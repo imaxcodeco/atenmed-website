@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Formulário - AtenMed</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #2563eb; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .notification { padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .notification-success { background: #10b981; color: white; }
+        .notification-error { background: #ef4444; color: white; }
+    </style>
+</head>
+<body>
+    <h1>Teste do Formulário AtenMed</h1>
+    <p>Este é um formulário de teste para verificar a integração com a API.</p>
+    
+    <form id="testForm">
+        <div class="form-group">
+            <label for="nome">Nome Completo</label>
+            <input type="text" id="nome" name="nome" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="telefone">Telefone</label>
+            <input type="tel" id="telefone" name="telefone" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="especialidade">Especialidade</label>
+            <select id="especialidade" name="especialidade" required>
+                <option value="">Selecione sua especialidade</option>
+                <option value="clinica-geral">Clínica Geral</option>
+                <option value="cardiologia">Cardiologia</option>
+                <option value="dermatologia">Dermatologia</option>
+                <option value="ginecologia">Ginecologia</option>
+                <option value="pediatria">Pediatria</option>
+                <option value="odontologia">Odontologia</option>
+                <option value="outros">Outros</option>
+            </select>
+        </div>
+        
+        <button type="submit">Enviar Teste</button>
+    </form>
+    
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('testForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = {
+                nome: formData.get('nome'),
+                email: formData.get('email'),
+                telefone: formData.get('telefone'),
+                especialidade: formData.get('especialidade')
+            };
+            
+            const button = this.querySelector('button');
+            const originalText = button.textContent;
+            
+            button.disabled = true;
+            button.textContent = 'Enviando...';
+            
+            try {
+                const response = await fetch('/api/leads', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        nome: data.nome,
+                        email: data.email,
+                        telefone: data.telefone,
+                        especialidade: data.especialidade,
+                        interesse: ['automacao-whatsapp', 'agendamento-inteligente']
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    document.getElementById('result').innerHTML = `
+                        <div class="notification notification-success">
+                            ✅ Sucesso! Lead criado: ${result.data.nome} (${result.data.email})
+                        </div>
+                    `;
+                    this.reset();
+                } else {
+                    throw new Error(result.error || 'Erro desconhecido');
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <div class="notification notification-error">
+                        ❌ Erro: ${error.message}
+                    </div>
+                `;
+            } finally {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+        });
+    </script>
+</body>
+</html>

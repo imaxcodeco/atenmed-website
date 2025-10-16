@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - AtenMed</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', Arial, sans-serif; 
+            background: linear-gradient(135deg, #45a7b1, #184354);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .logo h1 {
+            color: #45a7b1;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .logo p {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #374151;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #45a7b1;
+        }
+        .btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: #45a7b1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #3a8b94;
+        }
+        .btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .error {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .success {
+            background: #d1fae5;
+            color: #059669;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .demo-credentials {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        .demo-credentials h4 {
+            color: #45a7b1;
+            margin-bottom: 0.5rem;
+        }
+        .demo-credentials p {
+            margin-bottom: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <h1>🏥 AtenMed</h1>
+            <p>Dashboard Administrativo</p>
+        </div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">E-mail</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Senha</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <button type="submit" class="btn" id="loginBtn">
+                Entrar
+            </button>
+        </form>
+        
+        <div class="demo-credentials">
+            <h4>🔑 Credenciais de Demonstração</h4>
+            <p><strong>E-mail:</strong> admin@atenmed.com.br</p>
+            <p><strong>Senha:</strong> admin123</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            
+            // Mostrar estado de carregamento
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Entrando...';
+            
+            // Remover mensagens anteriores
+            const existingMessage = document.querySelector('.error, .success');
+            if (existingMessage) {
+                existingMessage.remove();
+            }
+            
+            try {
+                // Simular autenticação (em produção, isso seria uma chamada real para a API)
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Verificar credenciais de demonstração
+                if (email === 'admin@atenmed.com.br' && password === 'admin123') {
+                    // Salvar sessão
+                    localStorage.setItem('atenmed_auth', JSON.stringify({
+                        user: 'admin',
+                        email: email,
+                        loginTime: new Date().toISOString()
+                    }));
+                    
+                    // Mostrar sucesso
+                    showMessage('Login realizado com sucesso! Redirecionando...', 'success');
+                    
+                    // Redirecionar para dashboard
+                    setTimeout(() => {
+                        window.location.href = '/dashboard.html';
+                    }, 1500);
+                } else {
+                    throw new Error('Credenciais inválidas');
+                }
+                
+            } catch (error) {
+                showMessage('E-mail ou senha incorretos. Tente novamente.', 'error');
+            } finally {
+                // Restaurar botão
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Entrar';
+            }
+        });
+        
+        function showMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type;
+            messageDiv.textContent = message;
+            
+            const form = document.getElementById('loginForm');
+            form.insertBefore(messageDiv, form.firstChild);
+        }
+        
+        // Verificar se já está logado
+        document.addEventListener('DOMContentLoaded', function() {
+            const auth = localStorage.getItem('atenmed_auth');
+            if (auth) {
+                try {
+                    const authData = JSON.parse(auth);
+                    const loginTime = new Date(authData.loginTime);
+                    const now = new Date();
+                    const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
+                    
+                    // Se login foi há menos de 24 horas, redirecionar
+                    if (hoursDiff < 24) {
+                        window.location.href = '/dashboard.html';
+                    }
+                } catch (error) {
+                    localStorage.removeItem('atenmed_auth');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
