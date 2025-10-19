@@ -90,8 +90,16 @@ if (process.env.NODE_ENV === 'development') {
     }));
 }
 
-// Servir arquivos estáticos do frontend
-app.use(express.static(path.join(__dirname, '../')));
+// Servir arquivos estáticos do site principal
+app.use('/site', express.static(path.join(__dirname, 'site')));
+
+// Servir arquivos estáticos das aplicações
+app.use('/apps/whatsapp', express.static(path.join(__dirname, 'applications/whatsapp-automation')));
+app.use('/apps/cost-monitoring', express.static(path.join(__dirname, 'applications/cost-monitoring')));
+app.use('/apps/admin', express.static(path.join(__dirname, 'applications/admin-dashboard')));
+
+// Assets do site principal (compatibilidade)
+app.use('/assets', express.static(path.join(__dirname, 'site/assets')));
 
 // Health check
 app.get('/health', (req, res) => {
@@ -111,15 +119,33 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Rota para servir o frontend
+// Rotas específicas para aplicações
+app.get('/whatsapp', (req, res) => {
+    res.sendFile(path.join(__dirname, 'applications/whatsapp-automation/whatsapp-admin.html'));
+});
+
+app.get('/cost-monitoring', (req, res) => {
+    res.sendFile(path.join(__dirname, 'applications/cost-monitoring/cost-monitoring.html'));
+});
+
+app.get('/dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'applications/admin-dashboard/dashboard.html'));
+});
+
+// Rota para servir o site principal
 app.get('*', (req, res) => {
     // Se for uma rota da API, retornar 404
     if (req.path.startsWith('/api/')) {
         return res.status(404).json({ error: 'API endpoint não encontrado' });
     }
     
-    // Servir o index.html do frontend
-    res.sendFile(path.join(__dirname, '../index.html'));
+    // Se for rota de aplicação, redirecionar
+    if (req.path.startsWith('/apps/')) {
+        return res.status(404).json({ error: 'Aplicação não encontrada' });
+    }
+    
+    // Servir o index.html do site principal
+    res.sendFile(path.join(__dirname, 'site/index.html'));
 });
 
 // Middleware de erro 404
