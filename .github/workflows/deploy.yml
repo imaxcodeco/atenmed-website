@@ -62,6 +62,9 @@ jobs:
           sleep 10
           curl -f http://localhost:3000/health || exit 1
           
+          # Verificar se o domínio está respondendo
+          curl -f https://atenmed.com.br/health || echo "Domínio ainda não está respondendo, mas serviço local está OK"
+          
           echo "Deploy realizado com sucesso!"
           
     - name: Notify deployment status

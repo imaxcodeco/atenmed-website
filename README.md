@@ -202,6 +202,21 @@ atenmed-website/
 - **Validação** - Sanitização de todos os inputs
 - **Headers de Segurança** - Helmet configurado
 
+## 🌐 URLs de Acesso
+
+### Produção (atenmed.com.br)
+- **Site Principal**: https://atenmed.com.br/
+- **WhatsApp Admin**: https://atenmed.com.br/whatsapp
+- **Cost Monitoring**: https://atenmed.com.br/cost-monitoring
+- **Admin Dashboard**: https://atenmed.com.br/dashboard
+- **Health Check**: https://atenmed.com.br/health
+
+### Desenvolvimento Local
+- **Site Principal**: http://localhost:3000/
+- **WhatsApp Admin**: http://localhost:3000/whatsapp
+- **Cost Monitoring**: http://localhost:3000/cost-monitoring
+- **Admin Dashboard**: http://localhost:3000/dashboard
+
 ## 📈 Monitoramento
 
 - **Logs estruturados** com Winston

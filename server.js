@@ -46,7 +46,12 @@ app.use(helmet({
 
 // CORS configuration
 const corsOptions = {
-    origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:8000', 'http://localhost:3000'],
+    origin: process.env.CORS_ORIGIN?.split(',') || [
+        'https://atenmed.com.br',
+        'https://www.atenmed.com.br',
+        'http://localhost:3000', // Para desenvolvimento local
+        'http://localhost:8000'  // Para desenvolvimento local
+    ],
     credentials: true,
     optionsSuccessStatus: 200
 };

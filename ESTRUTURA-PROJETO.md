@@ -48,19 +48,19 @@ AtenMed/
 ## 🌐 URLs de Acesso
 
 ### Site Principal
-- **Homepage**: `http://localhost:3000/`
-- **Login**: `http://localhost:3000/login.html`
-- **Serviços**: `http://localhost:3000/servicos.html`
-- **Sobre**: `http://localhost:3000/sobre.html`
+- **Homepage**: `https://atenmed.com.br/`
+- **Login**: `https://atenmed.com.br/login.html`
+- **Serviços**: `https://atenmed.com.br/servicos.html`
+- **Sobre**: `https://atenmed.com.br/sobre.html`
 
 ### Aplicações
-- **WhatsApp Admin**: `http://localhost:3000/whatsapp`
-- **Cost Monitoring**: `http://localhost:3000/cost-monitoring`
-- **Admin Dashboard**: `http://localhost:3000/dashboard`
+- **WhatsApp Admin**: `https://atenmed.com.br/whatsapp`
+- **Cost Monitoring**: `https://atenmed.com.br/cost-monitoring`
+- **Admin Dashboard**: `https://atenmed.com.br/dashboard`
 
 ### Assets
-- **Site Assets**: `http://localhost:3000/assets/` (aponta para `site/assets/`)
-- **App Assets**: `http://localhost:3000/apps/{app-name}/` (para assets específicos de cada app)
+- **Site Assets**: `https://atenmed.com.br/assets/` (aponta para `site/assets/`)
+- **App Assets**: `https://atenmed.com.br/apps/{app-name}/` (para assets específicos de cada app)
 
 ## 🔧 Configuração do Servidor
 

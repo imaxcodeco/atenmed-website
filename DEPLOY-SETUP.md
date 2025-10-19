@@ -48,7 +48,7 @@ Conteúdo do arquivo de configuração do Nginx:
 ```nginx
 server {
     listen 80;
-    server_name seu-dominio.com.br;
+    server_name atenmed.com.br www.atenmed.com.br;
 
     location / {
         proxy_pass http://localhost:3000;
@@ -78,7 +78,7 @@ sudo systemctl restart nginx
 sudo apt install certbot python3-certbot-nginx
 
 # Obter certificado SSL
-sudo certbot --nginx -d seu-dominio.com.br
+sudo certbot --nginx -d atenmed.com.br -d www.atenmed.com.br
 
 # Testar renovação automática
 sudo certbot renew --dry-run
