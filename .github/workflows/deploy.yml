@@ -1,0 +1,74 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run tests
+      run: npm test
+      continue-on-error: true
+      
+    - name: Deploy to AWS EC2
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        port: ${{ secrets.EC2_PORT }}
+        script: |
+          # Navegar para o diretório do projeto
+          cd /home/ubuntu/atenmed-website
+          
+          # Fazer backup do código atual
+          sudo cp -r /home/ubuntu/atenmed-website /home/ubuntu/backup-atenmed-$(date +%Y%m%d-%H%M%S)
+          
+          # Parar o serviço
+          sudo systemctl stop atenmed
+          
+          # Fazer pull das mudanças
+          git fetch origin
+          git reset --hard origin/main
+          
+          # Instalar dependências
+          npm ci --production
+          
+          # Executar scripts de inicialização se necessário
+          npm run init-db || true
+          
+          # Reiniciar o serviço
+          sudo systemctl start atenmed
+          sudo systemctl status atenmed
+          
+          # Verificar se o serviço está rodando
+          sleep 10
+          curl -f http://localhost:3000/health || exit 1
+          
+          echo "Deploy realizado com sucesso!"
+          
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ ${{ job.status }} == 'success' ]; then
+          echo "✅ Deploy realizado com sucesso!"
+        else
+          echo "❌ Deploy falhou!"
+        fi
