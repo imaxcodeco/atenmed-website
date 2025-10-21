@@ -208,5 +208,114 @@ router.get('/ai-stats', (req, res) => {
     });
 });
 
+// ===== STATUS DA CONEXÃO =====
+
+/**
+ * @route   GET /api/whatsapp/status
+ * @desc    Verificar status da conexão WhatsApp
+ * @access  Public (temporário)
+ */
+router.get('/status', (req, res) => {
+    try {
+        const configured = !!(process.env.WHATSAPP_PHONE_ID && process.env.WHATSAPP_TOKEN);
+        
+        res.json({
+            success: true,
+            configured,
+            message: configured ? 
+                'WhatsApp configurado e pronto' : 
+                'WhatsApp não configurado. Adicione WHATSAPP_PHONE_ID e WHATSAPP_TOKEN'
+        });
+    } catch (error) {
+        logger.error('Erro ao verificar status:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Erro ao verificar status'
+        });
+    }
+});
+
+// ===== CONFIGURAÇÃO =====
+
+/**
+ * @route   GET /api/whatsapp/config
+ * @desc    Verificar configuração atual
+ * @access  Public (temporário)
+ */
+router.get('/config', (req, res) => {
+    try {
+        const phoneId = process.env.WHATSAPP_PHONE_ID;
+        const token = process.env.WHATSAPP_TOKEN;
+        const apiUrl = process.env.WHATSAPP_API_URL || 'https://graph.facebook.com/v18.0';
+        
+        const configured = !!(phoneId && token);
+        
+        res.json({
+            success: true,
+            configured,
+            phoneId: phoneId ? `${phoneId.substring(0, 6)}...` : null,
+            apiUrl: apiUrl,
+            hasToken: !!token
+        });
+    } catch (error) {
+        logger.error('Erro ao verificar configuração:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Erro ao verificar configuração'
+        });
+    }
+});
+
+// ===== ENVIAR MENSAGEM DE TESTE =====
+
+/**
+ * @route   POST /api/whatsapp/send-test
+ * @desc    Enviar mensagem de teste
+ * @access  Public (temporário)
+ */
+router.post('/send-test', async (req, res) => {
+    try {
+        const { phone, message } = req.body;
+        
+        if (!phone || !message) {
+            return res.status(400).json({
+                success: false,
+                error: 'Telefone e mensagem são obrigatórios'
+            });
+        }
+        
+        // Verificar se está configurado
+        if (!process.env.WHATSAPP_PHONE_ID || !process.env.WHATSAPP_TOKEN) {
+            return res.status(503).json({
+                success: false,
+                error: 'WhatsApp não configurado. Configure WHATSAPP_PHONE_ID e WHATSAPP_TOKEN nas variáveis de ambiente.'
+            });
+        }
+        
+        // Remover caracteres não numéricos e validar formato
+        const cleanPhone = phone.replace(/\D/g, '');
+        
+        logger.info(`📤 Enviando mensagem de teste para ${phone}`);
+        
+        const result = await whatsappService.sendMessage(cleanPhone, message);
+        
+        logger.info(`✅ Mensagem de teste enviada para ${phone}`);
+        
+        res.json({
+            success: true,
+            message: 'Mensagem enviada com sucesso',
+            messageId: result?.messageId,
+            phone: phone
+        });
+        
+    } catch (error) {
+        logger.error('Erro ao enviar mensagem de teste:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Erro ao enviar mensagem'
+        });
+    }
+});
+
 module.exports = router;
 

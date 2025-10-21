@@ -327,6 +327,10 @@ app.get('/whatsapp', (req, res) => {
     res.sendFile(path.join(__dirname, 'applications/whatsapp-automation/whatsapp-admin.html'));
 });
 
+app.get('/whatsapp-test', (req, res) => {
+    res.sendFile(path.join(__dirname, 'applications/whatsapp-test/index.html'));
+});
+
 app.get('/cost-monitoring', (req, res) => {
     res.sendFile(path.join(__dirname, 'applications/cost-monitoring/cost-monitoring.html'));
 });

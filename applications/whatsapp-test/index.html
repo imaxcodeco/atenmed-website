@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Teste WhatsApp - AtenMed</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .status-box {
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+
+        .status-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .status-box h3 {
+            color: #475569;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-connected { color: #10b981; }
+        .status-disconnected { color: #ef4444; }
+        .status-warning { color: #f59e0b; }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .test-form {
+            display: grid;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-weight: 600;
+            color: #475569;
+        }
+
+        input, textarea, select {
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .log-container {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+        }
+
+        .log-entry {
+            padding: 0.5rem;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .log-time {
+            color: #94a3b8;
+            flex-shrink: 0;
+        }
+
+        .log-success { color: #10b981; }
+        .log-error { color: #ef4444; }
+        .log-info { color: #3b82f6; }
+        .log-warning { color: #f59e0b; }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            border: 2px solid #3b82f6;
+            color: #1e40af;
+        }
+
+        .alert-warning {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            color: #92400e;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            color: #065f46;
+        }
+
+        .config-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .config-label {
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .config-value {
+            font-family: 'Courier New', monospace;
+            color: #64748b;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid #e2e8f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .clients-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .client-item {
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+
+        .client-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .client-name {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .client-phone {
+            color: #64748b;
+            font-family: 'Courier New', monospace;
+        }
+
+        .client-apps {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Painel de Teste - WhatsApp Business API</h1>
+
+        <!-- Status da Conexão -->
+        <div class="card">
+            <h2>📊 Status da Conexão</h2>
+            <div class="status-grid">
+                <div class="status-box">
+                    <h3>Conexão WhatsApp</h3>
+                    <div class="status-value" id="connectionStatus">
+                        <span class="loading"></span> Verificando...
+                    </div>
+                    <small id="connectionDetails">Aguardando verificação</small>
+                </div>
+                <div class="status-box">
+                    <h3>Clientes Ativos</h3>
+                    <div class="status-value status-connected" id="activeClients">0</div>
+                    <small>Com WhatsApp configurado</small>
+                </div>
+                <div class="status-box">
+                    <h3>Mensagens Hoje</h3>
+                    <div class="status-value status-warning" id="messagesCount">0</div>
+                    <small>Enviadas + Recebidas</small>
+                </div>
+                <div class="status-box">
+                    <h3>Taxa de Sucesso</h3>
+                    <div class="status-value status-connected" id="successRate">--%</div>
+                    <small>Últimas 24h</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuração -->
+        <div class="card">
+            <h2>⚙️ Configuração Atual</h2>
+            <div id="configStatus"></div>
+            <div class="btn-group">
+                <button class="btn" onclick="checkConfig()">
+                    🔄 Verificar Configuração
+                </button>
+                <button class="btn" onclick="showConfigGuide()">
+                    📖 Ver Guia de Configuração
+                </button>
+            </div>
+        </div>
+
+        <!-- Teste de Mensagem -->
+        <div class="card">
+            <h2>💬 Enviar Mensagem de Teste</h2>
+            <div id="testAlert"></div>
+            <form class="test-form" id="testMessageForm" onsubmit="sendTestMessage(event)">
+                <div class="form-group">
+                    <label for="testPhone">Número do WhatsApp (com código do país)</label>
+                    <input 
+                        type="tel" 
+                        id="testPhone" 
+                        placeholder="+5511999999999"
+                        pattern="^\+?[1-9]\d{1,14}$"
+                        required
+                    >
+                    <small style="color: #64748b;">Formato: +5511999999999 (incluir + e código do país)</small>
+                </div>
+                <div class="form-group">
+                    <label for="testMessage">Mensagem</label>
+                    <textarea 
+                        id="testMessage" 
+                        placeholder="Digite sua mensagem de teste..."
+                        required
+                    ></textarea>
+                </div>
+                <button type="submit" class="btn" id="sendTestBtn">
+                    📤 Enviar Mensagem de Teste
+                </button>
+            </form>
+        </div>
+
+        <!-- Clientes com WhatsApp -->
+        <div class="card">
+            <h2>👥 Clientes com WhatsApp Ativo</h2>
+            <div class="btn-group">
+                <button class="btn" onclick="loadClients()">
+                    🔄 Atualizar Lista
+                </button>
+            </div>
+            <div id="clientsList" style="margin-top: 1rem;">
+                <p style="color: #64748b;">Carregando clientes...</p>
+            </div>
+        </div>
+
+        <!-- Logs -->
+        <div class="card">
+            <h2>📝 Logs de Atividade</h2>
+            <div class="btn-group">
+                <button class="btn" onclick="clearLogs()">
+                    🗑️ Limpar Logs
+                </button>
+            </div>
+            <div class="log-container" id="logContainer">
+                <div class="log-entry">
+                    <span class="log-time">[00:00:00]</span>
+                    <span class="log-info">Sistema iniciado. Aguardando ações...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== FUNÇÕES DE LOG =====
+        function addLog(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const time = new Date().toLocaleTimeString('pt-BR');
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `
+                <span class="log-time">[${time}]</span>
+                <span class="log-${type}">${message}</span>
+            `;
+            logContainer.insertBefore(logEntry, logContainer.firstChild);
+        }
+
+        function clearLogs() {
+            const logContainer = document.getElementById('logContainer');
+            logContainer.innerHTML = `
+                <div class="log-entry">
+                    <span class="log-time">[${new Date().toLocaleTimeString('pt-BR')}]</span>
+                    <span class="log-info">Logs limpos.</span>
+                </div>
+            `;
+        }
+
+        // ===== VERIFICAR STATUS =====
+        async function checkStatus() {
+            addLog('Verificando status do WhatsApp...', 'info');
+            
+            try {
+                const response = await fetch('/api/whatsapp/status');
+                const result = await response.json();
+                
+                const statusElement = document.getElementById('connectionStatus');
+                const detailsElement = document.getElementById('connectionDetails');
+                
+                if (result.configured) {
+                    statusElement.innerHTML = '<span class="status-connected">✅ Conectado</span>';
+                    detailsElement.textContent = 'WhatsApp configurado e pronto';
+                    addLog('WhatsApp configurado corretamente!', 'success');
+                } else {
+                    statusElement.innerHTML = '<span class="status-disconnected">❌ Desconectado</span>';
+                    detailsElement.textContent = 'Configuração necessária';
+                    addLog('WhatsApp não configurado. Verifique as credenciais.', 'warning');
+                }
+                
+            } catch (error) {
+                document.getElementById('connectionStatus').innerHTML = '<span class="status-disconnected">❌ Erro</span>';
+                document.getElementById('connectionDetails').textContent = 'Falha na verificação';
+                addLog(`Erro ao verificar status: ${error.message}`, 'error');
+            }
+        }
+
+        // ===== VERIFICAR CONFIGURAÇÃO =====
+        async function checkConfig() {
+            addLog('Verificando configuração...', 'info');
+            
+            const configDiv = document.getElementById('configStatus');
+            configDiv.innerHTML = '<p style="color: #64748b;"><span class="loading"></span> Verificando...</p>';
+            
+            try {
+                const response = await fetch('/api/whatsapp/config');
+                const result = await response.json();
+                
+                let html = '';
+                
+                if (result.configured) {
+                    html += '<div class="alert alert-success">✅ WhatsApp Business API configurado!</div>';
+                    html += '<div class="config-item">';
+                    html += '<span class="config-label">Phone ID:</span>';
+                    html += `<span class="config-value">${result.phoneId || 'Não configurado'}</span>`;
+                    html += '</div>';
+                    html += '<div class="config-item">';
+                    html += '<span class="config-label">API URL:</span>';
+                    html += `<span class="config-value">${result.apiUrl || 'Padrão'}</span>`;
+                    html += '</div>';
+                    html += '<div class="config-item">';
+                    html += '<span class="config-label">Token:</span>';
+                    html += `<span class="badge badge-success">Configurado</span>`;
+                    html += '</div>';
+                    addLog('Configuração verificada com sucesso!', 'success');
+                } else {
+                    html += '<div class="alert alert-warning">';
+                    html += '⚠️ <strong>WhatsApp Business API não configurado</strong><br><br>';
+                    html += 'Configure as seguintes variáveis de ambiente:<br>';
+                    html += '<ul style="margin-top: 0.5rem; margin-left: 1.5rem;">';
+                    html += '<li><code>WHATSAPP_PHONE_ID</code></li>';
+                    html += '<li><code>WHATSAPP_TOKEN</code></li>';
+                    html += '<li><code>WHATSAPP_VERIFY_TOKEN</code> (opcional)</li>';
+                    html += '</ul>';
+                    html += '</div>';
+                    addLog('Configuração incompleta. Adicione as variáveis de ambiente.', 'warning');
+                }
+                
+                configDiv.innerHTML = html;
+                
+            } catch (error) {
+                configDiv.innerHTML = `<div class="alert alert-error">❌ Erro ao verificar configuração: ${error.message}</div>`;
+                addLog(`Erro ao verificar configuração: ${error.message}`, 'error');
+            }
+        }
+
+        // ===== ENVIAR MENSAGEM DE TESTE =====
+        async function sendTestMessage(event) {
+            event.preventDefault();
+            
+            const btn = document.getElementById('sendTestBtn');
+            const phone = document.getElementById('testPhone').value;
+            const message = document.getElementById('testMessage').value;
+            const alertDiv = document.getElementById('testAlert');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Enviando...';
+            
+            addLog(`Tentando enviar mensagem para ${phone}...`, 'info');
+            
+            try {
+                const response = await fetch('/api/whatsapp/send-test', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phone, message })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    alertDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            ✅ <strong>Mensagem enviada com sucesso!</strong><br>
+                            Para: ${phone}<br>
+                            Message ID: ${result.messageId || 'N/A'}
+                        </div>
+                    `;
+                    addLog(`✅ Mensagem enviada para ${phone}`, 'success');
+                    document.getElementById('testMessageForm').reset();
+                } else {
+                    alertDiv.innerHTML = `
+                        <div class="alert alert-error">
+                            ❌ <strong>Falha ao enviar mensagem</strong><br>
+                            Erro: ${result.error || 'Erro desconhecido'}
+                        </div>
+                    `;
+                    addLog(`❌ Erro ao enviar mensagem: ${result.error}`, 'error');
+                }
+                
+            } catch (error) {
+                alertDiv.innerHTML = `
+                    <div class="alert alert-error">
+                        ❌ <strong>Erro de conexão</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+                addLog(`❌ Erro de conexão: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '📤 Enviar Mensagem de Teste';
+            }
+        }
+
+        // ===== CARREGAR CLIENTES =====
+        async function loadClients() {
+            addLog('Carregando lista de clientes...', 'info');
+            
+            const clientsList = document.getElementById('clientsList');
+            clientsList.innerHTML = '<p style="color: #64748b;"><span class="loading"></span> Carregando...</p>';
+            
+            try {
+                const response = await fetch('/api/clients');
+                const result = await response.json();
+                
+                if (response.ok && result.success && result.data.length > 0) {
+                    // Filtrar clientes com aplicações de WhatsApp ativas
+                    const whatsappClients = result.data.filter(client => 
+                        client.applications.automacaoAtendimento || 
+                        client.applications.agendamentoInteligente
+                    );
+                    
+                    document.getElementById('activeClients').textContent = whatsappClients.length;
+                    
+                    if (whatsappClients.length === 0) {
+                        clientsList.innerHTML = '<p style="color: #64748b;">Nenhum cliente com WhatsApp ativo ainda.</p>';
+                    } else {
+                        clientsList.innerHTML = '<div class="clients-list">' + 
+                            whatsappClients.map(client => `
+                                <div class="client-item">
+                                    <div class="client-name">${client.name}</div>
+                                    <div class="client-phone">${client.whatsapp}</div>
+                                    <div class="client-apps">
+                                        ${client.applications.automacaoAtendimento ? '<span class="badge badge-success">💬 Automação</span>' : ''}
+                                        ${client.applications.agendamentoInteligente ? '<span class="badge badge-success">📅 Agendamento</span>' : ''}
+                                    </div>
+                                </div>
+                            `).join('') +
+                            '</div>';
+                    }
+                    
+                    addLog(`${whatsappClients.length} cliente(s) com WhatsApp ativo encontrado(s)`, 'success');
+                } else {
+                    clientsList.innerHTML = '<p style="color: #64748b;">Nenhum cliente cadastrado ainda.</p>';
+                    document.getElementById('activeClients').textContent = '0';
+                    addLog('Nenhum cliente encontrado', 'info');
+                }
+                
+            } catch (error) {
+                clientsList.innerHTML = `<p style="color: #ef4444;">Erro ao carregar clientes: ${error.message}</p>`;
+                addLog(`Erro ao carregar clientes: ${error.message}`, 'error');
+            }
+        }
+
+        // ===== MOSTRAR GUIA DE CONFIGURAÇÃO =====
+        function showConfigGuide() {
+            window.open('/docs/CONFIGURACAO-WHATSAPP.md', '_blank');
+        }
+
+        // ===== INICIALIZAR =====
+        document.addEventListener('DOMContentLoaded', function() {
+            addLog('Painel de teste iniciado', 'success');
+            checkStatus();
+            checkConfig();
+            loadClients();
+        });
+    </script>
+</body>
+</html>
+
