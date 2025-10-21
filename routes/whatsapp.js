@@ -21,16 +21,23 @@ router.get('/webhook', (req, res) => {
         const token = req.query['hub.verify_token'];
         const challenge = req.query['hub.challenge'];
 
+        // LOG DETALHADO PARA DEBUG
         logger.info('📱 Tentativa de verificação de webhook WhatsApp');
+        logger.info(`   Mode: ${mode}`);
+        logger.info(`   Token recebido: ${token}`);
+        logger.info(`   Token esperado: ${process.env.WHATSAPP_VERIFY_TOKEN}`);
+        logger.info(`   Challenge: ${challenge}`);
 
         const result = whatsappService.verifyWebhook(mode, token, challenge);
 
         if (result) {
             logger.info('✅ Webhook verificado com sucesso');
+            logger.info(`   Retornando challenge: ${result}`);
             return res.status(200).send(result);
         }
 
         logger.warn('❌ Falha na verificação do webhook');
+        logger.warn(`   Mode: ${mode}, Token match: ${token === process.env.WHATSAPP_VERIFY_TOKEN}`);
         return res.sendStatus(403);
 
     } catch (error) {
