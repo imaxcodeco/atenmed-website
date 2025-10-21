@@ -24,6 +24,7 @@ const confirmationRoutes = require('./routes/confirmations');
 const waitlistRoutes = require('./routes/waitlist');
 const analyticsRoutes = require('./routes/analytics');
 const whatsappRoutes = require('./routes/whatsapp');
+const clientRoutes = require('./routes/clients');
 
 // Importar middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -163,6 +164,7 @@ app.use('/api/confirmations', confirmationRoutes);
 app.use('/api/waitlist', waitlistRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
+app.use('/api/clients', clientRoutes);
 
 // Rotas de autenticação do Google Calendar
 app.get('/api/auth/google', (req, res) => {

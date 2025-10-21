@@ -57,6 +57,7 @@
                 <div class="logo">🏥 AtenMed Dashboard</div>
                 <nav class="nav">
                     <a href="#overview">Visão Geral</a>
+                    <a href="#clients">👥 Clientes</a>
                     <a href="#leads">Leads</a>
                     <a href="#contacts">Contatos</a>
                     <a href="#settings">Configurações</a>
@@ -121,6 +122,91 @@
                             <span>Última Atualização</span>
                             <span class="stat-number" id="lastUpdate">-</span>
                         </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Seção de Clientes -->
+            <section id="clients" style="margin-top: 3rem;">
+                <h2>👥 Gerenciar Clientes</h2>
+                
+                <!-- Formulário para adicionar cliente -->
+                <div class="card" style="margin-bottom: 2rem;">
+                    <h3>➕ Adicionar Novo Cliente</h3>
+                    <form id="clientForm" style="margin-top: 1rem;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Nome do Cliente *</label>
+                                <input type="text" id="clientName" required style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 5px;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Email</label>
+                                <input type="email" id="clientEmail" style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 5px;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">WhatsApp *</label>
+                                <input type="tel" id="clientWhatsapp" required placeholder="+5511999999999" style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 5px;">
+                                <small style="color: #64748b; font-size: 0.875rem;">Formato: +5511999999999</small>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Tipo de Negócio</label>
+                                <select id="clientBusinessType" style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 5px;">
+                                    <option value="clinica">Clínica</option>
+                                    <option value="consultorio" selected>Consultório</option>
+                                    <option value="hospital">Hospital</option>
+                                    <option value="laboratorio">Laboratório</option>
+                                    <option value="farmacia">Farmácia</option>
+                                    <option value="outros">Outros</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 1.5rem;">
+                            <label style="display: block; margin-bottom: 0.75rem; font-weight: 500; font-size: 1.1rem;">Aplicações *</label>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                                <label style="display: flex; align-items: center; padding: 1rem; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
+                                    <input type="radio" name="applications" value="automacao" required style="margin-right: 0.5rem;">
+                                    <div>
+                                        <div style="font-weight: 600; color: #45a7b1;">💬 Automação de Atendimento</div>
+                                        <small style="color: #64748b;">WhatsApp Bot inteligente</small>
+                                    </div>
+                                </label>
+                                <label style="display: flex; align-items: center; padding: 1rem; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
+                                    <input type="radio" name="applications" value="agendamento" required style="margin-right: 0.5rem;">
+                                    <div>
+                                        <div style="font-weight: 600; color: #45a7b1;">📅 Agendamento Inteligente</div>
+                                        <small style="color: #64748b;">Google Calendar integrado</small>
+                                    </div>
+                                </label>
+                                <label style="display: flex; align-items: center; padding: 1rem; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
+                                    <input type="radio" name="applications" value="both" required style="margin-right: 0.5rem;">
+                                    <div>
+                                        <div style="font-weight: 600; color: #45a7b1;">🚀 Ambas as Aplicações</div>
+                                        <small style="color: #64748b;">Solução completa</small>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 1.5rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Observações</label>
+                            <textarea id="clientNotes" rows="3" style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 5px;" placeholder="Informações adicionais sobre o cliente..."></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" id="addClientBtn" style="margin-top: 1.5rem; width: auto; padding: 0.75rem 2rem;">
+                            ➕ Adicionar Cliente e Configurar Aplicações
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Lista de Clientes -->
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3>📋 Clientes Cadastrados</h3>
+                        <button class="btn btn-primary" onclick="loadClients()">🔄 Atualizar</button>
+                    </div>
+                    <div id="clientsContent">
+                        <div class="loading">Carregando clientes...</div>
                     </div>
                 </div>
             </section>
@@ -370,7 +456,203 @@
             successDiv.className = 'success';
             successDiv.textContent = message;
             document.querySelector('.container').insertBefore(successDiv, document.querySelector('.main'));
+            
+            // Remover após 5 segundos
+            setTimeout(() => successDiv.remove(), 5000);
         }
+
+        // ===== FUNÇÕES DE GERENCIAMENTO DE CLIENTES =====
+
+        // Carregar clientes
+        async function loadClients() {
+            try {
+                const response = await fetch('/api/clients');
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    displayClients(result.data);
+                } else {
+                    document.getElementById('clientsContent').innerHTML = 
+                        '<div class="loading" style="color: #f59e0b;">Nenhum cliente encontrado</div>';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar clientes:', error);
+                document.getElementById('clientsContent').innerHTML = 
+                    '<div class="loading" style="color: #ef4444;">Erro ao carregar clientes</div>';
+            }
+        }
+
+        // Exibir clientes
+        function displayClients(clients) {
+            const content = document.getElementById('clientsContent');
+            
+            if (!clients || clients.length === 0) {
+                content.innerHTML = '<div class="loading">Nenhum cliente cadastrado ainda</div>';
+                return;
+            }
+            
+            const table = `
+                <table class="leads-table">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>WhatsApp</th>
+                            <th>Tipo</th>
+                            <th>Aplicações</th>
+                            <th>Status</th>
+                            <th>Cadastro</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${clients.map(client => {
+                            const apps = [];
+                            if (client.applications.automacaoAtendimento) apps.push('💬 Automação');
+                            if (client.applications.agendamentoInteligente) apps.push('📅 Agendamento');
+                            const appsText = apps.join('<br>') || 'Nenhuma';
+                            
+                            const businessTypeMap = {
+                                'clinica': 'Clínica',
+                                'consultorio': 'Consultório',
+                                'hospital': 'Hospital',
+                                'laboratorio': 'Laboratório',
+                                'farmacia': 'Farmácia',
+                                'outros': 'Outros'
+                            };
+                            
+                            return `
+                                <tr>
+                                    <td>
+                                        <strong>${client.name}</strong>
+                                        ${client.email ? `<br><small style="color: #64748b;">${client.email}</small>` : ''}
+                                    </td>
+                                    <td>${client.whatsapp}</td>
+                                    <td>${businessTypeMap[client.businessType] || client.businessType}</td>
+                                    <td>${appsText}</td>
+                                    <td><span class="status-badge status-${client.status}">${client.status}</span></td>
+                                    <td>${new Date(client.createdAt).toLocaleDateString('pt-BR')}</td>
+                                    <td>
+                                        <button onclick="viewClient('${client._id}')" class="btn" style="padding: 0.5rem 1rem; font-size: 0.875rem;">👁️ Ver</button>
+                                        <button onclick="deleteClient('${client._id}')" class="btn" style="padding: 0.5rem 1rem; font-size: 0.875rem; background: #ef4444;">🗑️ Excluir</button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            content.innerHTML = table;
+        }
+
+        // Adicionar cliente (submit do formulário)
+        document.addEventListener('DOMContentLoaded', function() {
+            const clientForm = document.getElementById('clientForm');
+            if (clientForm) {
+                clientForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const btn = document.getElementById('addClientBtn');
+                    const originalText = btn.textContent;
+                    btn.disabled = true;
+                    btn.textContent = '⏳ Adicionando...';
+                    
+                    try {
+                        const formData = {
+                            name: document.getElementById('clientName').value,
+                            email: document.getElementById('clientEmail').value,
+                            whatsapp: document.getElementById('clientWhatsapp').value,
+                            businessType: document.getElementById('clientBusinessType').value,
+                            applications: document.querySelector('input[name="applications"]:checked').value,
+                            notes: document.getElementById('clientNotes').value
+                        };
+                        
+                        const response = await fetch('/api/clients', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(formData)
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (response.ok && result.success) {
+                            showSuccess(result.message || 'Cliente adicionado com sucesso! ✅');
+                            clientForm.reset();
+                            loadClients(); // Recarregar lista
+                        } else {
+                            showError(result.error || 'Erro ao adicionar cliente');
+                        }
+                    } catch (error) {
+                        console.error('Erro ao adicionar cliente:', error);
+                        showError('Erro ao adicionar cliente. Verifique sua conexão.');
+                    } finally {
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                    }
+                });
+            }
+            
+            // Carregar clientes ao carregar a página
+            loadClients();
+        });
+
+        // Ver detalhes do cliente
+        function viewClient(clientId) {
+            alert('Função de visualização em desenvolvimento. ID: ' + clientId);
+            // TODO: Implementar modal ou página de detalhes
+        }
+
+        // Excluir/Desativar cliente
+        async function deleteClient(clientId) {
+            if (!confirm('Tem certeza que deseja desativar este cliente?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/clients/${clientId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    showSuccess('Cliente desativado com sucesso!');
+                    loadClients(); // Recarregar lista
+                } else {
+                    showError(result.error || 'Erro ao desativar cliente');
+                }
+            } catch (error) {
+                console.error('Erro ao desativar cliente:', error);
+                showError('Erro ao desativar cliente');
+            }
+        }
+
+        // Adicionar estilo para mensagens de sucesso
+        const style = document.createElement('style');
+        style.textContent = `
+            .success {
+                background-color: #10b981;
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                margin: 1rem 0;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            
+            input[type="radio"]:checked + div {
+                border-color: #45a7b1 !important;
+                background-color: #f0f9ff;
+            }
+            
+            label:has(input[type="radio"]):hover {
+                border-color: #45a7b1 !important;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 6px rgba(69, 167, 177, 0.1);
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>
