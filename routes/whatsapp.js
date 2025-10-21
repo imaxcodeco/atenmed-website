@@ -215,6 +215,25 @@ router.get('/ai-stats', (req, res) => {
     });
 });
 
+// ===== DEBUG WEBHOOK =====
+
+/**
+ * @route   GET /api/whatsapp/debug-webhook
+ * @desc    Debug do webhook - mostra configuração atual
+ * @access  Public (temporário - remover em produção!)
+ */
+router.get('/debug-webhook', (req, res) => {
+    res.json({
+        success: true,
+        debug: {
+            env_token: process.env.WHATSAPP_VERIFY_TOKEN || 'NÃO CONFIGURADO',
+            env_token_length: (process.env.WHATSAPP_VERIFY_TOKEN || '').length,
+            env_phone_id: process.env.WHATSAPP_PHONE_ID ? 'Configurado' : 'NÃO configurado',
+            env_token_wpp: process.env.WHATSAPP_TOKEN ? 'Configurado' : 'NÃO configurado'
+        }
+    });
+});
+
 // ===== STATUS DA CONEXÃO =====
 
 /**
