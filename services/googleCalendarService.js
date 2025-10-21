@@ -408,6 +408,37 @@ Sistema de Agendamento AtenMed
             throw new Error(`Erro ao verificar disponibilidade: ${error.message}`);
         }
     }
+
+    /**
+     * Listar todos os calendários disponíveis da conta
+     */
+    async listCalendars() {
+        try {
+            if (!this.isAuthenticated()) {
+                throw new Error('Não autenticado com Google Calendar');
+            }
+
+            const calendar = this.getCalendar();
+            const response = await calendar.calendarList.list();
+
+            const calendars = response.data.items.map(cal => ({
+                id: cal.id,
+                summary: cal.summary,
+                description: cal.description || '',
+                primary: cal.primary || false,
+                backgroundColor: cal.backgroundColor,
+                foregroundColor: cal.foregroundColor,
+                accessRole: cal.accessRole
+            }));
+
+            logger.info(`📅 ${calendars.length} calendários encontrados`);
+            return calendars;
+
+        } catch (error) {
+            logger.error('Erro ao listar calendários:', error);
+            throw new Error(`Erro ao listar calendários: ${error.message}`);
+        }
+    }
 }
 
 // Criar instância singleton

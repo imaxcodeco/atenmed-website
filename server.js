@@ -293,6 +293,35 @@ app.get('/api/auth/google/status', (req, res) => {
     });
 });
 
+// Listar calendários disponíveis
+app.get('/api/google/calendars', async (req, res) => {
+    try {
+        if (!googleCalendarService.isAuthenticated()) {
+            return res.status(401).json({
+                success: false,
+                error: 'Google Calendar não autenticado',
+                needsAuth: true,
+                authUrl: '/api/auth/google'
+            });
+        }
+
+        const calendars = await googleCalendarService.listCalendars();
+        
+        res.json({
+            success: true,
+            data: calendars,
+            total: calendars.length
+        });
+
+    } catch (error) {
+        logger.error('Erro ao listar calendários:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Erro ao listar calendários do Google'
+        });
+    }
+});
+
 // Rotas específicas para aplicações
 app.get('/whatsapp', (req, res) => {
     res.sendFile(path.join(__dirname, 'applications/whatsapp-automation/whatsapp-admin.html'));

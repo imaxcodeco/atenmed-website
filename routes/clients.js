@@ -44,10 +44,14 @@ router.post('/', [
         .isIn(['automacao', 'agendamento', 'both']).withMessage('Aplicação inválida'),
     body('plan')
         .optional()
-        .isIn(['basico', 'profissional', 'empresarial', 'personalizado'])
+        .isIn(['basico', 'profissional', 'empresarial', 'personalizado']),
+    body('googleCalendarId')
+        .optional()
+        .trim()
+        .notEmpty().withMessage('ID do calendário não pode ser vazio')
 ], validateRequest, async (req, res) => {
     try {
-        const { name, email, whatsapp, businessType, applications, plan, notes } = req.body;
+        const { name, email, whatsapp, businessType, applications, plan, notes, googleCalendarId } = req.body;
         
         // Verificar se já existe cliente com este WhatsApp
         const existingClient = await Client.findOne({ whatsapp });
@@ -74,9 +78,19 @@ router.post('/', [
             client.applications.automacaoAtendimento = true;
         } else if (applications === 'agendamento') {
             client.applications.agendamentoInteligente = true;
+            
+            // Salvar Google Calendar ID se fornecido
+            if (googleCalendarId) {
+                client.config.agendamento.googleCalendarId = googleCalendarId;
+            }
         } else if (applications === 'both') {
             client.applications.automacaoAtendimento = true;
             client.applications.agendamentoInteligente = true;
+            
+            // Salvar Google Calendar ID se fornecido
+            if (googleCalendarId) {
+                client.config.agendamento.googleCalendarId = googleCalendarId;
+            }
         }
         
         await client.save();

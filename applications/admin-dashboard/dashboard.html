@@ -188,6 +188,27 @@
                             </div>
                         </div>
                         
+                        <!-- Campo de seleção de agenda (aparece quando agendamento ou ambas forem selecionados) -->
+                        <div id="calendarSelectionField" style="margin-top: 1.5rem; display: none;">
+                            <label style="display: block; margin-bottom: 0.75rem; font-weight: 500; font-size: 1.1rem;">
+                                📅 Selecione a Agenda do Google Calendar *
+                            </label>
+                            <div id="calendarAuthMessage" style="display: none; padding: 1rem; background: #fef3c7; border: 2px solid #fbbf24; border-radius: 8px; margin-bottom: 1rem;">
+                                <p style="margin: 0; color: #92400e; font-weight: 500;">
+                                    ⚠️ Você precisa autenticar com o Google Calendar primeiro.
+                                    <a href="/api/auth/google" target="_blank" style="color: #45a7b1; text-decoration: underline;">
+                                        Clique aqui para autenticar
+                                    </a>
+                                </p>
+                            </div>
+                            <select id="clientGoogleCalendar" style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 5px; font-size: 1rem;">
+                                <option value="">Carregando calendários...</option>
+                            </select>
+                            <small style="color: #64748b; display: block; margin-top: 0.5rem;">
+                                Selecione a agenda que será usada para este cliente
+                            </small>
+                        </div>
+                        
                         <div style="margin-top: 1.5rem;">
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Observações</label>
                             <textarea id="clientNotes" rows="3" style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 5px;" placeholder="Informações adicionais sobre o cliente..."></textarea>
@@ -545,8 +566,79 @@
             content.innerHTML = table;
         }
 
+        // ===== FUNÇÕES PARA SELEÇÃO DE CALENDÁRIO =====
+        
+        let availableCalendars = [];
+        
+        // Carregar calendários do Google
+        async function loadGoogleCalendars() {
+            try {
+                const response = await fetch('/api/google/calendars');
+                const result = await response.json();
+                
+                const calendarSelect = document.getElementById('clientGoogleCalendar');
+                const authMessage = document.getElementById('calendarAuthMessage');
+                
+                if (response.ok && result.success) {
+                    availableCalendars = result.data;
+                    
+                    // Limpar e popular o select
+                    calendarSelect.innerHTML = '<option value="">-- Selecione uma agenda --</option>';
+                    
+                    result.data.forEach(cal => {
+                        const option = document.createElement('option');
+                        option.value = cal.id;
+                        option.textContent = `${cal.summary}${cal.primary ? ' (Principal)' : ''}`;
+                        option.style.color = cal.foregroundColor || '#000';
+                        calendarSelect.appendChild(option);
+                    });
+                    
+                    authMessage.style.display = 'none';
+                    calendarSelect.disabled = false;
+                    
+                } else if (result.needsAuth) {
+                    // Mostrar mensagem de autenticação necessária
+                    authMessage.style.display = 'block';
+                    calendarSelect.innerHTML = '<option value="">Autenticação necessária</option>';
+                    calendarSelect.disabled = true;
+                }
+                
+            } catch (error) {
+                console.error('Erro ao carregar calendários:', error);
+                document.getElementById('clientGoogleCalendar').innerHTML = 
+                    '<option value="">Erro ao carregar calendários</option>';
+            }
+        }
+        
+        // Controlar exibição do campo de calendário baseado na aplicação selecionada
+        function toggleCalendarField() {
+            const selectedApp = document.querySelector('input[name="applications"]:checked');
+            const calendarField = document.getElementById('calendarSelectionField');
+            const calendarSelect = document.getElementById('clientGoogleCalendar');
+            
+            if (selectedApp && (selectedApp.value === 'agendamento' || selectedApp.value === 'both')) {
+                calendarField.style.display = 'block';
+                calendarSelect.required = true;
+                
+                // Carregar calendários se ainda não foram carregados
+                if (availableCalendars.length === 0) {
+                    loadGoogleCalendars();
+                }
+            } else {
+                calendarField.style.display = 'none';
+                calendarSelect.required = false;
+                calendarSelect.value = '';
+            }
+        }
+
         // Adicionar cliente (submit do formulário)
         document.addEventListener('DOMContentLoaded', function() {
+            // Adicionar event listeners para os radio buttons de aplicações
+            const appRadios = document.querySelectorAll('input[name="applications"]');
+            appRadios.forEach(radio => {
+                radio.addEventListener('change', toggleCalendarField);
+            });
+            
             const clientForm = document.getElementById('clientForm');
             if (clientForm) {
                 clientForm.addEventListener('submit', async function(e) {
@@ -558,14 +650,23 @@
                     btn.textContent = '⏳ Adicionando...';
                     
                     try {
+                        const selectedApp = document.querySelector('input[name="applications"]:checked').value;
                         const formData = {
                             name: document.getElementById('clientName').value,
                             email: document.getElementById('clientEmail').value,
                             whatsapp: document.getElementById('clientWhatsapp').value,
                             businessType: document.getElementById('clientBusinessType').value,
-                            applications: document.querySelector('input[name="applications"]:checked').value,
+                            applications: selectedApp,
                             notes: document.getElementById('clientNotes').value
                         };
+                        
+                        // Adicionar googleCalendarId se agendamento ou both foi selecionado
+                        if (selectedApp === 'agendamento' || selectedApp === 'both') {
+                            const calendarId = document.getElementById('clientGoogleCalendar').value;
+                            if (calendarId) {
+                                formData.googleCalendarId = calendarId;
+                            }
+                        }
                         
                         const response = await fetch('/api/clients', {
                             method: 'POST',
@@ -580,6 +681,11 @@
                         if (response.ok && result.success) {
                             showSuccess(result.message || 'Cliente adicionado com sucesso! ✅');
                             clientForm.reset();
+                            
+                            // Ocultar campo de calendário após reset
+                            document.getElementById('calendarSelectionField').style.display = 'none';
+                            document.getElementById('clientGoogleCalendar').value = '';
+                            
                             loadClients(); // Recarregar lista
                         } else {
                             showError(result.error || 'Erro ao adicionar cliente');
