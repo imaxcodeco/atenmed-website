@@ -87,6 +87,9 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
+// Trust proxy - necessário para AWS/Nginx (express-rate-limit precisa disso)
+app.set('trust proxy', true);
+
 // Rate limiting
 const limiter = rateLimit({
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutos
