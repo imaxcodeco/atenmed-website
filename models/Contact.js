@@ -240,3 +240,5 @@ contactSchema.statics.obterEstatisticas = function() {
 
 module.exports = mongoose.model('Contact', contactSchema);
 
+
+

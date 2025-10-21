@@ -19,16 +19,46 @@ const leadRoutes = require('./routes/leads');
 const contactRoutes = require('./routes/contact');
 const serviceRoutes = require('./routes/services');
 const adminRoutes = require('./routes/admin');
+const appointmentRoutes = require('./routes/appointments');
+const confirmationRoutes = require('./routes/confirmations');
+const waitlistRoutes = require('./routes/waitlist');
+const analyticsRoutes = require('./routes/analytics');
+const whatsappRoutes = require('./routes/whatsapp');
 
 // Importar middleware
 const errorHandler = require('./middleware/errorHandler');
 const notFound = require('./middleware/notFound');
+
+// Importar serviços
+const googleCalendarService = require('./services/googleCalendarService');
+const reminderService = require('./services/reminderService');
+const waitlistService = require('./services/waitlistService');
+const whatsappService = require('./services/whatsappService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Conectar ao banco de dados
 connectDB();
+
+// Inicializar Google Calendar Service
+googleCalendarService.initialize();
+
+// Inicializar WhatsApp Service
+whatsappService.initialize();
+logger.info('📱 WhatsApp Business Service inicializado');
+
+// Inicializar Reminder Service
+if (process.env.NODE_ENV === 'production' || process.env.ENABLE_REMINDERS === 'true') {
+    reminderService.start();
+    logger.info('🔔 Reminder Service habilitado');
+}
+
+// Inicializar Waitlist Service
+if (process.env.NODE_ENV === 'production' || process.env.ENABLE_WAITLIST === 'true') {
+    waitlistService.start();
+    logger.info('📋 Waitlist Service habilitado');
+}
 
 // Middleware de segurança
 app.use(helmet({
@@ -38,7 +68,7 @@ app.use(helmet({
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             imgSrc: ["'self'", "data:", "https:"],
-            scriptSrc: ["'self'"],
+            scriptSrc: ["'self'", "https://cdn.jsdelivr.net"],
             connectSrc: ["'self'"]
         }
     }
@@ -102,6 +132,8 @@ app.use('/site', express.static(path.join(__dirname, 'site')));
 app.use('/apps/whatsapp', express.static(path.join(__dirname, 'applications/whatsapp-automation')));
 app.use('/apps/cost-monitoring', express.static(path.join(__dirname, 'applications/cost-monitoring')));
 app.use('/apps/admin', express.static(path.join(__dirname, 'applications/admin-dashboard')));
+app.use('/apps/agendamento', express.static(path.join(__dirname, 'applications/smart-scheduling')));
+app.use('/apps/analytics', express.static(path.join(__dirname, 'applications/analytics-dashboard')));
 
 // Assets do site principal (compatibilidade)
 app.use('/assets', express.static(path.join(__dirname, 'site/assets')));
@@ -123,6 +155,138 @@ app.use('/api/leads', leadRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/appointments', appointmentRoutes);
+app.use('/api/confirmations', confirmationRoutes);
+app.use('/api/waitlist', waitlistRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/whatsapp', whatsappRoutes);
+
+// Rotas de autenticação do Google Calendar
+app.get('/api/auth/google', (req, res) => {
+    try {
+        const authUrl = googleCalendarService.getAuthUrl();
+        res.redirect(authUrl);
+    } catch (error) {
+        logger.error('Erro ao gerar URL de autenticação:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Erro ao iniciar autenticação com Google' 
+        });
+    }
+});
+
+app.get('/api/auth/google/callback', async (req, res) => {
+    try {
+        const { code } = req.query;
+        
+        if (!code) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Código de autorização não fornecido' 
+            });
+        }
+        
+        const tokens = await googleCalendarService.getTokenFromCode(code);
+        logger.info('✅ Autenticação com Google Calendar bem-sucedida');
+        
+        res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Autenticação Bem-sucedida</title>
+                <style>
+                    body { 
+                        font-family: Arial, sans-serif; 
+                        display: flex; 
+                        justify-content: center; 
+                        align-items: center; 
+                        height: 100vh; 
+                        margin: 0;
+                        background: linear-gradient(135deg, #45a7b1, #184354);
+                    }
+                    .success-box {
+                        background: white;
+                        padding: 3rem;
+                        border-radius: 10px;
+                        text-align: center;
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                    }
+                    .success-icon {
+                        font-size: 4rem;
+                        margin-bottom: 1rem;
+                    }
+                    h1 { color: #45a7b1; margin-bottom: 1rem; }
+                    p { color: #64748b; margin-bottom: 2rem; }
+                    a { 
+                        display: inline-block;
+                        background: #45a7b1; 
+                        color: white; 
+                        padding: 1rem 2rem; 
+                        text-decoration: none;
+                        border-radius: 5px;
+                        font-weight: bold;
+                    }
+                    a:hover { background: #184354; }
+                </style>
+            </head>
+            <body>
+                <div class="success-box">
+                    <div class="success-icon">✅</div>
+                    <h1>Autenticação Bem-sucedida!</h1>
+                    <p>O AtenMed está agora conectado ao Google Calendar.<br>
+                    Você pode fechar esta janela e voltar ao sistema.</p>
+                    <a href="/agendamento">Voltar ao Sistema</a>
+                </div>
+            </body>
+            </html>
+        `);
+        
+    } catch (error) {
+        logger.error('Erro no callback do Google:', error);
+        res.status(500).send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Erro de Autenticação</title>
+                <style>
+                    body { 
+                        font-family: Arial, sans-serif; 
+                        display: flex; 
+                        justify-content: center; 
+                        align-items: center; 
+                        height: 100vh; 
+                        margin: 0;
+                        background: #fee2e2;
+                    }
+                    .error-box {
+                        background: white;
+                        padding: 3rem;
+                        border-radius: 10px;
+                        text-align: center;
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                    }
+                    h1 { color: #dc2626; margin-bottom: 1rem; }
+                    p { color: #64748b; }
+                </style>
+            </head>
+            <body>
+                <div class="error-box">
+                    <h1>❌ Erro na Autenticação</h1>
+                    <p>Ocorreu um erro ao conectar com o Google Calendar.<br>
+                    Por favor, tente novamente.</p>
+                </div>
+            </body>
+            </html>
+        `);
+    }
+});
+
+app.get('/api/auth/google/status', (req, res) => {
+    res.json({
+        success: true,
+        authenticated: googleCalendarService.isAuthenticated()
+    });
+});
 
 // Rotas específicas para aplicações
 app.get('/whatsapp', (req, res) => {
@@ -135,6 +299,14 @@ app.get('/cost-monitoring', (req, res) => {
 
 app.get('/dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'applications/admin-dashboard/dashboard.html'));
+});
+
+app.get('/agendamento', (req, res) => {
+    res.sendFile(path.join(__dirname, 'applications/smart-scheduling/index.html'));
+});
+
+app.get('/analytics', (req, res) => {
+    res.sendFile(path.join(__dirname, 'applications/analytics-dashboard/index.html'));
 });
 
 // Rota para servir o site principal
