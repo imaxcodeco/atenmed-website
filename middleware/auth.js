@@ -203,6 +203,7 @@ const selfOrAdmin = (req, res, next) => {
 module.exports = {
     authenticateToken,
     authorize,
+    authorizeRoles: authorize, // Alias para compatibilidade
     requirePermission,
     userRateLimit,
     logActivity,

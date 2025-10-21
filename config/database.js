@@ -13,12 +13,10 @@ const connectDB = async () => {
         }
         
         const options = {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
+            // useNewUrlParser e useUnifiedTopology removidos - deprecated desde Node.js Driver 4.0.0
             maxPoolSize: 10, // Manter até 10 conexões no pool
             serverSelectionTimeoutMS: 5000, // Manter tentando por 5 segundos
             socketTimeoutMS: 45000, // Fechar sockets após 45 segundos de inatividade
-            // bufferMaxEntries removido - não suportado na versão atual
             bufferCommands: false, // Desabilitar mongoose buffering
         };
 
@@ -48,7 +46,9 @@ const connectDB = async () => {
 
     } catch (error) {
         logger.error('Erro ao conectar com MongoDB:', error);
-        process.exit(1);
+        logger.warn('⚠️ Continuando sem banco de dados - algumas funcionalidades podem não funcionar');
+        // Não fazer exit - deixar o servidor rodar mesmo sem DB
+        // process.exit(1);
     }
 };
 

@@ -76,7 +76,7 @@ const clinicSchema = new mongoose.Schema({
 });
 
 // Índices para performance
-clinicSchema.index({ name: 1 });
+// name já tem unique: true (índice automático)
 clinicSchema.index({ active: 1 });
 
 // Virtual para contar especialidades
