@@ -144,8 +144,7 @@ const clientSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
-// Índices para performance
-clientSchema.index({ whatsapp: 1 }, { unique: true });
+// Índices para performance (não duplicar índices que já estão com unique: true no schema)
 clientSchema.index({ status: 1 });
 clientSchema.index({ 'applications.automacaoAtendimento': 1 });
 clientSchema.index({ 'applications.agendamentoInteligente': 1 });
