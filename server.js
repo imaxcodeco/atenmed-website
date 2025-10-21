@@ -312,7 +312,20 @@ app.get('/analytics', (req, res) => {
     res.sendFile(path.join(__dirname, 'applications/analytics-dashboard/index.html'));
 });
 
-// Rota para servir o site principal
+// Rotas para páginas do site principal
+app.get('/sobre', (req, res) => {
+    res.sendFile(path.join(__dirname, 'site/sobre.html'));
+});
+
+app.get('/servicos', (req, res) => {
+    res.sendFile(path.join(__dirname, 'site/servicos.html'));
+});
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'site/login.html'));
+});
+
+// Rota para servir o site principal (catch-all deve vir por último)
 app.get('*', (req, res) => {
     // Se for uma rota da API, retornar 404
     if (req.path.startsWith('/api/')) {
