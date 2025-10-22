@@ -38,7 +38,7 @@ echo "📦 Configurando Nginx..."
 sudo tee /etc/nginx/sites-available/atenmed > /dev/null <<EOF
 server {
     listen 80;
-    server_name _;
+    server_name atenmed.com.br www.atenmed.com.br;
 
     location / {
         proxy_pass http://localhost:3000;
@@ -79,13 +79,14 @@ echo "📦 Configurando variáveis de ambiente..."
 cat > .env <<EOF
 NODE_ENV=production
 PORT=3000
+APP_URL=https://atenmed.com.br
 MONGODB_URI=mongodb://localhost:27017/atenmed
 JWT_SECRET=atenmed_jwt_secret_production_$(date +%s)
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
-EMAIL_USER=seu_email@gmail.com
+EMAIL_USER=contato@atenmed.com.br
 EMAIL_PASS=sua_senha_app
-CORS_ORIGIN=http://localhost:3000
+CORS_ORIGIN=https://atenmed.com.br,https://www.atenmed.com.br
 EOF
 
 # Start application with PM2

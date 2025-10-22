@@ -424,11 +424,12 @@ app.use(errorHandler);
 
 // Iniciar servidor
 const server = app.listen(PORT, () => {
+    const BASE_URL = process.env.APP_URL || `http://localhost:${PORT}`;
     logger.info(`🚀 Servidor AtenMed rodando na porta ${PORT}`);
     logger.info(`📊 Ambiente: ${process.env.NODE_ENV}`);
-    logger.info(`🌐 Health check: http://localhost:${PORT}/health`);
-    logger.info(`📱 Frontend: http://localhost:${PORT}`);
-    logger.info(`🔗 API: http://localhost:${PORT}/api`);
+    logger.info(`🌐 Health check: ${BASE_URL}/health`);
+    logger.info(`📱 Frontend: ${BASE_URL}`);
+    logger.info(`🔗 API: ${BASE_URL}/api`);
 });
 
 // Graceful shutdown

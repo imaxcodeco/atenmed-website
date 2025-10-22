@@ -22,10 +22,11 @@ class GoogleCalendarService {
                 return false;
             }
 
+            const appBaseUrl = process.env.APP_URL || 'http://localhost:3000';
             this.oauth2Client = new google.auth.OAuth2(
                 process.env.GOOGLE_CLIENT_ID,
                 process.env.GOOGLE_CLIENT_SECRET,
-                process.env.GOOGLE_REDIRECT_URL || 'http://localhost:3000/api/auth/google/callback'
+                process.env.GOOGLE_REDIRECT_URL || `${appBaseUrl}/api/auth/google/callback`
             );
 
             this.initialized = true;
