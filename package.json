@@ -15,6 +15,8 @@
     "pm2:logs": "pm2 logs atenmed",
     "pm2:monit": "pm2 monit",
     "test": "jest",
+    "test-webhook": "node test-webhook.js",
+    "test-webhook-local": "node test-webhook-local.js",
     "build": "echo 'Build completed'",
     "init-db": "node scripts/init-db.js",
     "logs": "tail -f logs/combined.log",
@@ -52,7 +54,8 @@
     "pm2": "^5.3.0",
     "googleapis": "^159.0.0",
     "node-cron": "^3.0.3",
-    "axios": "^1.6.2"
+    "axios": "^1.6.2",
+    "chalk": "^4.1.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.2",

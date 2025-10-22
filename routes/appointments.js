@@ -32,7 +32,7 @@ const validateRequest = (req, res, next) => {
 // @access  Public
 router.get('/clinics', async (req, res) => {
     try {
-        const clinics = await Clinic.find({ active: true })
+        const clinics = await Clinic.find({ $or: [{ isActive: true }, { active: true }] })
             .select('name description address contact workingHours')
             .sort({ name: 1 });
 

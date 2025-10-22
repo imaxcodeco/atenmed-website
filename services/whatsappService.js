@@ -18,7 +18,7 @@ const aiService = require('./aiService');
 const WHATSAPP_API_URL = process.env.WHATSAPP_API_URL || 'https://graph.facebook.com/v18.0';
 const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID;
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
-const WHATSAPP_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'atenmed_verify_token';
+const WHATSAPP_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
 
 // Estado das conversas (em produção, usar Redis ou banco de dados)
 const conversationState = new Map();
@@ -94,6 +94,10 @@ function initialize() {
 
 // ===== WEBHOOK VERIFICATION =====
 function verifyWebhook(mode, token, challenge) {
+    if (!WHATSAPP_VERIFY_TOKEN) {
+        logger.warn('⚠️ WHATSAPP_VERIFY_TOKEN não configurado');
+        return null;
+    }
     if (mode === 'subscribe' && token === WHATSAPP_VERIFY_TOKEN) {
         logger.info('✅ WhatsApp webhook verificado com sucesso');
         return challenge;
@@ -597,11 +601,16 @@ async function sendAvailableTimeSlots(phoneNumber, session) {
         const calendarId = session.getData('calendarId');
         const selectedDate = session.getData('selectedDate');
 
+        // Normalizar data para YYYY-MM-DD
+        const dateStr = (selectedDate instanceof Date)
+            ? selectedDate.toISOString().slice(0, 10)
+            : selectedDate;
+
         // Buscar slots disponíveis via Google Calendar
         const availableSlots = await googleCalendarService.getAvailableSlots(
             calendarId,
-            selectedDate,
-            30 // 30 minutos por consulta
+            dateStr,
+            { slotDuration: 30 }
         );
 
         if (availableSlots.length === 0) {
@@ -647,10 +656,15 @@ async function handleTimeSelection(phoneNumber, messageText, session) {
         const calendarId = session.getData('calendarId');
         const selectedDate = session.getData('selectedDate');
 
+        // Normalizar data para YYYY-MM-DD
+        const dateStr = (selectedDate instanceof Date)
+            ? selectedDate.toISOString().slice(0, 10)
+            : selectedDate;
+
         const availableSlots = await googleCalendarService.getAvailableSlots(
             calendarId,
-            selectedDate,
-            30
+            dateStr,
+            { slotDuration: 30 }
         );
 
         const timeIndex = parseInt(messageText) - 1;
@@ -762,13 +776,15 @@ async function createAppointment(phoneNumber, session) {
 
         // Criar agendamento no banco
         const appointment = await Appointment.create({
-            patientName: session.getData('patientName'),
-            patientPhone: phoneNumber,
+            patient: {
+                name: session.getData('patientName'),
+                phone: phoneNumber
+            },
             doctor: session.getData('doctorId'),
             specialty: session.getData('specialtyId'),
             clinic: session.getData('clinicId'),
-            startTime,
-            endTime,
+            scheduledDate: selectedDate,
+            scheduledTime: selectedTime,
             status: 'confirmado',
             source: 'whatsapp',
             confirmations: {
@@ -839,16 +855,16 @@ async function handleAppointmentCheck(phoneNumber, messageText, session) {
         
         const appointments = await Appointment.find({
             $or: [
-                { patientPhone: phoneNumber },
+                { 'patient.phone': phoneNumber },
                 { _id: messageText }
             ],
-            startTime: { $gte: new Date() },
+            scheduledDate: { $gte: new Date() },
             status: { $in: ['confirmado', 'pendente'] }
         })
         .populate('doctor', 'name')
         .populate('specialty', 'name')
         .populate('clinic', 'name')
-        .sort({ startTime: 1 });
+        .sort({ scheduledDate: 1, scheduledTime: 1 });
 
         if (appointments.length === 0) {
             const notFoundMessages = [
@@ -871,7 +887,7 @@ async function handleAppointmentCheck(phoneNumber, messageText, session) {
         
         appointments.forEach((appt, index) => {
             message += `${index + 1}️⃣ *Código:* ${appt._id.toString().slice(-6).toUpperCase()}\n`;
-            message += `   📅 ${new Date(appt.startTime).toLocaleDateString('pt-BR')} às ${new Date(appt.startTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}\n`;
+            message += `   📅 ${new Date(appt.scheduledDate).toLocaleDateString('pt-BR')} às ${appt.scheduledTime}\n`;
             message += `   👨‍⚕️ ${appt.doctor.name}\n`;
             message += `   🩺 ${appt.specialty.name}\n`;
             message += `   📍 ${appt.clinic.name}\n\n`;
@@ -922,7 +938,7 @@ async function sendMessage(to, text) {
 
 // ===== ENVIAR LEMBRETE =====
 async function sendReminder(phoneNumber, appointment) {
-    const appointmentDate = new Date(appointment.startTime);
+    const appointmentDate = new Date(appointment.scheduledDate + 'T' + appointment.scheduledTime);
     const now = new Date();
     const hoursUntil = Math.round((appointmentDate - now) / (1000 * 60 * 60));
     
@@ -951,8 +967,8 @@ async function sendReminder(phoneNumber, appointment) {
 
 Sua consulta ${timeText}! 📅
 
-👤 *${appointment.patientName}*
-📅 *${appointmentDate.toLocaleDateString('pt-BR')}* às *${appointmentDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}*
+👤 *${appointment.patient.name}*
+📅 *${appointmentDate.toLocaleDateString('pt-BR')}* às *${appointment.scheduledTime}*
 👨‍⚕️ Com *${appointment.doctor?.name}*
 🏥 Na *${appointment.clinic?.name}*
 

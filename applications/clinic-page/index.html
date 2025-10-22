@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="clinic-title">Agendar Consulta</title>
+    
+    <!-- SEO -->
+    <meta name="description" id="clinic-description" content="Agende sua consulta online de forma rápida e fácil">
+    <meta name="keywords" id="clinic-keywords" content="agendar consulta, médico, clínica">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" id="og-title" content="Agendar Consulta">
+    <meta property="og:description" id="og-description" content="Agende sua consulta online">
+    <meta property="og:image" id="og-image" content="/assets/images/default-clinic.jpg">
+    <meta property="og:type" content="website">
+    
+    <!-- Favicon -->
+    <link rel="icon" id="clinic-favicon" type="image/png" href="/assets/images/logo-transp.png">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="clinic-page.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Loading -->
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Carregando...</p>
+    </div>
+
+    <!-- Header da Clínica -->
+    <header class="clinic-header" id="clinic-header">
+        <div class="header-overlay"></div>
+        <div class="container">
+            <div class="clinic-branding">
+                <img id="clinic-logo" src="" alt="Logo" class="clinic-logo">
+                <div class="clinic-info">
+                    <h1 id="clinic-name">Carregando...</h1>
+                    <p id="clinic-slogan" class="clinic-slogan"></p>
+                    <div class="clinic-rating">
+                        <span class="stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </span>
+                        <span id="clinic-rating-count" class="rating-count">(0 avaliações)</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="clinic-contact-header">
+                <a href="#agendar" class="btn-primary-header">
+                    <i class="fas fa-calendar-check"></i>
+                    Agendar Consulta
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Quick Info Bar -->
+    <section class="quick-info">
+        <div class="container">
+            <div class="info-grid">
+                <div class="info-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <div>
+                        <span class="label">Endereço</span>
+                        <span id="clinic-address" class="value">-</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-phone"></i>
+                    <div>
+                        <span class="label">Telefone</span>
+                        <span id="clinic-phone" class="value">-</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-clock"></i>
+                    <div>
+                        <span class="label">Horário</span>
+                        <span id="clinic-hours" class="value">-</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-whatsapp"></i>
+                    <div>
+                        <span class="label">WhatsApp</span>
+                        <a id="clinic-whatsapp" class="value whatsapp-link" href="#" target="_blank">-</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="content-grid">
+                
+                <!-- Left Column - Informações -->
+                <aside class="clinic-sidebar">
+                    
+                    <!-- Sobre a Clínica -->
+                    <section class="info-card">
+                        <h2><i class="fas fa-info-circle"></i> Sobre a Clínica</h2>
+                        <div id="clinic-about" class="clinic-description">
+                            Carregando informações...
+                        </div>
+                    </section>
+
+                    <!-- Especialidades -->
+                    <section class="info-card">
+                        <h2><i class="fas fa-stethoscope"></i> Especialidades</h2>
+                        <div id="specialties-list" class="specialties-grid">
+                            <!-- Preenchido via JS -->
+                        </div>
+                    </section>
+
+                    <!-- Médicos -->
+                    <section class="info-card">
+                        <h2><i class="fas fa-user-md"></i> Nossos Profissionais</h2>
+                        <div id="doctors-list" class="doctors-list">
+                            <!-- Preenchido via JS -->
+                        </div>
+                    </section>
+
+                    <!-- Convênios -->
+                    <section class="info-card" id="insurance-section" style="display: none;">
+                        <h2><i class="fas fa-hospital"></i> Convênios Aceitos</h2>
+                        <div id="insurance-list" class="insurance-grid">
+                            <!-- Preenchido via JS -->
+                        </div>
+                    </section>
+
+                    <!-- Mapa -->
+                    <section class="info-card">
+                        <h2><i class="fas fa-map"></i> Localização</h2>
+                        <div id="clinic-map" class="map-container">
+                            <iframe id="map-iframe" 
+                                    width="100%" 
+                                    height="300" 
+                                    frameborder="0" 
+                                    style="border:0; border-radius: 8px;" 
+                                    allowfullscreen>
+                            </iframe>
+                        </div>
+                    </section>
+
+                </aside>
+
+                <!-- Right Column - Agendamento -->
+                <section class="booking-section" id="agendar">
+                    
+                    <div class="booking-card">
+                        <div class="booking-header">
+                            <h2><i class="fas fa-calendar-alt"></i> Agendar Consulta</h2>
+                            <p>Escolha a especialidade, o profissional e o melhor horário para você</p>
+                        </div>
+
+                        <!-- Step 1: Especialidade -->
+                        <div class="booking-step" id="step-specialty">
+                            <h3 class="step-title">
+                                <span class="step-number">1</span>
+                                Escolha a Especialidade
+                            </h3>
+                            <div id="specialty-options" class="option-grid">
+                                <!-- Preenchido via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Médico -->
+                        <div class="booking-step" id="step-doctor" style="display: none;">
+                            <h3 class="step-title">
+                                <span class="step-number">2</span>
+                                Escolha o Profissional
+                                <button class="btn-back" onclick="bookingApp.backToStep(1)">
+                                    <i class="fas fa-arrow-left"></i> Voltar
+                                </button>
+                            </h3>
+                            <div id="doctor-options" class="doctor-options">
+                                <!-- Preenchido via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Data -->
+                        <div class="booking-step" id="step-date" style="display: none;">
+                            <h3 class="step-title">
+                                <span class="step-number">3</span>
+                                Escolha a Data
+                                <button class="btn-back" onclick="bookingApp.backToStep(2)">
+                                    <i class="fas fa-arrow-left"></i> Voltar
+                                </button>
+                            </h3>
+                            <div class="calendar-container">
+                                <div class="calendar-header">
+                                    <button class="btn-icon" onclick="bookingApp.previousMonth()">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    <h4 id="calendar-month">Carregando...</h4>
+                                    <button class="btn-icon" onclick="bookingApp.nextMonth()">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                                <div id="calendar" class="calendar">
+                                    <!-- Preenchido via JS -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Horário -->
+                        <div class="booking-step" id="step-time" style="display: none;">
+                            <h3 class="step-title">
+                                <span class="step-number">4</span>
+                                Escolha o Horário
+                                <button class="btn-back" onclick="bookingApp.backToStep(3)">
+                                    <i class="fas fa-arrow-left"></i> Voltar
+                                </button>
+                            </h3>
+                            <div class="selected-info">
+                                <p><strong>Data:</strong> <span id="selected-date-display"></span></p>
+                            </div>
+                            <div id="time-slots" class="time-slots-grid">
+                                <!-- Preenchido via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Step 5: Dados Pessoais -->
+                        <div class="booking-step" id="step-personal" style="display: none;">
+                            <h3 class="step-title">
+                                <span class="step-number">5</span>
+                                Seus Dados
+                                <button class="btn-back" onclick="bookingApp.backToStep(4)">
+                                    <i class="fas fa-arrow-left"></i> Voltar
+                                </button>
+                            </h3>
+                            
+                            <form id="patient-form" class="patient-form">
+                                <div class="form-group">
+                                    <label for="patient-name">
+                                        <i class="fas fa-user"></i> Nome Completo *
+                                    </label>
+                                    <input type="text" id="patient-name" required placeholder="Seu nome completo">
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="patient-email">
+                                            <i class="fas fa-envelope"></i> Email
+                                        </label>
+                                        <input type="email" id="patient-email" placeholder="seu@email.com">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="patient-phone">
+                                            <i class="fas fa-phone"></i> Telefone/WhatsApp *
+                                        </label>
+                                        <input type="tel" id="patient-phone" required placeholder="(11) 99999-9999">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="patient-notes">
+                                        <i class="fas fa-comment"></i> Observações (opcional)
+                                    </label>
+                                    <textarea id="patient-notes" rows="3" placeholder="Alguma informação adicional?"></textarea>
+                                </div>
+
+                                <div class="booking-summary">
+                                    <h4><i class="fas fa-clipboard-check"></i> Resumo do Agendamento</h4>
+                                    <div class="summary-grid">
+                                        <div class="summary-item">
+                                            <span class="label">Especialidade:</span>
+                                            <span id="summary-specialty" class="value">-</span>
+                                        </div>
+                                        <div class="summary-item">
+                                            <span class="label">Profissional:</span>
+                                            <span id="summary-doctor" class="value">-</span>
+                                        </div>
+                                        <div class="summary-item">
+                                            <span class="label">Data:</span>
+                                            <span id="summary-date" class="value">-</span>
+                                        </div>
+                                        <div class="summary-item">
+                                            <span class="label">Horário:</span>
+                                            <span id="summary-time" class="value">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn-confirm-booking">
+                                    <i class="fas fa-check-circle"></i>
+                                    Confirmar Agendamento
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Step 6: Confirmação -->
+                        <div class="booking-step" id="step-confirmation" style="display: none;">
+                            <div class="confirmation-success">
+                                <div class="success-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <h3>Agendamento Confirmado!</h3>
+                                <p>Sua consulta foi agendada com sucesso.</p>
+                                
+                                <div class="confirmation-details">
+                                    <div class="detail-row">
+                                        <i class="fas fa-calendar"></i>
+                                        <span id="confirm-date"></span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <i class="fas fa-clock"></i>
+                                        <span id="confirm-time"></span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <i class="fas fa-user-md"></i>
+                                        <span id="confirm-doctor"></span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <span id="confirm-address"></span>
+                                    </div>
+                                </div>
+
+                                <div class="confirmation-actions">
+                                    <button onclick="bookingApp.addToCalendar()" class="btn-secondary">
+                                        <i class="fas fa-calendar-plus"></i>
+                                        Adicionar à Agenda
+                                    </button>
+                                    <button onclick="bookingApp.shareWhatsApp()" class="btn-whatsapp">
+                                        <i class="fab fa-whatsapp"></i>
+                                        Compartilhar
+                                    </button>
+                                </div>
+
+                                <p class="confirmation-note">
+                                    <i class="fas fa-info-circle"></i>
+                                    Você receberá uma confirmação por WhatsApp e email com todos os detalhes.
+                                </p>
+
+                                <button onclick="location.reload()" class="btn-new-booking">
+                                    Fazer Novo Agendamento
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="clinic-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Contato</h4>
+                    <p id="footer-address"></p>
+                    <p id="footer-phone"></p>
+                    <p id="footer-email"></p>
+                </div>
+                <div class="footer-section">
+                    <h4>Horário de Atendimento</h4>
+                    <p id="footer-hours"></p>
+                </div>
+                <div class="footer-section">
+                    <h4>Redes Sociais</h4>
+                    <div class="social-links" id="social-links">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© <span id="current-year"></span> <span id="footer-clinic-name"></span> - Todos os direitos reservados</p>
+                <p class="powered-by">
+                    Powered by <a href="https://atenmed.com.br" target="_blank">AtenMed</a>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="clinic-page.js"></script>
+</body>
+</html>
+

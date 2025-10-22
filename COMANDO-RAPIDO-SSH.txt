@@ -1,0 +1,177 @@
+===============================================
+🚀 CONFIGURAÇÃO RÁPIDA DO WEBHOOK WHATSAPP
+===============================================
+
+PASSO 1: CONECTAR AO SERVIDOR
+------------------------------
+ssh -i "C:\Users\Ian_1\Documents\AtenMed\site-atenmed.pem" ubuntu@3.129.206.231
+
+
+PASSO 2: IR PARA A PASTA DO PROJETO
+------------------------------------
+cd /var/www/atenmed
+# ou
+cd ~/AtenMed/Website
+
+
+PASSO 3: CONFIGURAÇÃO AUTOMÁTICA (copie e cole tudo de uma vez)
+----------------------------------------------------------------
+chmod +x scripts/setup-webhook-aws.sh && ./scripts/setup-webhook-aws.sh
+
+
+PASSO 3.1: ALTERNATIVA - CONFIGURAÇÃO MANUAL RÁPIDA
+----------------------------------------------------
+Se o script acima não funcionar, use este comando (cole tudo de uma vez):
+
+cat >> .env << 'EOF'
+
+# WhatsApp Webhook Configuration
+WHATSAPP_VERIFY_TOKEN=atenmed_webhook_secure_2024
+WHATSAPP_PHONE_ID=SEU_PHONE_ID_AQUI
+WHATSAPP_TOKEN=SEU_TOKEN_AQUI
+WHATSAPP_API_URL=https://graph.facebook.com/v18.0
+EOF
+
+Depois edite e coloque os valores corretos:
+nano .env
+
+
+PASSO 4: REINICIAR O SERVIDOR
+------------------------------
+pm2 restart atenmed
+
+
+PASSO 5: TESTAR O WEBHOOK
+--------------------------
+curl "http://localhost:3000/api/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=atenmed_webhook_secure_2024&hub.challenge=teste123"
+
+✅ Deve retornar: teste123
+
+
+PASSO 6: VERIFICAR LOGS
+------------------------
+pm2 logs atenmed --lines 30
+
+
+PASSO 7: TESTAR EXTERNAMENTE
+-----------------------------
+# Com domínio:
+curl "https://atenmed.com.br/api/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=atenmed_webhook_secure_2024&hub.challenge=OK"
+
+# Com IP (se não tiver domínio):
+curl "https://3.129.206.231/api/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=atenmed_webhook_secure_2024&hub.challenge=OK"
+
+
+PASSO 8: CONFIGURAR NO META DEVELOPER
+--------------------------------------
+Acesse: https://developers.facebook.com/apps/
+
+URL de callback: https://atenmed.com.br/api/whatsapp/webhook
+Verificar token: atenmed_webhook_secure_2024
+
+
+===============================================
+COMANDOS ÚTEIS
+===============================================
+
+# Ver configuração atual
+curl http://localhost:3000/api/whatsapp/debug-webhook
+
+# Ver logs
+pm2 logs atenmed
+
+# Status do servidor
+pm2 status
+
+# Reiniciar servidor
+pm2 restart atenmed
+
+# Ver o token configurado
+grep WHATSAPP_VERIFY_TOKEN .env
+
+# Editar .env
+nano .env
+
+# Ver se HTTPS está funcionando
+sudo systemctl status nginx
+sudo ls -la /etc/letsencrypt/live/
+
+
+===============================================
+TOKENS NECESSÁRIOS (META DEVELOPER)
+===============================================
+
+Acesse: https://developers.facebook.com/apps/
+
+1. WHATSAPP_PHONE_ID
+   WhatsApp > Configurações da API > Phone Number ID
+
+2. WHATSAPP_TOKEN  
+   WhatsApp > Configurações da API > Token de acesso
+
+3. WHATSAPP_VERIFY_TOKEN
+   Você escolhe: atenmed_webhook_secure_2024
+
+
+===============================================
+TROUBLESHOOTING
+===============================================
+
+❌ Erro: Token inválido
+→ Verifique se o token no .env é IGUAL ao do Meta
+→ grep WHATSAPP_VERIFY_TOKEN .env
+
+❌ Erro: Connection refused
+→ Verifique se o servidor está rodando
+→ pm2 status
+
+❌ Erro: SSL required
+→ Configure HTTPS com certbot
+→ sudo certbot --nginx -d atenmed.com.br
+
+❌ Webhook não responde
+→ Verifique Nginx
+→ sudo nginx -t
+→ sudo systemctl status nginx
+
+
+===============================================
+CHECKLIST FINAL
+===============================================
+
+✓ Servidor rodando (pm2 status)
+✓ .env configurado com WHATSAPP_VERIFY_TOKEN
+✓ Token no .env = Token no Meta
+✓ HTTPS/SSL configurado
+✓ Porta 443 aberta
+✓ Teste local funcionou (curl localhost:3000...)
+✓ Teste externo funcionou (curl https://...)
+✓ Configurado no Meta Developer
+
+
+===============================================
+CONFIGURAR NO META DEVELOPER
+===============================================
+
+URL:     https://atenmed.com.br/api/whatsapp/webhook
+Token:   atenmed_webhook_secure_2024
+
+✅ Clique em "Verificar e salvar"
+
+
+===============================================
+💡 DICA IMPORTANTE
+===============================================
+
+O token DEVE ser EXATAMENTE IGUAL no .env e no Meta!
+
+Para garantir:
+1. Copie do .env:
+   grep WHATSAPP_VERIFY_TOKEN .env
+
+2. Cole no Meta Developer (campo "Verificar token")
+
+3. Salve!
+
+
+

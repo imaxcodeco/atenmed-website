@@ -17,9 +17,15 @@ const logger = require('../utils/logger');
  */
 router.get('/webhook', (req, res) => {
     try {
-        const mode = req.query['hub.mode'];
-        const token = req.query['hub.verify_token'];
-        const challenge = req.query['hub.challenge'];
+        // Parse URL diretamente para ignorar sanitização
+        const url = require('url');
+        const parsed = url.parse(req.originalUrl, true);
+        const qs = parsed.query;
+        const hub = qs.hub || {};
+
+        const mode = qs['hub.mode'] || hub.mode || qs.mode;
+        const token = qs['hub.verify_token'] || hub.verify_token || qs.token;
+        const challenge = qs['hub.challenge'] || hub.challenge || qs.challenge;
 
         // LOG DETALHADO PARA DEBUG
         logger.info('📱 Tentativa de verificação de webhook WhatsApp');

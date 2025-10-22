@@ -25,7 +25,7 @@ class GoogleCalendarService {
             this.oauth2Client = new google.auth.OAuth2(
                 process.env.GOOGLE_CLIENT_ID,
                 process.env.GOOGLE_CLIENT_SECRET,
-                process.env.GOOGLE_REDIRECT_URL || 'http://localhost:3000/auth/google/callback'
+                process.env.GOOGLE_REDIRECT_URL || 'http://localhost:3000/api/auth/google/callback'
             );
 
             this.initialized = true;
@@ -120,9 +120,11 @@ class GoogleCalendarService {
                 timeZone = 'America/Sao_Paulo'
             } = options;
 
+            // Normalizar data
+            const dateStr = (date instanceof Date) ? date.toISOString().slice(0,10) : date;
             // Criar timestamps para início e fim do dia
-            const timeMin = new Date(`${date}T00:00:00-03:00`);
-            const timeMax = new Date(`${date}T23:59:59-03:00`);
+            const timeMin = new Date(`${dateStr}T00:00:00-03:00`);
+            const timeMax = new Date(`${dateStr}T23:59:59-03:00`);
 
             // Buscar períodos ocupados usando Freebusy API
             const response = await calendar.freebusy.query({
@@ -267,6 +269,56 @@ Sistema de Agendamento AtenMed
 
         } catch (error) {
             logger.error('Erro ao criar evento no Google Calendar:', error);
+            throw new Error(`Erro ao criar evento: ${error.message}`);
+        }
+    }
+
+    /**
+     * Compatibilidade: criar evento a partir de startTime/endTime
+     * @param {string} calendarId
+     * @param {object} data { summary, description, startTime: Date, endTime: Date, attendees: [] }
+     */
+    async createCalendarEvent(calendarId, data) {
+        try {
+            const calendar = this.getCalendar();
+
+            const event = {
+                summary: data.summary || 'Consulta',
+                description: data.description || '',
+                start: {
+                    dateTime: new Date(data.startTime).toISOString(),
+                    timeZone: 'America/Sao_Paulo'
+                },
+                end: {
+                    dateTime: new Date(data.endTime).toISOString(),
+                    timeZone: 'America/Sao_Paulo'
+                },
+                attendees: Array.isArray(data.attendees) ? data.attendees : [],
+                reminders: {
+                    useDefault: false,
+                    overrides: [
+                        { method: 'email', minutes: 24 * 60 },
+                        { method: 'popup', minutes: 60 }
+                    ]
+                },
+                colorId: '9'
+            };
+
+            const createdEvent = await calendar.events.insert({
+                calendarId,
+                resource: event,
+                sendUpdates: 'none'
+            });
+
+            logger.info(`✅ Evento criado no Google Calendar: ${createdEvent.data.id}`);
+            return {
+                eventId: createdEvent.data.id,
+                htmlLink: createdEvent.data.htmlLink,
+                status: createdEvent.data.status,
+                created: createdEvent.data.created
+            };
+        } catch (error) {
+            logger.error('Erro ao criar evento (compat):', error);
             throw new Error(`Erro ao criar evento: ${error.message}`);
         }
     }

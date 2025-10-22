@@ -25,6 +25,7 @@ const waitlistRoutes = require('./routes/waitlist');
 const analyticsRoutes = require('./routes/analytics');
 const whatsappRoutes = require('./routes/whatsapp');
 const clientRoutes = require('./routes/clients');
+const clinicRoutes = require('./routes/clinics');
 
 // Importar middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -66,8 +67,19 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            styleSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                "https://fonts.googleapis.com",
+                "https://cdnjs.cloudflare.com",
+                "https://cdn.jsdelivr.net"
+            ],
+            fontSrc: [
+                "'self'",
+                "https://fonts.gstatic.com",
+                "https://cdnjs.cloudflare.com",
+                "https://cdn.jsdelivr.net"
+            ],
             imgSrc: ["'self'", "data:", "https:"],
             scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
             connectSrc: ["'self'"]
@@ -77,12 +89,22 @@ app.use(helmet({
 
 // CORS configuration
 const corsOptions = {
-    origin: process.env.CORS_ORIGIN?.split(',') || [
-        'https://atenmed.com.br',
-        'https://www.atenmed.com.br',
-        'http://localhost:3000', // Para desenvolvimento local
-        'http://localhost:8000'  // Para desenvolvimento local
-    ],
+    origin: (origin, callback) => {
+        // Permitir webhooks do WhatsApp sem restrição de origem
+        const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || [
+            'https://atenmed.com.br',
+            'https://www.atenmed.com.br',
+            'http://localhost:3000',
+            'http://localhost:8000'
+        ];
+        
+        // Permitir sem origem (webhooks, curl, etc) ou origens permitidas
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(null, true); // Permitir todas por enquanto (webhook precisa)
+        }
+    },
     credentials: true,
     optionsSuccessStatus: 200
 };
@@ -91,7 +113,7 @@ app.use(cors(corsOptions));
 // Trust proxy - necessário para AWS/Nginx (express-rate-limit precisa disso)
 app.set('trust proxy', true);
 
-// Rate limiting
+// Rate limiting (EXCETO para webhooks do WhatsApp)
 const limiter = rateLimit({
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutos
     max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limite de 100 requests por IP
@@ -100,7 +122,9 @@ const limiter = rateLimit({
         retryAfter: 900
     },
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
+    // Pular rate limiting para webhooks do WhatsApp
+    skip: (req) => req.path.startsWith('/api/whatsapp/webhook') || req.originalUrl.startsWith('/api/whatsapp/webhook')
 });
 app.use('/api/', limiter);
 
@@ -108,9 +132,14 @@ app.use('/api/', limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Sanitização de dados
+// Sanitização de dados (EXCETO para webhooks do WhatsApp)
 app.use(mongoSanitize());
 app.use((req, res, next) => {
+    // Não sanitizar webhooks do WhatsApp (Meta precisa dos dados exatos)
+    if (req.path.startsWith('/api/whatsapp/webhook')) {
+        return next();
+    }
+    
     if (req.body) {
         req.body = JSON.parse(xss(JSON.stringify(req.body)));
     }
@@ -138,6 +167,7 @@ app.use('/apps/cost-monitoring', express.static(path.join(__dirname, 'applicatio
 app.use('/apps/admin', express.static(path.join(__dirname, 'applications/admin-dashboard')));
 app.use('/apps/agendamento', express.static(path.join(__dirname, 'applications/smart-scheduling')));
 app.use('/apps/analytics', express.static(path.join(__dirname, 'applications/analytics-dashboard')));
+app.use('/apps/clinic-page', express.static(path.join(__dirname, 'applications/clinic-page')));
 
 // Assets do site principal (compatibilidade)
 app.use('/assets', express.static(path.join(__dirname, 'site/assets')));
@@ -165,6 +195,7 @@ app.use('/api/waitlist', waitlistRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/clients', clientRoutes);
+app.use('/api/clinics', clinicRoutes);
 
 // Rotas de autenticação do Google Calendar
 app.get('/api/auth/google', (req, res) => {
@@ -362,6 +393,11 @@ app.get(['/login', '/login.html'], (req, res) => {
 
 app.get(['/index', '/index.html'], (req, res) => {
     res.sendFile(path.join(__dirname, 'site/index.html'));
+});
+
+// Página pública de clínica
+app.get('/clinica/:slug', (req, res) => {
+    res.sendFile(path.join(__dirname, 'applications/clinic-page/index.html'));
 });
 
 // Rota para servir o site principal (catch-all deve vir por último)
