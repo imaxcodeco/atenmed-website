@@ -1449,26 +1449,35 @@ img[data-src].loaded {
 
 /* ===== BOTÃO DE LOGIN ===== */
 .nav-login {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    color: var(--text-white) !important;
-    padding: 0.5rem 1rem;
-    border-radius: 25px;
+    color: var(--primary-color) !important;
+    padding: 0.5rem 0.75rem;
     font-weight: 600;
+    position: relative;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(69, 167, 177, 0.3);
-    border: 2px solid transparent;
+    background: transparent;
+}
+
+.nav-login::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--primary-color);
+    transition: width 0.3s ease;
 }
 
 .nav-login:hover {
-    background: linear-gradient(135deg, var(--primary-dark), var(--secondary-dark));
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(69, 167, 177, 0.4);
-    color: var(--text-white) !important;
+    color: var(--primary-dark) !important;
+}
+
+.nav-login:hover::after {
+    width: 100%;
 }
 
 .nav-login:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(69, 167, 177, 0.3);
+    transform: scale(0.98);
 }
 
 /* Estilo especial para mobile */
@@ -1477,7 +1486,7 @@ img[data-src].loaded {
         margin-top: 1rem;
         text-align: center;
         display: block;
-        width: 100%;
-        padding: 0.75rem 1rem;
+        width: auto;
+        padding: 0.75rem 0;
     }
 }
