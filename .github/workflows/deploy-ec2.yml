@@ -65,6 +65,20 @@ jobs:
             pm2 restart atenmed --update-env || pm2 start ecosystem.config.js --env production
             pm2 save
 
-            # Health check (fail workflow if unhealthy)
-            curl -fsS http://127.0.0.1:3000/health > /dev/null
+            # Wait for app to start (give it 10 seconds)
+            echo "Aguardando app inicializar..."
+            sleep 10
+
+            # Health check with retries
+            for i in 1 2 3 4 5; do
+              if curl -fsS http://127.0.0.1:3000/health > /dev/null 2>&1; then
+                echo "✅ Health check OK!"
+                exit 0
+              fi
+              echo "Tentativa $i falhou, aguardando..."
+              sleep 3
+            done
+            echo "❌ Health check falhou após 5 tentativas"
+            pm2 logs atenmed --lines 50 --nostream
+            exit 1
 
