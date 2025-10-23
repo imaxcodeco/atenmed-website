@@ -44,7 +44,13 @@ router.post('/', [
         .withMessage('Especialidade inválida'),
     body('interesse')
         .optional()
-        .isIn(['baixo', 'medio', 'alto'])
+        .custom(val => {
+            const allowed = ['baixo', 'medio', 'alto'];
+            if (Array.isArray(val)) {
+                return val.length > 0 && allowed.includes(val[0]);
+            }
+            return allowed.includes(val);
+        })
         .withMessage('Interesse deve ser: baixo, medio ou alto'),
     body('origem')
         .optional()
@@ -84,7 +90,7 @@ router.post('/', [
             email,
             telefone,
             especialidade,
-            interesse,
+            interesse: Array.isArray(interesse) ? (interesse[0] || 'medio') : interesse,
             origem,
             observacoes,
             ip: req.ip,
