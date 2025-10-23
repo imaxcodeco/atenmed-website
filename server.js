@@ -78,7 +78,9 @@ app.use(helmet({
                 "'self'",
                 "https://fonts.gstatic.com",
                 "https://cdnjs.cloudflare.com",
-                "https://cdn.jsdelivr.net"
+                "https://cdn.jsdelivr.net",
+                "https://ka-f.fontawesome.com",
+                "data:"
             ],
             imgSrc: ["'self'", "data:", "https:"],
             scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
