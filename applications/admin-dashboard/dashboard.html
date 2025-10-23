@@ -4,153 +4,175 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - AtenMed</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', Arial, sans-serif; background: #f8fafc; color: #1e293b; }
-        .header { background: linear-gradient(135deg, #45a7b1, #184354); color: white; padding: 1rem 0; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
-        .header-content { display: flex; justify-content: space-between; align-items: center; }
-        .logo { font-size: 1.5rem; font-weight: bold; }
-        .nav { display: flex; gap: 2rem; }
-        .nav a { color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 5px; transition: background 0.3s; }
-        .nav a:hover { background: rgba(255,255,255,0.1); }
-        
-        .main { padding: 2rem 0; }
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 2rem; }
-        .card { background: white; border-radius: 10px; padding: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .card h3 { color: #45a7b1; margin-bottom: 1rem; font-size: 1.2rem; }
-        .stat { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0; }
-        .stat:last-child { border-bottom: none; }
-        .stat-number { font-size: 1.5rem; font-weight: bold; color: #45a7b1; }
-        
-        .leads-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        .leads-table th, .leads-table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
-        .leads-table th { background: #f8fafc; font-weight: 600; color: #45a7b1; }
-        .leads-table tr:hover { background: #f8fafc; }
-        
-        .status-badge { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.875rem; font-weight: 500; }
-        .status-novo { background: #dbeafe; color: #1e40af; }
-        .status-contatado { background: #fef3c7; color: #d97706; }
-        .status-qualificado { background: #d1fae5; color: #059669; }
-        
-        .btn { padding: 0.5rem 1rem; border: none; border-radius: 5px; cursor: pointer; font-weight: 500; transition: all 0.3s; }
-        .btn-primary { background: #45a7b1; color: white; }
-        .btn-primary:hover { background: #3a8b94; }
-        .btn-secondary { background: #e2e8f0; color: #475569; }
-        .btn-secondary:hover { background: #cbd5e1; }
-        
-        .loading { text-align: center; padding: 2rem; color: #64748b; }
-        .error { background: #fee2e2; color: #dc2626; padding: 1rem; border-radius: 5px; margin: 1rem 0; }
-        .success { background: #d1fae5; color: #059669; padding: 1rem; border-radius: 5px; margin: 1rem 0; }
-        
-        @media (max-width: 768px) {
-            .header-content { flex-direction: column; gap: 1rem; }
-            .nav { flex-wrap: wrap; justify-content: center; }
-            .dashboard-grid { grid-template-columns: 1fr; }
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="dashboard.css" rel="stylesheet">
 </head>
 <body>
-    <header class="header">
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">🏥 AtenMed Dashboard</div>
-                <nav class="nav">
-                    <a href="#overview">Visão Geral</a>
-                    <a href="#clients">👥 Clientes</a>
-                    <a href="#leads">Leads</a>
-                    <a href="#contacts">Contatos</a>
-                    <a href="#settings">Configurações</a>
-                    <a href="#" onclick="logout()" style="color: #ef4444;">Sair</a>
-                </nav>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-hospital"></i>
+                    <span>AtenMed</span>
+                </div>
             </div>
-        </div>
-    </header>
+            <nav class="sidebar-nav">
+                <a href="#overview" class="nav-item active" data-section="overview">
+                    <i class="fas fa-chart-line"></i>
+                    Visão Geral
+                </a>
+                <a href="#clients" class="nav-item" data-section="clients">
+                    <i class="fas fa-users"></i>
+                    Clientes
+                </a>
+                <a href="#leads" class="nav-item" data-section="leads">
+                    <i class="fas fa-bullseye"></i>
+                    Leads
+                </a>
+                <a href="#contacts" class="nav-item" data-section="contacts">
+                    <i class="fas fa-envelope"></i>
+                    Contatos
+                </a>
+                <a href="#analytics" class="nav-item" data-section="analytics">
+                    <i class="fas fa-chart-bar"></i>
+                    Analytics
+                </a>
+                <a href="#settings" class="nav-item" data-section="settings">
+                    <i class="fas fa-cog"></i>
+                    Configurações
+                </a>
+                <a href="#" class="nav-item" onclick="logout()" style="color: var(--danger);">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Sair
+                </a>
+            </nav>
+        </aside>
 
-    <main class="main">
-        <div class="container">
-            <h1>Dashboard Administrativo</h1>
-            <p style="color: #64748b; margin-bottom: 2rem;">Gerencie leads, contatos e monitore o desempenho da sua clínica.</p>
-            
-            <!-- Visão Geral -->
-            <section id="overview">
-                <h2>📊 Visão Geral</h2>
-                <div class="dashboard-grid">
-                    <div class="card">
-                        <h3>📈 Estatísticas de Leads</h3>
-                        <div class="stat">
-                            <span>Total de Leads</span>
-                            <span class="stat-number" id="totalLeads">-</span>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <h1>Dashboard Administrativo</h1>
+                <p>Gerencie sua clínica com inteligência e eficiência</p>
+            </div>
+
+            <!-- Overview Section -->
+            <section id="overview" class="content-section">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Total de Leads</span>
+                            <div class="stat-icon primary">
+                                <i class="fas fa-bullseye"></i>
+                            </div>
                         </div>
-                        <div class="stat">
-                            <span>Novos (últimos 7 dias)</span>
-                            <span class="stat-number" id="newLeads">-</span>
-                        </div>
-                        <div class="stat">
-                            <span>Taxa de Conversão</span>
-                            <span class="stat-number" id="conversionRate">-</span>
-                        </div>
-                    </div>
-                    
-                    <div class="card">
-                        <h3>📧 Contatos</h3>
-                        <div class="stat">
-                            <span>Total de Contatos</span>
-                            <span class="stat-number" id="totalContacts">-</span>
-                        </div>
-                        <div class="stat">
-                            <span>Pendentes</span>
-                            <span class="stat-number" id="pendingContacts">-</span>
-                        </div>
-                        <div class="stat">
-                            <span>Respondidos</span>
-                            <span class="stat-number" id="answeredContacts">-</span>
+                        <div class="stat-value" id="totalLeads">-</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+12% vs mês anterior</span>
                         </div>
                     </div>
-                    
-                    <div class="card">
-                        <h3>🎯 Performance</h3>
-                        <div class="stat">
-                            <span>Tempo Médio de Resposta</span>
-                            <span class="stat-number" id="avgResponseTime">-</span>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Clientes Ativos</span>
+                            <div class="stat-icon success">
+                                <i class="fas fa-users"></i>
+                            </div>
                         </div>
-                        <div class="stat">
-                            <span>Leads por Especialidade</span>
-                            <span class="stat-number" id="leadsBySpecialty">-</span>
+                        <div class="stat-value" id="activeClients">-</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+8% vs mês anterior</span>
                         </div>
-                        <div class="stat">
-                            <span>Última Atualização</span>
-                            <span class="stat-number" id="lastUpdate">-</span>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Taxa de Conversão</span>
+                            <div class="stat-icon warning">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="conversionRate">-</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+3.2% vs mês anterior</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Receita Mensal</span>
+                            <div class="stat-icon info">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="monthlyRevenue">-</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+15% vs mês anterior</span>
                         </div>
                     </div>
                 </div>
+
+                <!-- Quick Actions -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-bolt"></i>
+                            Ações Rápidas
+                        </h2>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <button class="btn btn-primary" onclick="showSection('clients')">
+                            <i class="fas fa-user-plus"></i>
+                            Novo Cliente
+                        </button>
+                        <button class="btn btn-secondary" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i>
+                            Atualizar Dados
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportData()">
+                            <i class="fas fa-download"></i>
+                            Exportar Relatório
+                        </button>
+                        <button class="btn btn-secondary" onclick="showSection('settings')">
+                            <i class="fas fa-cog"></i>
+                            Configurações
+                        </button>
+                    </div>
+                </div>
             </section>
-            
-            <!-- Seção de Clientes -->
-            <section id="clients" style="margin-top: 3rem;">
-                <h2>👥 Gerenciar Clientes</h2>
-                
-                <!-- Formulário para adicionar cliente -->
-                <div class="card" style="margin-bottom: 2rem;">
-                    <h3>➕ Adicionar Novo Cliente</h3>
-                    <form id="clientForm" style="margin-top: 1rem;">
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
-                            <div>
-                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Nome do Cliente *</label>
-                                <input type="text" id="clientName" required style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 5px;">
+
+            <!-- Clients Section -->
+            <section id="clients" class="content-section" style="display: none;">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-user-plus"></i>
+                            Adicionar Novo Cliente
+                        </h2>
+                    </div>
+                    <form id="clientForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Nome do Cliente *</label>
+                                <input type="text" id="clientName" class="form-input" required>
                             </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Email</label>
-                                <input type="email" id="clientEmail" style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 5px;">
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" id="clientEmail" class="form-input">
                             </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">WhatsApp *</label>
-                                <input type="tel" id="clientWhatsapp" required placeholder="+5511999999999" style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 5px;">
-                                <small style="color: #64748b; font-size: 0.875rem;">Formato: +5511999999999</small>
+                            <div class="form-group">
+                                <label class="form-label">WhatsApp *</label>
+                                <input type="tel" id="clientWhatsapp" class="form-input" required placeholder="+5511999999999">
                             </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Tipo de Negócio</label>
-                                <select id="clientBusinessType" style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 5px;">
+                            <div class="form-group">
+                                <label class="form-label">Tipo de Negócio</label>
+                                <select id="clientBusinessType" class="form-select">
                                     <option value="clinica">Clínica</option>
                                     <option value="consultorio" selected>Consultório</option>
                                     <option value="hospital">Hospital</option>
@@ -160,605 +182,151 @@
                                 </select>
                             </div>
                         </div>
-                        
-                        <div style="margin-top: 1.5rem;">
-                            <label style="display: block; margin-bottom: 0.75rem; font-weight: 500; font-size: 1.1rem;">Aplicações *</label>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                                <label style="display: flex; align-items: center; padding: 1rem; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
-                                    <input type="radio" name="applications" value="automacao" required style="margin-right: 0.5rem;">
+
+                        <div style="margin: 1.5rem 0;">
+                            <label class="form-label" style="font-size: 1.125rem; font-weight: 600;">Aplicações *</label>
+                            <div class="app-cards">
+                                <label class="app-card">
+                                    <input type="radio" name="applications" value="automacao" required>
                                     <div>
-                                        <div style="font-weight: 600; color: #45a7b1;">💬 Automação de Atendimento</div>
-                                        <small style="color: #64748b;">WhatsApp Bot inteligente</small>
+                                        <div class="app-title">💬 Automação de Atendimento</div>
+                                        <div class="app-description">WhatsApp Bot inteligente com IA</div>
                                     </div>
                                 </label>
-                                <label style="display: flex; align-items: center; padding: 1rem; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
-                                    <input type="radio" name="applications" value="agendamento" required style="margin-right: 0.5rem;">
+                                <label class="app-card">
+                                    <input type="radio" name="applications" value="agendamento" required>
                                     <div>
-                                        <div style="font-weight: 600; color: #45a7b1;">📅 Agendamento Inteligente</div>
-                                        <small style="color: #64748b;">Google Calendar integrado</small>
+                                        <div class="app-title">📅 Agendamento Inteligente</div>
+                                        <div class="app-description">Google Calendar integrado</div>
                                     </div>
                                 </label>
-                                <label style="display: flex; align-items: center; padding: 1rem; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
-                                    <input type="radio" name="applications" value="both" required style="margin-right: 0.5rem;">
+                                <label class="app-card">
+                                    <input type="radio" name="applications" value="both" required>
                                     <div>
-                                        <div style="font-weight: 600; color: #45a7b1;">🚀 Ambas as Aplicações</div>
-                                        <small style="color: #64748b;">Solução completa</small>
+                                        <div class="app-title">🚀 Solução Completa</div>
+                                        <div class="app-description">Ambas as aplicações</div>
                                     </div>
                                 </label>
                             </div>
                         </div>
-                        
-                        <!-- Campo de seleção de agenda (aparece quando agendamento ou ambas forem selecionados) -->
-                        <div id="calendarSelectionField" style="margin-top: 1.5rem; display: none;">
-                            <label style="display: block; margin-bottom: 0.75rem; font-weight: 500; font-size: 1.1rem;">
-                                📅 Selecione a Agenda do Google Calendar *
-                            </label>
-                            <div id="calendarAuthMessage" style="display: none; padding: 1rem; background: #fef3c7; border: 2px solid #fbbf24; border-radius: 8px; margin-bottom: 1rem;">
-                                <p style="margin: 0; color: #92400e; font-weight: 500;">
-                                    ⚠️ Você precisa autenticar com o Google Calendar primeiro.
-                                    <a href="/api/auth/google" target="_blank" style="color: #45a7b1; text-decoration: underline;">
-                                        Clique aqui para autenticar
-                                    </a>
-                                </p>
-                            </div>
-                            <select id="clientGoogleCalendar" style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 5px; font-size: 1rem;">
+
+                        <div id="calendarSelectionField" style="display: none;">
+                            <label class="form-label">📅 Selecione a Agenda do Google Calendar *</label>
+                            <select id="clientGoogleCalendar" class="form-select">
                                 <option value="">Carregando calendários...</option>
                             </select>
-                            <small style="color: #64748b; display: block; margin-top: 0.5rem;">
-                                Selecione a agenda que será usada para este cliente
-                            </small>
                         </div>
-                        
-                        <div style="margin-top: 1.5rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Observações</label>
-                            <textarea id="clientNotes" rows="3" style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 5px;" placeholder="Informações adicionais sobre o cliente..."></textarea>
+
+                        <div class="form-group" style="margin-top: 1.5rem;">
+                            <label class="form-label">Observações</label>
+                            <textarea id="clientNotes" class="form-textarea" placeholder="Informações adicionais sobre o cliente..."></textarea>
                         </div>
-                        
-                        <button type="submit" class="btn btn-primary" id="addClientBtn" style="margin-top: 1.5rem; width: auto; padding: 0.75rem 2rem;">
-                            ➕ Adicionar Cliente e Configurar Aplicações
+
+                        <button type="submit" class="btn btn-primary" style="margin-top: 1.5rem;">
+                            <i class="fas fa-plus"></i>
+                            Adicionar Cliente
                         </button>
                     </form>
                 </div>
-                
-                <!-- Lista de Clientes -->
-                <div class="card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <h3>📋 Clientes Cadastrados</h3>
-                        <button class="btn btn-primary" onclick="loadClients()">🔄 Atualizar</button>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-users"></i>
+                            Clientes Cadastrados
+                        </h2>
+                        <button class="btn btn-secondary" onclick="loadClients()">
+                            <i class="fas fa-sync-alt"></i>
+                            Atualizar
+                        </button>
                     </div>
                     <div id="clientsContent">
-                        <div class="loading">Carregando clientes...</div>
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            Carregando clientes...
+                        </div>
                     </div>
                 </div>
             </section>
-            
-            <!-- Leads Recentes -->
-            <section id="leads" style="margin-top: 3rem;">
-                <h2>🎯 Leads Recentes</h2>
-                <div class="card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <h3>Últimos Leads</h3>
-                        <button class="btn btn-primary" onclick="refreshLeads()">🔄 Atualizar</button>
+
+            <!-- Leads Section -->
+            <section id="leads" class="content-section" style="display: none;">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-bullseye"></i>
+                            Leads Recentes
+                        </h2>
+                        <button class="btn btn-secondary" onclick="refreshLeads()">
+                            <i class="fas fa-sync-alt"></i>
+                            Atualizar
+                        </button>
                     </div>
                     <div id="leadsContent">
-                        <div class="loading">Carregando leads...</div>
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            Carregando leads...
+                        </div>
                     </div>
                 </div>
             </section>
-            
-            <!-- Contatos Recentes -->
-            <section id="contacts" style="margin-top: 3rem;">
-                <h2>📧 Contatos Recentes</h2>
-                <div class="card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <h3>Últimos Contatos</h3>
-                        <button class="btn btn-primary" onclick="refreshContacts()">🔄 Atualizar</button>
+
+            <!-- Contacts Section -->
+            <section id="contacts" class="content-section" style="display: none;">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-envelope"></i>
+                            Contatos Recentes
+                        </h2>
+                        <button class="btn btn-secondary" onclick="refreshContacts()">
+                            <i class="fas fa-sync-alt"></i>
+                            Atualizar
+                        </button>
                     </div>
                     <div id="contactsContent">
-                        <div class="loading">Carregando contatos...</div>
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            Carregando contatos...
+                        </div>
                     </div>
                 </div>
             </section>
-        </div>
-    </main>
 
-    <script>
-        // Verificar autenticação
-        function checkAuth() {
-            const auth = localStorage.getItem('atenmed_auth');
-            if (!auth) {
-                window.location.href = '/login.html';
-                return false;
-            }
-            
-            try {
-                const authData = JSON.parse(auth);
-                const loginTime = new Date(authData.loginTime);
-                const now = new Date();
-                const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
-                
-                // Se login foi há mais de 24 horas, fazer logout
-                if (hoursDiff >= 24) {
-                    localStorage.removeItem('atenmed_auth');
-                    window.location.href = '/login.html';
-                    return false;
-                }
-                
-                return true;
-            } catch (error) {
-                localStorage.removeItem('atenmed_auth');
-                window.location.href = '/login.html';
-                return false;
-            }
-        }
-        
-        // Logout
-        function logout() {
-            localStorage.removeItem('atenmed_auth');
-            window.location.href = '/login.html';
-        }
-        
-        // Dados mockados para demonstração
-        const mockData = {
-            leads: [
-                { id: 1, nome: 'Dr. João Silva', email: 'joao@clinica.com', telefone: '(11) 99999-9999', especialidade: 'cardiologia', status: 'novo', createdAt: '2024-01-15T10:30:00Z' },
-                { id: 2, nome: 'Dra. Maria Santos', email: 'maria@clinica.com', telefone: '(11) 88888-8888', especialidade: 'dermatologia', status: 'contatado', createdAt: '2024-01-15T09:15:00Z' },
-                { id: 3, nome: 'Dr. Carlos Mendes', email: 'carlos@clinica.com', telefone: '(11) 77777-7777', especialidade: 'pediatria', status: 'qualificado', createdAt: '2024-01-14T16:45:00Z' }
-            ],
-            contacts: [
-                { id: 1, nome: 'Ana Costa', email: 'ana@email.com', assunto: 'Dúvida sobre serviços', status: 'novo', createdAt: '2024-01-15T11:20:00Z' },
-                { id: 2, nome: 'Pedro Lima', email: 'pedro@email.com', assunto: 'Orçamento para automação', status: 'respondido', createdAt: '2024-01-15T08:30:00Z' }
-            ]
-        };
+            <!-- Analytics Section -->
+            <section id="analytics" class="content-section" style="display: none;">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-chart-bar"></i>
+                            Analytics Avançados
+                        </h2>
+                    </div>
+                    <div style="text-align: center; padding: 3rem; color: var(--gray-500);">
+                        <i class="fas fa-chart-line" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                        <p>Analytics avançados em desenvolvimento...</p>
+                    </div>
+                </div>
+            </section>
 
-        // Carregar dados iniciais
-        document.addEventListener('DOMContentLoaded', function() {
-            if (!checkAuth()) return;
-            
-            loadDashboardData();
-            loadLeads();
-            loadContacts();
-        });
+            <!-- Settings Section -->
+            <section id="settings" class="content-section" style="display: none;">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-cog"></i>
+                            Configurações do Sistema
+                        </h2>
+                    </div>
+                    <div style="text-align: center; padding: 3rem; color: var(--gray-500);">
+                        <i class="fas fa-cog" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                        <p>Configurações em desenvolvimento...</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
 
-        // Carregar dados do dashboard
-        async function loadDashboardData() {
-            try {
-                // Simular carregamento de dados
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Atualizar estatísticas
-                document.getElementById('totalLeads').textContent = mockData.leads.length;
-                document.getElementById('newLeads').textContent = '3';
-                document.getElementById('conversionRate').textContent = '15%';
-                document.getElementById('totalContacts').textContent = mockData.contacts.length;
-                document.getElementById('pendingContacts').textContent = '1';
-                document.getElementById('answeredContacts').textContent = '1';
-                document.getElementById('avgResponseTime').textContent = '2h';
-                document.getElementById('leadsBySpecialty').textContent = '3';
-                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('pt-BR');
-                
-            } catch (error) {
-                console.error('Erro ao carregar dados:', error);
-                showError('Erro ao carregar dados do dashboard');
-            }
-        }
-
-        // Carregar leads
-        async function loadLeads() {
-            try {
-                const response = await fetch('/api/leads');
-                const result = await response.json();
-                
-                if (response.ok) {
-                    displayLeads(result.data || mockData.leads);
-                } else {
-                    displayLeads(mockData.leads);
-                }
-            } catch (error) {
-                console.error('Erro ao carregar leads:', error);
-                displayLeads(mockData.leads);
-            }
-        }
-
-        // Exibir leads
-        function displayLeads(leads) {
-            const content = document.getElementById('leadsContent');
-            
-            if (leads.length === 0) {
-                content.innerHTML = '<div class="loading">Nenhum lead encontrado</div>';
-                return;
-            }
-            
-            const table = `
-                <table class="leads-table">
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>Email</th>
-                            <th>Especialidade</th>
-                            <th>Status</th>
-                            <th>Data</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${leads.map(lead => `
-                            <tr>
-                                <td>${lead.nome}</td>
-                                <td>${lead.email}</td>
-                                <td>${lead.especialidade}</td>
-                                <td><span class="status-badge status-${lead.status}">${lead.status}</span></td>
-                                <td>${new Date(lead.createdAt).toLocaleDateString('pt-BR')}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-            
-            content.innerHTML = table;
-        }
-
-        // Carregar contatos
-        async function loadContacts() {
-            try {
-                const response = await fetch('/api/contact');
-                const result = await response.json();
-                
-                if (response.ok) {
-                    displayContacts(result.data || mockData.contacts);
-                } else {
-                    displayContacts(mockData.contacts);
-                }
-            } catch (error) {
-                console.error('Erro ao carregar contatos:', error);
-                displayContacts(mockData.contacts);
-            }
-        }
-
-        // Exibir contatos
-        function displayContacts(contacts) {
-            const content = document.getElementById('contactsContent');
-            
-            if (contacts.length === 0) {
-                content.innerHTML = '<div class="loading">Nenhum contato encontrado</div>';
-                return;
-            }
-            
-            const table = `
-                <table class="leads-table">
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>Email</th>
-                            <th>Assunto</th>
-                            <th>Status</th>
-                            <th>Data</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${contacts.map(contact => `
-                            <tr>
-                                <td>${contact.nome}</td>
-                                <td>${contact.email}</td>
-                                <td>${contact.assunto}</td>
-                                <td><span class="status-badge status-${contact.status}">${contact.status}</span></td>
-                                <td>${new Date(contact.createdAt).toLocaleDateString('pt-BR')}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-            
-            content.innerHTML = table;
-        }
-
-        // Atualizar leads
-        function refreshLeads() {
-            document.getElementById('leadsContent').innerHTML = '<div class="loading">Atualizando leads...</div>';
-            loadLeads();
-        }
-
-        // Atualizar contatos
-        function refreshContacts() {
-            document.getElementById('contactsContent').innerHTML = '<div class="loading">Atualizando contatos...</div>';
-            loadContacts();
-        }
-
-        // Mostrar erro
-        function showError(message) {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error';
-            errorDiv.textContent = message;
-            document.querySelector('.container').insertBefore(errorDiv, document.querySelector('.main'));
-        }
-
-        // Mostrar sucesso
-        function showSuccess(message) {
-            const successDiv = document.createElement('div');
-            successDiv.className = 'success';
-            successDiv.textContent = message;
-            document.querySelector('.container').insertBefore(successDiv, document.querySelector('.main'));
-            
-            // Remover após 5 segundos
-            setTimeout(() => successDiv.remove(), 5000);
-        }
-
-        // ===== FUNÇÕES DE GERENCIAMENTO DE CLIENTES =====
-
-        // Carregar clientes
-        async function loadClients() {
-            try {
-                const response = await fetch('/api/clients');
-                const result = await response.json();
-                
-                if (response.ok && result.success) {
-                    displayClients(result.data);
-                } else {
-                    document.getElementById('clientsContent').innerHTML = 
-                        '<div class="loading" style="color: #f59e0b;">Nenhum cliente encontrado</div>';
-                }
-            } catch (error) {
-                console.error('Erro ao carregar clientes:', error);
-                document.getElementById('clientsContent').innerHTML = 
-                    '<div class="loading" style="color: #ef4444;">Erro ao carregar clientes</div>';
-            }
-        }
-
-        // Exibir clientes
-        function displayClients(clients) {
-            const content = document.getElementById('clientsContent');
-            
-            if (!clients || clients.length === 0) {
-                content.innerHTML = '<div class="loading">Nenhum cliente cadastrado ainda</div>';
-                return;
-            }
-            
-            const table = `
-                <table class="leads-table">
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>WhatsApp</th>
-                            <th>Tipo</th>
-                            <th>Aplicações</th>
-                            <th>Status</th>
-                            <th>Cadastro</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${clients.map(client => {
-                            const apps = [];
-                            if (client.applications.automacaoAtendimento) apps.push('💬 Automação');
-                            if (client.applications.agendamentoInteligente) apps.push('📅 Agendamento');
-                            const appsText = apps.join('<br>') || 'Nenhuma';
-                            
-                            const businessTypeMap = {
-                                'clinica': 'Clínica',
-                                'consultorio': 'Consultório',
-                                'hospital': 'Hospital',
-                                'laboratorio': 'Laboratório',
-                                'farmacia': 'Farmácia',
-                                'outros': 'Outros'
-                            };
-                            
-                            return `
-                                <tr>
-                                    <td>
-                                        <strong>${client.name}</strong>
-                                        ${client.email ? `<br><small style="color: #64748b;">${client.email}</small>` : ''}
-                                    </td>
-                                    <td>${client.whatsapp}</td>
-                                    <td>${businessTypeMap[client.businessType] || client.businessType}</td>
-                                    <td>${appsText}</td>
-                                    <td><span class="status-badge status-${client.status}">${client.status}</span></td>
-                                    <td>${new Date(client.createdAt).toLocaleDateString('pt-BR')}</td>
-                                    <td>
-                                        <button onclick="viewClient('${client._id}')" class="btn" style="padding: 0.5rem 1rem; font-size: 0.875rem;">👁️ Ver</button>
-                                        <button onclick="deleteClient('${client._id}')" class="btn" style="padding: 0.5rem 1rem; font-size: 0.875rem; background: #ef4444;">🗑️ Excluir</button>
-                                    </td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>
-            `;
-            
-            content.innerHTML = table;
-        }
-
-        // ===== FUNÇÕES PARA SELEÇÃO DE CALENDÁRIO =====
-        
-        let availableCalendars = [];
-        
-        // Carregar calendários do Google
-        async function loadGoogleCalendars() {
-            try {
-                const response = await fetch('/api/google/calendars');
-                const result = await response.json();
-                
-                const calendarSelect = document.getElementById('clientGoogleCalendar');
-                const authMessage = document.getElementById('calendarAuthMessage');
-                
-                if (response.ok && result.success) {
-                    availableCalendars = result.data;
-                    
-                    // Limpar e popular o select
-                    calendarSelect.innerHTML = '<option value="">-- Selecione uma agenda --</option>';
-                    
-                    result.data.forEach(cal => {
-                        const option = document.createElement('option');
-                        option.value = cal.id;
-                        option.textContent = `${cal.summary}${cal.primary ? ' (Principal)' : ''}`;
-                        option.style.color = cal.foregroundColor || '#000';
-                        calendarSelect.appendChild(option);
-                    });
-                    
-                    authMessage.style.display = 'none';
-                    calendarSelect.disabled = false;
-                    
-                } else if (result.needsAuth) {
-                    // Mostrar mensagem de autenticação necessária
-                    authMessage.style.display = 'block';
-                    calendarSelect.innerHTML = '<option value="">Autenticação necessária</option>';
-                    calendarSelect.disabled = true;
-                }
-                
-            } catch (error) {
-                console.error('Erro ao carregar calendários:', error);
-                document.getElementById('clientGoogleCalendar').innerHTML = 
-                    '<option value="">Erro ao carregar calendários</option>';
-            }
-        }
-        
-        // Controlar exibição do campo de calendário baseado na aplicação selecionada
-        function toggleCalendarField() {
-            const selectedApp = document.querySelector('input[name="applications"]:checked');
-            const calendarField = document.getElementById('calendarSelectionField');
-            const calendarSelect = document.getElementById('clientGoogleCalendar');
-            
-            if (selectedApp && (selectedApp.value === 'agendamento' || selectedApp.value === 'both')) {
-                calendarField.style.display = 'block';
-                calendarSelect.required = true;
-                
-                // Carregar calendários se ainda não foram carregados
-                if (availableCalendars.length === 0) {
-                    loadGoogleCalendars();
-                }
-            } else {
-                calendarField.style.display = 'none';
-                calendarSelect.required = false;
-                calendarSelect.value = '';
-            }
-        }
-
-        // Adicionar cliente (submit do formulário)
-        document.addEventListener('DOMContentLoaded', function() {
-            // Adicionar event listeners para os radio buttons de aplicações
-            const appRadios = document.querySelectorAll('input[name="applications"]');
-            appRadios.forEach(radio => {
-                radio.addEventListener('change', toggleCalendarField);
-            });
-            
-            const clientForm = document.getElementById('clientForm');
-            if (clientForm) {
-                clientForm.addEventListener('submit', async function(e) {
-                    e.preventDefault();
-                    
-                    const btn = document.getElementById('addClientBtn');
-                    const originalText = btn.textContent;
-                    btn.disabled = true;
-                    btn.textContent = '⏳ Adicionando...';
-                    
-                    try {
-                        const selectedApp = document.querySelector('input[name="applications"]:checked').value;
-                        const formData = {
-                            name: document.getElementById('clientName').value,
-                            email: document.getElementById('clientEmail').value,
-                            whatsapp: document.getElementById('clientWhatsapp').value,
-                            businessType: document.getElementById('clientBusinessType').value,
-                            applications: selectedApp,
-                            notes: document.getElementById('clientNotes').value
-                        };
-                        
-                        // Adicionar googleCalendarId se agendamento ou both foi selecionado
-                        if (selectedApp === 'agendamento' || selectedApp === 'both') {
-                            const calendarId = document.getElementById('clientGoogleCalendar').value;
-                            if (calendarId) {
-                                formData.googleCalendarId = calendarId;
-                            }
-                        }
-                        
-                        const response = await fetch('/api/clients', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(formData)
-                        });
-                        
-                        const result = await response.json();
-                        
-                        if (response.ok && result.success) {
-                            showSuccess(result.message || 'Cliente adicionado com sucesso! ✅');
-                            clientForm.reset();
-                            
-                            // Ocultar campo de calendário após reset
-                            document.getElementById('calendarSelectionField').style.display = 'none';
-                            document.getElementById('clientGoogleCalendar').value = '';
-                            
-                            loadClients(); // Recarregar lista
-                        } else {
-                            showError(result.error || 'Erro ao adicionar cliente');
-                        }
-                    } catch (error) {
-                        console.error('Erro ao adicionar cliente:', error);
-                        showError('Erro ao adicionar cliente. Verifique sua conexão.');
-                    } finally {
-                        btn.disabled = false;
-                        btn.textContent = originalText;
-                    }
-                });
-            }
-            
-            // Carregar clientes ao carregar a página
-            loadClients();
-        });
-
-        // Ver detalhes do cliente
-        function viewClient(clientId) {
-            alert('Função de visualização em desenvolvimento. ID: ' + clientId);
-            // TODO: Implementar modal ou página de detalhes
-        }
-
-        // Excluir/Desativar cliente
-        async function deleteClient(clientId) {
-            if (!confirm('Tem certeza que deseja desativar este cliente?')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`/api/clients/${clientId}`, {
-                    method: 'DELETE'
-                });
-                
-                const result = await response.json();
-                
-                if (response.ok && result.success) {
-                    showSuccess('Cliente desativado com sucesso!');
-                    loadClients(); // Recarregar lista
-                } else {
-                    showError(result.error || 'Erro ao desativar cliente');
-                }
-            } catch (error) {
-                console.error('Erro ao desativar cliente:', error);
-                showError('Erro ao desativar cliente');
-            }
-        }
-
-        // Adicionar estilo para mensagens de sucesso
-        const style = document.createElement('style');
-        style.textContent = `
-            .success {
-                background-color: #10b981;
-                color: white;
-                padding: 1rem 1.5rem;
-                border-radius: 8px;
-                margin: 1rem 0;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            }
-            
-            input[type="radio"]:checked + div {
-                border-color: #45a7b1 !important;
-                background-color: #f0f9ff;
-            }
-            
-            label:has(input[type="radio"]):hover {
-                border-color: #45a7b1 !important;
-                transform: translateY(-2px);
-                box-shadow: 0 4px 6px rgba(69, 167, 177, 0.1);
-            }
-        `;
-        document.head.appendChild(style);
-    </script>
+    <script src="dashboard.js"></script>
 </body>
 </html>
