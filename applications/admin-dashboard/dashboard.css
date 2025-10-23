@@ -33,7 +33,7 @@
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: linear-gradient(135deg, #4ca5b2 0%, #083e51 100%);
+    background: var(--white);
     min-height: 100vh;
     color: var(--gray-800);
     line-height: 1.6;
@@ -54,6 +54,7 @@ body {
     top: 0;
     height: 100vh;
     overflow-y: auto;
+    border-right: 1px solid var(--gray-200);
 }
 
 .sidebar-header {
@@ -64,10 +65,16 @@ body {
 .logo {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.75rem;
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--primary);
+}
+
+.logo img {
+    max-width: 100%;
+    height: auto;
 }
 
 .logo i {
@@ -111,11 +118,12 @@ body {
 }
 
 .header {
-    background: var(--white);
+    background: var(--gray-50);
     border-radius: 1rem;
     padding: 2rem;
     margin-bottom: 2rem;
     box-shadow: var(--shadow);
+    border: 1px solid var(--gray-200);
 }
 
 .header h1 {
