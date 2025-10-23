@@ -70,20 +70,22 @@ const mockData = {
 // Carregar dados do dashboard
 async function loadDashboardData() {
     try {
-        // Buscar leads
-        const leadsRes = await fetch('/api/leads?limit=1000');
+        // Buscar leads (sem limit para evitar erro de validação)
+        const leadsRes = await fetch('/api/leads');
         const leads = await leadsRes.json();
         console.log('Leads response:', leads);
         
         const totalLeads = leads.data?.pagination?.total || leads.data?.leads?.length || 0;
         
-        // Buscar clientes
+        // Buscar clientes (rota protegida - ignorar erro de autenticação)
         let totalClients = 0;
         try {
             const clientsRes = await fetch('/api/clients');
-            const clients = await clientsRes.json();
-            console.log('Clients response:', clients);
-            totalClients = Array.isArray(clients.data) ? clients.data.length : 0;
+            if (clientsRes.ok) {
+                const clients = await clientsRes.json();
+                console.log('Clients response:', clients);
+                totalClients = Array.isArray(clients.data) ? clients.data.length : 0;
+            }
         } catch (err) {
             console.warn('Erro ao buscar clientes:', err);
         }
@@ -202,6 +204,11 @@ async function loadContacts() {
 // Exibir contatos
 function displayContacts(contacts) {
     const content = document.getElementById('contactsContent');
+    
+    // Se contacts não for array, tentar extrair array de dentro dele
+    if (!Array.isArray(contacts)) {
+        contacts = contacts?.contatos || [];
+    }
     
     if (contacts.length === 0) {
         content.innerHTML = '<div class="loading">Nenhum contato encontrado</div>';
