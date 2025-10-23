@@ -205,7 +205,9 @@ async function submitForm(data) {
                 email: data.email,
                 telefone: data.telefone,
                 especialidade: data.especialidade,
-                interesse: ['automacao-whatsapp', 'agendamento-inteligente'] // Interesses padrão
+                origem: 'site',
+                interesse: 'alto', // String ao invés de array
+                observacoes: 'Lead gerado pela página inicial - Interesse em demonstração'
             })
         });
         
