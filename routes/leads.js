@@ -46,9 +46,7 @@ router.post('/', [
         .optional()
         .custom(val => {
             const allowed = ['baixo', 'medio', 'alto'];
-            if (Array.isArray(val)) {
-                return val.length > 0 && allowed.includes(val[0]);
-            }
+            if (Array.isArray(val)) return true;
             return allowed.includes(val);
         })
         .withMessage('Interesse deve ser: baixo, medio ou alto'),
@@ -90,7 +88,7 @@ router.post('/', [
             email,
             telefone,
             especialidade,
-            interesse: Array.isArray(interesse) ? (interesse[0] || 'medio') : interesse,
+            interesse: Array.isArray(interesse) ? 'alto' : interesse,
             origem,
             observacoes,
             ip: req.ip,
