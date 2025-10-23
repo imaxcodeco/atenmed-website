@@ -1,5 +1,37 @@
-const { google } = require('googleapis');
 const logger = require('../utils/logger');
+
+let google; // será atribuído se disponível
+let GOOGLE_ENABLED = process.env.ENABLE_GOOGLE_CALENDAR !== 'false';
+
+if (GOOGLE_ENABLED) {
+    try {
+        ({ google } = require('googleapis'));
+    } catch (err) {
+        GOOGLE_ENABLED = false;
+        logger.error('❌ googleapis não pôde ser carregado. Google Calendar será desativado nesta execução.', err.message);
+    }
+}
+
+// Se o Google Calendar estiver explicitamente desativado ou indisponível, exportar stub
+if (!GOOGLE_ENABLED) {
+    module.exports = {
+        initialize: () => {
+            logger.warn('Google Calendar Service desativado. Variável ENABLE_GOOGLE_CALENDAR=false ou dependência ausente.');
+            return false;
+        },
+        isAuthenticated: () => false,
+        getAuthUrl: () => { throw new Error('Google Calendar desativado.'); },
+        getAvailableSlots: async () => [],
+        createEvent: async () => { throw new Error('Google Calendar desativado.'); },
+        createCalendarEvent: async () => { throw new Error('Google Calendar desativado.'); },
+        updateEvent: async () => { throw new Error('Google Calendar desativado.'); },
+        cancelEvent: async () => { throw new Error('Google Calendar desativado.'); },
+        listEvents: async () => [],
+        isTimeSlotAvailable: async () => true,
+        listCalendars: async () => []
+    };
+    return;
+}
 
 /**
  * Serviço para integração com Google Calendar API
