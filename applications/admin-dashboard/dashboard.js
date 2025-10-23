@@ -453,6 +453,15 @@ document.addEventListener('DOMContentLoaded', function() {
         radio.addEventListener('change', toggleCalendarField);
     });
     
+    // Event listener para o botão de logout
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            logout();
+        });
+    }
+    
     // Carregar dados iniciais
     loadDashboardData();
     loadLeads();

@@ -16,8 +16,8 @@
                 <div class="logo">
                     <i class="fas fa-hospital"></i>
                     <span>AtenMed</span>
-                </div>
             </div>
+        </div>
             <nav class="sidebar-nav">
                 <a href="#overview" class="nav-item active" data-section="overview">
                     <i class="fas fa-chart-line"></i>
@@ -43,7 +43,7 @@
                     <i class="fas fa-cog"></i>
                     Configurações
                 </a>
-                <a href="#" class="nav-item" onclick="logout()" style="color: var(--danger);">
+                <a href="javascript:void(0)" class="nav-item" id="logoutBtn" style="color: var(--danger);">
                     <i class="fas fa-sign-out-alt"></i>
                     Sair
                 </a>
@@ -54,7 +54,7 @@
         <main class="main-content">
             <!-- Header -->
             <div class="header">
-                <h1>Dashboard Administrativo</h1>
+            <h1>Dashboard Administrativo</h1>
                 <p>Gerencie sua clínica com inteligência e eficiência</p>
             </div>
 
@@ -80,7 +80,7 @@
                             <span class="stat-title">Clientes Ativos</span>
                             <div class="stat-icon success">
                                 <i class="fas fa-users"></i>
-                            </div>
+                        </div>
                         </div>
                         <div class="stat-value" id="activeClients">-</div>
                         <div class="stat-change positive">
@@ -88,13 +88,13 @@
                             <span>+8% vs mês anterior</span>
                         </div>
                     </div>
-
+                    
                     <div class="stat-card">
                         <div class="stat-header">
                             <span class="stat-title">Taxa de Conversão</span>
                             <div class="stat-icon warning">
                                 <i class="fas fa-percentage"></i>
-                            </div>
+                        </div>
                         </div>
                         <div class="stat-value" id="conversionRate">-</div>
                         <div class="stat-change positive">
@@ -102,13 +102,13 @@
                             <span>+3.2% vs mês anterior</span>
                         </div>
                     </div>
-
+                    
                     <div class="stat-card">
                         <div class="stat-header">
                             <span class="stat-title">Receita Mensal</span>
                             <div class="stat-icon info">
                                 <i class="fas fa-dollar-sign"></i>
-                            </div>
+                        </div>
                         </div>
                         <div class="stat-value" id="monthlyRevenue">-</div>
                         <div class="stat-change positive">
@@ -146,7 +146,7 @@
                     </div>
                 </div>
             </section>
-
+            
             <!-- Clients Section -->
             <section id="clients" class="content-section" style="display: none;">
                 <div class="content-card">
@@ -182,7 +182,7 @@
                                 </select>
                             </div>
                         </div>
-
+                        
                         <div style="margin: 1.5rem 0;">
                             <label class="form-label" style="font-size: 1.125rem; font-weight: 600;">Aplicações *</label>
                             <div class="app-cards">
@@ -209,26 +209,26 @@
                                 </label>
                             </div>
                         </div>
-
+                        
                         <div id="calendarSelectionField" style="display: none;">
                             <label class="form-label">📅 Selecione a Agenda do Google Calendar *</label>
                             <select id="clientGoogleCalendar" class="form-select">
                                 <option value="">Carregando calendários...</option>
                             </select>
                         </div>
-
+                        
                         <div class="form-group" style="margin-top: 1.5rem;">
                             <label class="form-label">Observações</label>
                             <textarea id="clientNotes" class="form-textarea" placeholder="Informações adicionais sobre o cliente..."></textarea>
                         </div>
-
+                        
                         <button type="submit" class="btn btn-primary" style="margin-top: 1.5rem;">
                             <i class="fas fa-plus"></i>
                             Adicionar Cliente
                         </button>
                     </form>
                 </div>
-
+                
                 <div class="content-card">
                     <div class="card-header">
                         <h2 class="card-title">
@@ -248,7 +248,7 @@
                     </div>
                 </div>
             </section>
-
+            
             <!-- Leads Section -->
             <section id="leads" class="content-section" style="display: none;">
                 <div class="content-card">
@@ -270,7 +270,7 @@
                     </div>
                 </div>
             </section>
-
+            
             <!-- Contacts Section -->
             <section id="contacts" class="content-section" style="display: none;">
                 <div class="content-card">
@@ -322,9 +322,9 @@
                         <i class="fas fa-cog" style="font-size: 3rem; margin-bottom: 1rem;"></i>
                         <p>Configurações em desenvolvimento...</p>
                     </div>
-                </div>
+        </div>
             </section>
-        </main>
+    </main>
     </div>
 
     <script src="dashboard.js"></script>
