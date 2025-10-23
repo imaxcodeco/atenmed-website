@@ -59,7 +59,7 @@ jobs:
             fi
 
             # Install production dependencies
-            npm ci --omit=dev || npm install --omit=dev
+            npm ci || npm install
 
             # Start or restart with PM2
             pm2 restart atenmed --update-env || pm2 start ecosystem.config.js --env production

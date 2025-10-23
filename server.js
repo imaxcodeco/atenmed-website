@@ -116,7 +116,12 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Trust proxy - configurar para AWS/Nginx mas de forma segura
-app.set('trust proxy', 1); // Confiar apenas no primeiro proxy (Nginx)
+// Usar configuração mais específica para evitar problemas com express-rate-limit
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1); // Confiar apenas no primeiro proxy (Nginx)
+} else {
+    app.set('trust proxy', false); // Desenvolvimento sem proxy
+}
 
 // Rate limiting (EXCETO para webhooks do WhatsApp)
 const limiter = rateLimit({
