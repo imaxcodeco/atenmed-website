@@ -1,0 +1,70 @@
+name: Deploy AtenMed to EC2
+
+on:
+  push:
+    branches:
+      - reorganizacao-estrutura
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -e
+            # Ensure Node 18 and PM2 are installed
+            if ! command -v node >/dev/null 2>&1; then
+              curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+            fi
+            sudo npm i -g pm2
+
+            # Clone/update repository
+            cd /home/ubuntu
+            if [ ! -d atenmed-website ]; then
+              git clone https://github.com/imaxcodeco/atenmed-website.git
+            fi
+            cd atenmed-website
+            git fetch --all
+            git checkout reorganizacao-estrutura
+            git pull origin reorganizacao-estrutura
+
+            # Prepare environment file from GitHub Secrets when provided
+            touch .env
+            if [ -n "${{ secrets.APP_URL }}" ]; then
+              grep -q '^APP_URL=' .env && sed -i "s|^APP_URL=.*|APP_URL=${{ secrets.APP_URL }}|" .env || echo "APP_URL=${{ secrets.APP_URL }}" >> .env
+            fi
+            if [ -n "${{ secrets.CORS_ORIGIN }}" ]; then
+              grep -q '^CORS_ORIGIN=' .env && sed -i "s|^CORS_ORIGIN=.*|CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}|" .env || echo "CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}" >> .env
+            fi
+            if [ -n "${{ secrets.WHATSAPP_VERIFY_TOKEN }}" ]; then
+              grep -q '^WHATSAPP_VERIFY_TOKEN=' .env && sed -i "s|^WHATSAPP_VERIFY_TOKEN=.*|WHATSAPP_VERIFY_TOKEN=${{ secrets.WHATSAPP_VERIFY_TOKEN }}|" .env || echo "WHATSAPP_VERIFY_TOKEN=${{ secrets.WHATSAPP_VERIFY_TOKEN }}" >> .env
+            fi
+            if [ -n "${{ secrets.MONGODB_URI }}" ]; then
+              grep -q '^MONGODB_URI=' .env && sed -i "s|^MONGODB_URI=.*|MONGODB_URI=${{ secrets.MONGODB_URI }}|" .env || echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
+            fi
+            if [ -n "${{ secrets.JWT_SECRET }}" ]; then
+              grep -q '^JWT_SECRET=' .env && sed -i "s|^JWT_SECRET=.*|JWT_SECRET=${{ secrets.JWT_SECRET }}|" .env || echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+            fi
+
+            # Install production dependencies
+            npm ci --omit=dev || npm install --omit=dev
+
+            # Start or restart with PM2
+            pm2 restart atenmed --update-env || pm2 start ecosystem.config.js --env production
+            pm2 save
+
+            # Health check (fail workflow if unhealthy)
+            curl -fsS http://127.0.0.1:3000/health > /dev/null
+
