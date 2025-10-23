@@ -38,7 +38,7 @@ jobs:
             cd atenmed-website
             git fetch --all
             git checkout reorganizacao-estrutura
-            git pull origin reorganizacao-estrutura
+            git reset --hard origin/reorganizacao-estrutura
 
             # Prepare environment file from GitHub Secrets when provided
             touch .env
