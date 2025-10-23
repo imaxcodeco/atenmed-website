@@ -5,7 +5,7 @@
 function checkAuth() {
     const auth = localStorage.getItem('atenmed_auth');
     if (!auth) {
-        window.location.href = '/login.html';
+        window.location.href = '/site/login.html';
         return false;
     }
     
@@ -17,14 +17,14 @@ function checkAuth() {
         
         if (hoursDiff >= 24) {
             localStorage.removeItem('atenmed_auth');
-            window.location.href = '/login.html';
+            window.location.href = '/site/login.html';
             return false;
         }
         
         return true;
     } catch (error) {
         localStorage.removeItem('atenmed_auth');
-        window.location.href = '/login.html';
+        window.location.href = '/site/login.html';
         return false;
     }
 }
@@ -32,7 +32,7 @@ function checkAuth() {
 // Logout
 function logout() {
     localStorage.removeItem('atenmed_auth');
-    window.location.href = '/login.html';
+    window.location.href = '/site/login.html';
 }
 
 // Navigation

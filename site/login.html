@@ -175,7 +175,7 @@
                     
                     // Redirecionar para dashboard
                     setTimeout(() => {
-                        window.location.href = '/dashboard';
+                        window.location.href = '/apps/admin/dashboard.html';
                     }, 1500);
                 } else {
                     throw new Error('Credenciais inválidas');
@@ -211,7 +211,7 @@
                     
                     // Se login foi há menos de 24 horas, redirecionar
                     if (hoursDiff < 24) {
-                        window.location.href = '/dashboard';
+                        window.location.href = '/apps/admin/dashboard.html';
                     }
                 } catch (error) {
                     localStorage.removeItem('atenmed_auth');
