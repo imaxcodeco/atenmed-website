@@ -70,32 +70,48 @@ const mockData = {
 // Carregar dados do dashboard
 async function loadDashboardData() {
     try {
-        // Buscar estatísticas reais
-        const [leadsRes, clientsRes, contactsRes] = await Promise.all([
-            fetch('/api/leads?limit=1000'),
-            fetch('/api/clients'),
-            fetch('/api/contact')
-        ]);
-        
+        // Buscar leads
+        const leadsRes = await fetch('/api/leads?limit=1000');
         const leads = await leadsRes.json();
-        const clients = await clientsRes.json();
-        const contacts = await contactsRes.json();
+        console.log('Leads response:', leads);
         
-        // Atualizar estatísticas
         const totalLeads = leads.data?.pagination?.total || leads.data?.leads?.length || 0;
-        const totalClients = clients.data?.length || 0;
-        const totalContacts = contacts.data?.contatos?.length || contacts.data?.length || 0;
+        
+        // Buscar clientes
+        let totalClients = 0;
+        try {
+            const clientsRes = await fetch('/api/clients');
+            const clients = await clientsRes.json();
+            console.log('Clients response:', clients);
+            totalClients = Array.isArray(clients.data) ? clients.data.length : 0;
+        } catch (err) {
+            console.warn('Erro ao buscar clientes:', err);
+        }
+        
+        // Buscar contatos
+        let totalContacts = 0;
+        try {
+            const contactsRes = await fetch('/api/contact');
+            const contacts = await contactsRes.json();
+            console.log('Contacts response:', contacts);
+            totalContacts = contacts.data?.contatos?.length || (Array.isArray(contacts.data) ? contacts.data.length : 0);
+        } catch (err) {
+            console.warn('Erro ao buscar contatos:', err);
+        }
         
         // Calcular taxa de conversão
         const conversionRate = totalLeads > 0 ? Math.round((totalClients / totalLeads) * 100) : 0;
         
+        // Atualizar UI
         document.getElementById('totalLeads').textContent = totalLeads;
         document.getElementById('activeClients').textContent = totalClients;
         document.getElementById('conversionRate').textContent = `${conversionRate}%`;
         document.getElementById('monthlyRevenue').textContent = totalContacts;
         
+        console.log('✅ Dashboard atualizado:', { totalLeads, totalClients, totalContacts, conversionRate });
+        
     } catch (error) {
-        console.error('Erro ao carregar dados:', error);
+        console.error('❌ Erro ao carregar dados do dashboard:', error);
         // Manter valores padrão em caso de erro
         document.getElementById('totalLeads').textContent = '0';
         document.getElementById('activeClients').textContent = '0';
