@@ -2,6 +2,7 @@ const express = require('express');
 const { body, query, param } = require('express-validator');
 const Client = require('../models/Client');
 const { validationResult } = require('express-validator');
+const { authenticateToken, authorize } = require('../middleware/auth');
 const logger = require('../utils/logger');
 
 const router = express.Router();
@@ -21,8 +22,10 @@ const validateRequest = (req, res, next) => {
 
 // @route   POST /api/clients
 // @desc    Criar novo cliente e ativar aplicações
-// @access  Public (temporariamente)
+// @access  Private (Admin)
 router.post('/', [
+    authenticateToken,
+    authorize('admin'),
     body('name')
         .trim()
         .notEmpty().withMessage('Nome é obrigatório')
@@ -132,8 +135,10 @@ router.post('/', [
 
 // @route   GET /api/clients
 // @desc    Listar todos os clientes
-// @access  Public (temporariamente)
+// @access  Private (Admin)
 router.get('/', [
+    authenticateToken,
+    authorize('admin'),
     query('page').optional().isInt({ min: 1 }),
     query('limit').optional().isInt({ min: 1, max: 100 }),
     query('status').optional().isIn(['ativo', 'inativo', 'suspenso', 'teste']),
@@ -178,8 +183,10 @@ router.get('/', [
 
 // @route   GET /api/clients/:id
 // @desc    Buscar cliente por ID
-// @access  Public (temporariamente)
+// @access  Private (Admin)
 router.get('/:id', [
+    authenticateToken,
+    authorize('admin'),
     param('id').isMongoId().withMessage('ID inválido')
 ], validateRequest, async (req, res) => {
     try {
@@ -209,8 +216,10 @@ router.get('/:id', [
 
 // @route   PUT /api/clients/:id
 // @desc    Atualizar cliente
-// @access  Public (temporariamente)
+// @access  Private (Admin)
 router.put('/:id', [
+    authenticateToken,
+    authorize('admin'),
     param('id').isMongoId().withMessage('ID inválido'),
     body('name').optional().trim().isLength({ min: 2, max: 200 }),
     body('email').optional().trim().isEmail().normalizeEmail(),
@@ -251,8 +260,10 @@ router.put('/:id', [
 
 // @route   PUT /api/clients/:id/applications
 // @desc    Atualizar aplicações do cliente
-// @access  Public (temporariamente)
+// @access  Private (Admin)
 router.put('/:id/applications', [
+    authenticateToken,
+    authorize('admin'),
     param('id').isMongoId().withMessage('ID inválido'),
     body('automacaoAtendimento').optional().isBoolean(),
     body('agendamentoInteligente').optional().isBoolean()
@@ -295,8 +306,10 @@ router.put('/:id/applications', [
 
 // @route   DELETE /api/clients/:id
 // @desc    Deletar cliente (soft delete - muda status para inativo)
-// @access  Public (temporariamente)
+// @access  Private (Admin)
 router.delete('/:id', [
+    authenticateToken,
+    authorize('admin'),
     param('id').isMongoId().withMessage('ID inválido')
 ], validateRequest, async (req, res) => {
     try {
@@ -332,8 +345,8 @@ router.delete('/:id', [
 
 // @route   GET /api/clients/stats/summary
 // @desc    Obter estatísticas gerais de clientes
-// @access  Public (temporariamente)
-router.get('/stats/summary', async (req, res) => {
+// @access  Private (Admin)
+router.get('/stats/summary', authenticateToken, authorize('admin'), async (req, res) => {
     try {
         const total = await Client.countDocuments();
         const ativos = await Client.countDocuments({ status: 'ativo' });

@@ -90,7 +90,6 @@ app.use(helmet({
 // CORS configuration
 const corsOptions = {
     origin: (origin, callback) => {
-        // Permitir webhooks do WhatsApp sem restrição de origem
         const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || [
             'https://atenmed.com.br',
             'https://www.atenmed.com.br',
@@ -98,12 +97,18 @@ const corsOptions = {
             'http://localhost:8000'
         ];
         
-        // Permitir sem origem (webhooks, curl, etc) ou origens permitidas
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(null, true); // Permitir todas por enquanto (webhook precisa)
+        // Permitir requests sem origin (webhooks, curl, Postman, server-to-server)
+        if (!origin) {
+            return callback(null, true);
         }
+        
+        // Verificar se a origem está na lista permitida
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        
+        // Rejeitar origens não permitidas
+        callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
     optionsSuccessStatus: 200

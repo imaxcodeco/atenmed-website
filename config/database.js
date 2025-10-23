@@ -3,13 +3,18 @@ const logger = require('../utils/logger');
 
 const connectDB = async () => {
     try {
-        // Para desenvolvimento, vamos usar uma string de conexão que não falhe
+        // Validar MongoDB URI em produção
+        if (process.env.NODE_ENV === 'production' && !process.env.MONGODB_URI) {
+            logger.error('❌ MONGODB_URI é obrigatório em produção');
+            process.exit(1);
+        }
+        
+        // Para desenvolvimento, usar local se não configurado
         const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/atenmed';
         
-        // Se não conseguir conectar, vamos continuar sem banco por enquanto
-        if (!process.env.MONGODB_URI) {
-            logger.warn('⚠️ MongoDB não configurado - algumas funcionalidades podem não funcionar');
-            return;
+        // Avisar em desenvolvimento se não estiver configurado
+        if (!process.env.MONGODB_URI && process.env.NODE_ENV !== 'production') {
+            logger.warn('⚠️ MongoDB não configurado - usando local mongodb://localhost:27017/atenmed');
         }
         
         const options = {
@@ -46,9 +51,15 @@ const connectDB = async () => {
 
     } catch (error) {
         logger.error('Erro ao conectar com MongoDB:', error);
+        
+        // Em produção, falhar imediatamente se não conseguir conectar
+        if (process.env.NODE_ENV === 'production') {
+            logger.error('❌ Falha crítica: não foi possível conectar ao MongoDB em produção');
+            process.exit(1);
+        }
+        
+        // Em desenvolvimento, apenas avisar e continuar
         logger.warn('⚠️ Continuando sem banco de dados - algumas funcionalidades podem não funcionar');
-        // Não fazer exit - deixar o servidor rodar mesmo sem DB
-        // process.exit(1);
     }
 };
 

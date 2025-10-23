@@ -6,6 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const whatsappService = require('../services/whatsappService');
+const { authenticateToken, authorize } = require('../middleware/auth');
 const logger = require('../utils/logger');
 
 // ===== WEBHOOK VERIFICATION =====
@@ -226,9 +227,9 @@ router.get('/ai-stats', (req, res) => {
 /**
  * @route   GET /api/whatsapp/debug-webhook
  * @desc    Debug do webhook - mostra configuração atual
- * @access  Public (temporário - remover em produção!)
+ * @access  Private (Admin only)
  */
-router.get('/debug-webhook', (req, res) => {
+router.get('/debug-webhook', authenticateToken, authorize('admin'), (req, res) => {
     res.json({
         success: true,
         debug: {
@@ -245,9 +246,9 @@ router.get('/debug-webhook', (req, res) => {
 /**
  * @route   GET /api/whatsapp/status
  * @desc    Verificar status da conexão WhatsApp
- * @access  Public (temporário)
+ * @access  Private (Admin only)
  */
-router.get('/status', (req, res) => {
+router.get('/status', authenticateToken, authorize('admin'), (req, res) => {
     try {
         const configured = !!(process.env.WHATSAPP_PHONE_ID && process.env.WHATSAPP_TOKEN);
         
@@ -272,9 +273,9 @@ router.get('/status', (req, res) => {
 /**
  * @route   GET /api/whatsapp/config
  * @desc    Verificar configuração atual
- * @access  Public (temporário)
+ * @access  Private (Admin only)
  */
-router.get('/config', (req, res) => {
+router.get('/config', authenticateToken, authorize('admin'), (req, res) => {
     try {
         const phoneId = process.env.WHATSAPP_PHONE_ID;
         const token = process.env.WHATSAPP_TOKEN;
@@ -303,9 +304,9 @@ router.get('/config', (req, res) => {
 /**
  * @route   POST /api/whatsapp/send-test
  * @desc    Enviar mensagem de teste
- * @access  Public (temporário)
+ * @access  Private (Admin only)
  */
-router.post('/send-test', async (req, res) => {
+router.post('/send-test', authenticateToken, authorize('admin'), async (req, res) => {
     try {
         const { phone, message } = req.body;
         
