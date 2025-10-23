@@ -407,4 +407,5 @@ APP_URL=http://localhost:3000
 ---
 
 **Desenvolvido com ❤️ pela equipe AtenMed**  
-**Versão 2.0 - Outubro 2024** 🚀
+**Versão 2.0 - Outubro 2024** 🚀#   D e p l o y   a u t o m � t i c o   c o n f i g u r a d o  
+ 
