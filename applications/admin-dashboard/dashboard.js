@@ -90,8 +90,8 @@ async function loadLeads() {
         const response = await fetch('/api/leads');
         const result = await response.json();
         
-        if (response.ok) {
-            displayLeads(result.data || mockData.leads);
+        if (response.ok && result.success) {
+            displayLeads(result.data.leads || mockData.leads);
         } else {
             displayLeads(mockData.leads);
         }
@@ -152,8 +152,8 @@ async function loadContacts() {
         const response = await fetch('/api/contact');
         const result = await response.json();
         
-        if (response.ok) {
-            displayContacts(result.data || mockData.contacts);
+        if (response.ok && result.success) {
+            displayContacts(result.data.contatos || result.data || mockData.contacts);
         } else {
             displayContacts(mockData.contacts);
         }
