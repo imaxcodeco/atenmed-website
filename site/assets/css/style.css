@@ -1452,28 +1452,12 @@ img[data-src].loaded {
     color: var(--primary-color) !important;
     padding: 0.5rem 0.75rem;
     font-weight: 600;
-    position: relative;
     transition: all 0.3s ease;
     background: transparent;
 }
 
-.nav-login::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: var(--primary-color);
-    transition: width 0.3s ease;
-}
-
 .nav-login:hover {
     color: var(--primary-dark) !important;
-}
-
-.nav-login:hover::after {
-    width: 100%;
 }
 
 .nav-login:active {
