@@ -70,17 +70,37 @@ const mockData = {
 // Carregar dados do dashboard
 async function loadDashboardData() {
     try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Buscar estatísticas reais
+        const [leadsRes, clientsRes, contactsRes] = await Promise.all([
+            fetch('/api/leads?limit=1000'),
+            fetch('/api/clients'),
+            fetch('/api/contact')
+        ]);
+        
+        const leads = await leadsRes.json();
+        const clients = await clientsRes.json();
+        const contacts = await contactsRes.json();
         
         // Atualizar estatísticas
-        document.getElementById('totalLeads').textContent = mockData.leads.length;
-        document.getElementById('activeClients').textContent = '12';
-        document.getElementById('conversionRate').textContent = '15%';
-        document.getElementById('monthlyRevenue').textContent = 'R$ 45.000';
+        const totalLeads = leads.data?.pagination?.total || leads.data?.leads?.length || 0;
+        const totalClients = clients.data?.length || 0;
+        const totalContacts = contacts.data?.contatos?.length || contacts.data?.length || 0;
+        
+        // Calcular taxa de conversão
+        const conversionRate = totalLeads > 0 ? Math.round((totalClients / totalLeads) * 100) : 0;
+        
+        document.getElementById('totalLeads').textContent = totalLeads;
+        document.getElementById('activeClients').textContent = totalClients;
+        document.getElementById('conversionRate').textContent = `${conversionRate}%`;
+        document.getElementById('monthlyRevenue').textContent = totalContacts;
         
     } catch (error) {
         console.error('Erro ao carregar dados:', error);
-        showAlert('Erro ao carregar dados do dashboard', 'error');
+        // Manter valores padrão em caso de erro
+        document.getElementById('totalLeads').textContent = '0';
+        document.getElementById('activeClients').textContent = '0';
+        document.getElementById('conversionRate').textContent = '0%';
+        document.getElementById('monthlyRevenue').textContent = '0';
     }
 }
 
@@ -335,16 +355,85 @@ function exportData() {
     showAlert('Funcionalidade de exportação em desenvolvimento...', 'warning');
 }
 
-function viewLead(leadId) {
-    showAlert(`Visualizando lead ${leadId}...`, 'info');
+async function viewLead(leadId) {
+    try {
+        const response = await fetch(`/api/leads/${leadId}`);
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            const lead = result.data;
+            const details = `
+                <strong>Nome:</strong> ${lead.nome}<br>
+                <strong>Email:</strong> ${lead.email}<br>
+                <strong>Telefone:</strong> ${lead.telefone}<br>
+                <strong>Especialidade:</strong> ${lead.especialidade || 'Não informada'}<br>
+                <strong>Status:</strong> ${lead.status}<br>
+                <strong>Origem:</strong> ${lead.origem}<br>
+                <strong>Data:</strong> ${new Date(lead.createdAt).toLocaleString('pt-BR')}
+            `;
+            showAlert(details, 'info');
+        } else {
+            showAlert('Lead não encontrado', 'error');
+        }
+    } catch (error) {
+        console.error('Erro ao visualizar lead:', error);
+        showAlert('Erro ao carregar detalhes do lead', 'error');
+    }
 }
 
-function viewContact(contactId) {
-    showAlert(`Visualizando contato ${contactId}...`, 'info');
+async function viewContact(contactId) {
+    try {
+        const response = await fetch(`/api/contact/${contactId}`);
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            const contact = result.data;
+            const details = `
+                <strong>Nome:</strong> ${contact.nome}<br>
+                <strong>Email:</strong> ${contact.email}<br>
+                <strong>Telefone:</strong> ${contact.telefone || 'Não informado'}<br>
+                <strong>Assunto:</strong> ${contact.assunto}<br>
+                <strong>Mensagem:</strong> ${contact.mensagem}<br>
+                <strong>Data:</strong> ${new Date(contact.createdAt).toLocaleString('pt-BR')}
+            `;
+            showAlert(details, 'info');
+        } else {
+            showAlert('Contato não encontrado', 'error');
+        }
+    } catch (error) {
+        console.error('Erro ao visualizar contato:', error);
+        showAlert('Erro ao carregar detalhes do contato', 'error');
+    }
 }
 
-function viewClient(clientId) {
-    showAlert(`Visualizando cliente ${clientId}...`, 'info');
+async function viewClient(clientId) {
+    try {
+        const response = await fetch(`/api/clients/${clientId}`);
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            const client = result.data;
+            const apps = [];
+            if (client.applications?.automacaoAtendimento) apps.push('💬 Automação WhatsApp');
+            if (client.applications?.agendamentoInteligente) apps.push('📅 Agendamento Inteligente');
+            
+            const details = `
+                <strong>Nome:</strong> ${client.name}<br>
+                <strong>Email:</strong> ${client.email || 'Não informado'}<br>
+                <strong>WhatsApp:</strong> ${client.whatsapp}<br>
+                <strong>Tipo:</strong> ${client.businessType}<br>
+                <strong>Aplicações:</strong> ${apps.join(', ') || 'Nenhuma'}<br>
+                <strong>Status:</strong> ${client.status}<br>
+                <strong>Data:</strong> ${new Date(client.createdAt).toLocaleString('pt-BR')}
+            `;
+            showAlert(details, 'info');
+        } else {
+            showAlert('Cliente não encontrado', 'error');
+        }
+    } catch (error) {
+        console.error('Erro ao visualizar cliente:', error);
+        showAlert('Erro ao carregar detalhes do cliente', 'error');
+    }
 }
 
 async function deleteClient(clientId) {
@@ -414,12 +503,17 @@ document.addEventListener('DOMContentLoaded', function() {
         clientForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            const selectedApp = document.querySelector('input[name="applications"]:checked').value;
+            
             const formData = {
                 name: document.getElementById('clientName').value,
                 email: document.getElementById('clientEmail').value,
                 whatsapp: document.getElementById('clientWhatsapp').value,
                 businessType: document.getElementById('clientBusinessType').value,
-                applications: document.querySelector('input[name="applications"]:checked').value,
+                applications: {
+                    automacaoAtendimento: selectedApp === 'whatsapp' || selectedApp === 'both',
+                    agendamentoInteligente: selectedApp === 'agendamento' || selectedApp === 'both'
+                },
                 notes: document.getElementById('clientNotes').value
             };
             
