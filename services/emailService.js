@@ -315,10 +315,59 @@ async function testEmailConfiguration() {
     }
 }
 
+/**
+ * Enviar email de confirmação para o lead recém cadastrado
+ */
+async function sendLeadConfirmation(lead) {
+    const html = `
+    <h2>Olá, ${lead.nome}!</h2>
+    <p>Obrigado por entrar em contato com a AtenMed. Nossa equipe retornará em breve ✨</p>
+    <p><strong>Resumo do seu pedido:</strong></p>
+    <ul>
+        <li>Email: ${lead.email}</li>
+        <li>Telefone: ${lead.telefone}</li>
+        <li>Especialidade: ${lead.especialidade || 'Não informada'}</li>
+    </ul>
+    <p>Enquanto isso, conheça mais sobre nossa solução em <a href="https://atenmed.com.br">atenmed.com.br</a>.</p>
+    `;
+
+    return sendEmail({
+        to: lead.email,
+        subject: '✅ Recebemos sua solicitação – AtenMed',
+        html
+    });
+}
+
+/**
+ * Notificar equipe interna sobre novo lead
+ */
+async function sendNewLeadNotification(lead) {
+    const html = `
+    <h2>Novo Lead no Site</h2>
+    <ul>
+        <li>Nome: ${lead.nome}</li>
+        <li>Email: ${lead.email}</li>
+        <li>Telefone: ${lead.telefone}</li>
+        <li>Especialidade: ${lead.especialidade || 'Não informada'}</li>
+        <li>Origem: ${lead.origem}</li>
+        <li>Interesse: ${lead.interesse}</li>
+    </ul>
+    <a href="https://atenmed.com.br/apps/admin/dashboard.html">Ver na dashboard</a>
+    `;
+
+    return sendEmail({
+        to: 'contato@atenmed.com.br',
+        subject: `📢 Novo Lead – ${lead.nome}`,
+        html
+    });
+}
+
 module.exports = {
     sendEmail,
     sendWelcomeEmail,
     sendContactNotification,
     sendAppointmentConfirmation,
-    testEmailConfiguration
+    testEmailConfiguration,
+    sendLeadConfirmation,
+    sendNewLeadNotification
 };
