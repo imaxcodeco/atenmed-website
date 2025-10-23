@@ -1,334 +1,256 @@
+/**
+ * Serviço de Email - AWS SES
+ * Gerencia envio de emails transacionais
+ */
+
 const nodemailer = require('nodemailer');
 const logger = require('../utils/logger');
 
-class EmailService {
-    constructor() {
-        this.transporter = null;
-        this.initializeTransporter();
+// Configuração do transporter
+let transporter = null;
+
+/**
+ * Inicializar transporter
+ */
+function initializeTransporter() {
+    if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER) {
+        logger.warn('⚠️  Email não configurado. Variáveis EMAIL_HOST e EMAIL_USER são necessárias.');
+        return null;
     }
 
-    async initializeTransporter() {
-        try {
-            this.transporter = nodemailer.createTransport({
-                host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-                port: parseInt(process.env.EMAIL_PORT) || 587,
-                secure: false, // true para 465, false para outras portas
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS
-                },
-                tls: {
-                    rejectUnauthorized: false
-                }
-            });
-
-            // Verificar conexão
-            await this.transporter.verify();
-            logger.info('📧 Serviço de email configurado com sucesso');
-        } catch (error) {
-            logger.error('Erro ao configurar serviço de email:', error);
+    transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: parseInt(process.env.EMAIL_PORT) || 587,
+        secure: process.env.EMAIL_SECURE === 'true', // false para STARTTLS
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
         }
-    }
+    });
 
-    async sendEmail(options) {
-        try {
-            if (!this.transporter) {
-                throw new Error('Transporter não configurado');
+    logger.info('✅ Email transporter inicializado (AWS SES)');
+    return transporter;
+}
+
+/**
+ * Enviar email genérico
+ */
+async function sendEmail({ to, subject, text, html }) {
+    try {
+        if (!transporter) {
+            transporter = initializeTransporter();
+            if (!transporter) {
+                throw new Error('Email não configurado');
             }
-
-            const mailOptions = {
-                from: process.env.EMAIL_FROM || 'AtenMed <contato@atenmed.com.br>',
-                to: options.to,
-                subject: options.subject,
-                html: options.html,
-                text: options.text
-            };
-
-            if (options.cc) mailOptions.cc = options.cc;
-            if (options.bcc) mailOptions.bcc = options.bcc;
-            if (options.attachments) mailOptions.attachments = options.attachments;
-
-            const result = await this.transporter.sendMail(mailOptions);
-            
-            logger.info('Email enviado com sucesso:', {
-                to: options.to,
-                subject: options.subject,
-                messageId: result.messageId
-            });
-
-            return result;
-        } catch (error) {
-            logger.error('Erro ao enviar email:', error);
-            throw error;
         }
-    }
 
-    // Template para confirmação de lead
-    async sendLeadConfirmation(leadData) {
-        const html = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="utf-8">
-                <title>Confirmação de Demonstração - AtenMed</title>
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: linear-gradient(135deg, #45a7b1, #184354); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-                    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-                    .button { display: inline-block; background: #45a7b1; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-                    .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>🎉 Demonstração Agendada!</h1>
-                        <p>Olá ${leadData.nome}, obrigado pelo seu interesse na AtenMed!</p>
-                    </div>
-                    <div class="content">
-                        <h2>Próximos Passos:</h2>
-                        <ul>
-                            <li>✅ Nossa equipe entrará em contato em até 2 horas úteis</li>
-                            <li>📞 Ligaremos para o telefone: ${leadData.telefone}</li>
-                            <li>📧 Também enviaremos informações por email</li>
-                            <li>🎯 Prepararemos uma demonstração personalizada para sua especialidade: ${leadData.especialidade}</li>
-                        </ul>
-                        
-                        <h3>O que você pode esperar:</h3>
-                        <p>• Demonstração prática das nossas soluções<br>
-                        • Análise personalizada das necessidades da sua clínica<br>
-                        • Proposta comercial adaptada ao seu perfil<br>
-                        • Suporte completo na implementação</p>
-                        
-                        <p><strong>Enquanto isso, que tal conhecer mais sobre nossos serviços?</strong></p>
-                        <a href="https://atenmed.com.br/servicos" class="button">Ver Nossos Serviços</a>
-                    </div>
-                    <div class="footer">
-                        <p>AtenMed - Organização Inteligente para Consultórios</p>
-                        <p>📧 contato@atenmed.com.br | 📱 (11) 99999-9999</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-        `;
-
-        return await this.sendEmail({
-            to: leadData.email,
-            subject: '🎉 Demonstração Agendada - AtenMed',
-            html: html,
-            text: `Olá ${leadData.nome}, obrigado pelo seu interesse na AtenMed! Nossa equipe entrará em contato em até 2 horas úteis.`
+        const info = await transporter.sendMail({
+            from: process.env.EMAIL_FROM || 'AtenMed <contato@atenmed.com.br>',
+            to,
+            subject,
+            text,
+            html
         });
-    }
 
-    // Template para notificação interna de novo lead
-    async sendNewLeadNotification(leadData) {
-        const html = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="utf-8">
-                <title>Novo Lead - AtenMed</title>
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #45a7b1; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
-                    .content { background: #f9f9f9; padding: 20px; border-radius: 0 0 10px 10px; }
-                    .lead-info { background: white; padding: 15px; border-radius: 5px; margin: 10px 0; }
-                    .urgent { border-left: 4px solid #e74c3c; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>🆕 Novo Lead Recebido</h1>
-                    </div>
-                    <div class="content">
-                        <div class="lead-info">
-                            <h3>Informações do Lead:</h3>
-                            <p><strong>Nome:</strong> ${leadData.nome}</p>
-                            <p><strong>Email:</strong> ${leadData.email}</p>
-                            <p><strong>Telefone:</strong> ${leadData.telefone}</p>
-                            <p><strong>Especialidade:</strong> ${leadData.especialidade}</p>
-                            <p><strong>Interesse:</strong> ${leadData.interesse ? leadData.interesse.join(', ') : 'Não especificado'}</p>
-                            <p><strong>Data:</strong> ${new Date(leadData.createdAt).toLocaleString('pt-BR')}</p>
-                        </div>
-                        
-                        <p><strong>Ação Requerida:</strong> Entre em contato com o lead o mais rápido possível.</p>
-                        
-                        <p>📞 <strong>Telefone:</strong> ${leadData.telefone}<br>
-                        📧 <strong>Email:</strong> ${leadData.email}</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-        `;
-
-        return await this.sendEmail({
-            to: process.env.EMAIL_USER,
-            subject: `🆕 Novo Lead: ${leadData.nome} - ${leadData.especialidade}`,
-            html: html
-        });
-    }
-
-    // Template para resposta a contato
-    async sendContactResponse(contactData, response) {
-        const html = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="utf-8">
-                <title>Resposta - AtenMed</title>
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: linear-gradient(135deg, #45a7b1, #184354); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-                    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-                    .response { background: white; padding: 20px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #45a7b1; }
-                    .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>📧 Resposta ao seu contato</h1>
-                        <p>Olá ${contactData.nome}, obrigado por entrar em contato conosco!</p>
-                    </div>
-                    <div class="content">
-                        <div class="response">
-                            <h3>Nossa Resposta:</h3>
-                            <p>${response.conteudo}</p>
-                        </div>
-                        
-                        <p>Se você tiver mais dúvidas, não hesite em nos contatar novamente.</p>
-                        
-                        <p><strong>Equipe AtenMed</strong><br>
-                        📧 contato@atenmed.com.br<br>
-                        📱 (11) 99999-9999</p>
-                    </div>
-                    <div class="footer">
-                        <p>AtenMed - Organização Inteligente para Consultórios</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-        `;
-
-        return await this.sendEmail({
-            to: contactData.email,
-            subject: `Re: ${contactData.assunto} - AtenMed`,
-            html: html
-        });
-    }
-
-    // Template para notificação de contato urgente
-    async sendUrgentContactNotification(contactData) {
-        const html = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="utf-8">
-                <title>Contato Urgente - AtenMed</title>
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #e74c3c; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
-                    .content { background: #f9f9f9; padding: 20px; border-radius: 0 0 10px 10px; }
-                    .urgent { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 10px 0; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>🚨 CONTATO URGENTE</h1>
-                    </div>
-                    <div class="content">
-                        <div class="urgent">
-                            <h3>⚠️ ATENÇÃO: Contato de alta prioridade recebido!</h3>
-                        </div>
-                        
-                        <h3>Informações do Contato:</h3>
-                        <p><strong>Nome:</strong> ${contactData.nome}</p>
-                        <p><strong>Email:</strong> ${contactData.email}</p>
-                        <p><strong>Telefone:</strong> ${contactData.telefone}</p>
-                        <p><strong>Assunto:</strong> ${contactData.assunto}</p>
-                        <p><strong>Mensagem:</strong> ${contactData.mensagem}</p>
-                        <p><strong>Prioridade:</strong> ${contactData.prioridade}</p>
-                        <p><strong>Data:</strong> ${new Date(contactData.createdAt).toLocaleString('pt-BR')}</p>
-                        
-                        <p><strong>🚨 AÇÃO IMEDIATA REQUERIDA!</strong></p>
-                    </div>
-                </div>
-            </body>
-            </html>
-        `;
-
-        return await this.sendEmail({
-            to: process.env.EMAIL_USER,
-            subject: `🚨 URGENTE: ${contactData.assunto} - ${contactData.nome}`,
-            html: html
-        });
-    }
-
-    // Template para relatório semanal
-    async sendWeeklyReport(reportData) {
-        const html = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="utf-8">
-                <title>Relatório Semanal - AtenMed</title>
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 800px; margin: 0 auto; padding: 20px; }
-                    .header { background: linear-gradient(135deg, #45a7b1, #184354); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-                    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-                    .stats { display: flex; justify-content: space-around; margin: 20px 0; }
-                    .stat { text-align: center; background: white; padding: 20px; border-radius: 10px; margin: 10px; }
-                    .stat-number { font-size: 2em; font-weight: bold; color: #45a7b1; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>📊 Relatório Semanal</h1>
-                        <p>Período: ${reportData.periodo.inicio} a ${reportData.periodo.fim}</p>
-                    </div>
-                    <div class="content">
-                        <div class="stats">
-                            <div class="stat">
-                                <div class="stat-number">${reportData.leads.total}</div>
-                                <div>Novos Leads</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-number">${reportData.contatos.total}</div>
-                                <div>Contatos</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-number">${reportData.leads.taxaConversao}%</div>
-                                <div>Taxa de Conversão</div>
-                            </div>
-                        </div>
-                        
-                        <h3>📈 Resumo de Performance:</h3>
-                        <ul>
-                            <li>Leads convertidos: ${reportData.leads.convertidos}</li>
-                            <li>Contatos respondidos: ${reportData.contatos.respondidos}</li>
-                            <li>Tempo médio de resposta: ${reportData.contatos.tempoMedioResposta}h</li>
-                        </ul>
-                    </div>
-                </div>
-            </body>
-            </html>
-        `;
-
-        return await this.sendEmail({
-            to: process.env.EMAIL_USER,
-            subject: `📊 Relatório Semanal - ${new Date().toLocaleDateString('pt-BR')}`,
-            html: html
-        });
+        logger.info(`📧 Email enviado: ${info.messageId} para ${to}`);
+        return { success: true, messageId: info.messageId };
+    } catch (error) {
+        logger.error(`❌ Erro ao enviar email: ${error.message}`);
+        return { success: false, error: error.message };
     }
 }
 
-module.exports = new EmailService();
+/**
+ * Email de boas-vindas
+ */
+async function sendWelcomeEmail(user) {
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #4ca5b2, #083e51); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f9f9f9; padding: 30px; }
+            .button { display: inline-block; background: #4ca5b2; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+            .footer { background: #083e51; color: white; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 10px 10px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🏥 Bem-vindo à AtenMed!</h1>
+            </div>
+            <div class="content">
+                <h2>Olá, ${user.name}!</h2>
+                <p>Estamos felizes em ter você conosco. Sua conta foi criada com sucesso!</p>
+                <p>Com a AtenMed, você pode:</p>
+                <ul>
+                    <li>✅ Automatizar atendimentos via WhatsApp</li>
+                    <li>✅ Gerenciar agendamentos inteligentes</li>
+                    <li>✅ Acompanhar métricas e relatórios</li>
+                </ul>
+                <a href="https://atenmed.com.br/apps/admin/dashboard.html" class="button">Acessar Dashboard</a>
+                <p><strong>Suas credenciais:</strong></p>
+                <p>Email: ${user.email}</p>
+                <p>⚠️ Por segurança, altere sua senha no primeiro acesso.</p>
+            </div>
+            <div class="footer">
+                <p>AtenMed - Organização inteligente para consultórios modernos</p>
+                <p>© ${new Date().getFullYear()} AtenMed. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
 
+    return sendEmail({
+        to: user.email,
+        subject: '🏥 Bem-vindo à AtenMed!',
+        html
+    });
+}
+
+/**
+ * Email de novo contato
+ */
+async function sendContactNotification(contact) {
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #f9f9f9; }
+            .header { background: #4ca5b2; color: white; padding: 20px; text-align: center; }
+            .content { background: white; padding: 20px; margin: 20px 0; border-radius: 5px; }
+            .info { background: #f0f0f0; padding: 15px; margin: 10px 0; border-left: 4px solid #4ca5b2; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h2>📧 Novo Contato Recebido</h2>
+            </div>
+            <div class="content">
+                <h3>Informações do Contato:</h3>
+                <div class="info">
+                    <p><strong>Nome:</strong> ${contact.name}</p>
+                    <p><strong>Email:</strong> ${contact.email}</p>
+                    <p><strong>Telefone:</strong> ${contact.phone || 'Não informado'}</p>
+                    <p><strong>Mensagem:</strong></p>
+                    <p>${contact.message}</p>
+                    <p><strong>Data:</strong> ${new Date(contact.createdAt).toLocaleString('pt-BR')}</p>
+                </div>
+                <p>Responda o mais breve possível!</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+
+    return sendEmail({
+        to: 'contato@atenmed.com.br',
+        subject: `📧 Novo Contato: ${contact.name}`,
+        html
+    });
+}
+
+/**
+ * Email de confirmação de agendamento
+ */
+async function sendAppointmentConfirmation(appointment) {
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #4ca5b2, #083e51); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f9f9f9; padding: 30px; }
+            .appointment-box { background: white; padding: 20px; margin: 20px 0; border-left: 4px solid #4ca5b2; border-radius: 5px; }
+            .button { display: inline-block; background: #10b981; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 10px 5px; }
+            .button-cancel { background: #ef4444; }
+            .footer { background: #083e51; color: white; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 10px 10px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>✅ Consulta Confirmada!</h1>
+            </div>
+            <div class="content">
+                <p>Olá, <strong>${appointment.patientName}</strong>!</p>
+                <p>Sua consulta foi confirmada com sucesso:</p>
+                <div class="appointment-box">
+                    <h3>📋 Detalhes da Consulta</h3>
+                    <p><strong>📅 Data:</strong> ${new Date(appointment.date).toLocaleDateString('pt-BR')}</p>
+                    <p><strong>🕐 Horário:</strong> ${appointment.time}</p>
+                    <p><strong>👨‍⚕️ Médico:</strong> ${appointment.doctorName || 'A confirmar'}</p>
+                    <p><strong>📍 Local:</strong> ${appointment.clinic || 'A confirmar'}</p>
+                </div>
+                <p>⚠️ <strong>Importante:</strong> Chegue com 15 minutos de antecedência.</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="https://atenmed.com.br" class="button">Gerenciar Consulta</a>
+                </div>
+            </div>
+            <div class="footer">
+                <p>AtenMed - Organização inteligente para consultórios modernos</p>
+                <p>© ${new Date().getFullYear()} AtenMed. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+
+    return sendEmail({
+        to: appointment.patientEmail,
+        subject: '✅ Consulta Confirmada - AtenMed',
+        html
+    });
+}
+
+/**
+ * Testar configuração de email
+ */
+async function testEmailConfiguration() {
+    try {
+        if (!transporter) {
+            transporter = initializeTransporter();
+            if (!transporter) {
+                return { success: false, error: 'Email não configurado' };
+            }
+        }
+
+        // Verificar conexão
+        await transporter.verify();
+        logger.info('✅ Configuração de email verificada com sucesso');
+
+        // Enviar email de teste
+        const result = await sendEmail({
+            to: process.env.EMAIL_FROM || 'contato@atenmed.com.br',
+            subject: '🧪 Teste de Configuração - AtenMed',
+            html: `
+                <h2>✅ Email Configurado com Sucesso!</h2>
+                <p>Este é um email de teste do sistema AtenMed.</p>
+                <p>Data/Hora: ${new Date().toLocaleString('pt-BR')}</p>
+                <p>Servidor: ${process.env.EMAIL_HOST}</p>
+            `
+        });
+
+        return { success: true, ...result };
+    } catch (error) {
+        logger.error(`❌ Erro ao testar email: ${error.message}`);
+        return { success: false, error: error.message };
+    }
+}
+
+module.exports = {
+    sendEmail,
+    sendWelcomeEmail,
+    sendContactNotification,
+    sendAppointmentConfirmation,
+    testEmailConfiguration
+};

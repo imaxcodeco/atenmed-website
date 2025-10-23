@@ -1,21 +1,23 @@
+# robots.txt para AtenMed
+# https://atenmed.com.br
+
 User-agent: *
 Allow: /
+Allow: /site/
+Allow: /servicos.html
+Allow: /sobre.html
+Allow: /assets/
+
+# Bloquear áreas administrativas
+Disallow: /apps/admin/
+Disallow: /api/
+Disallow: /login.html
+
+# Bloquear aplicações internas
+Disallow: /apps/whatsapp/
+Disallow: /apps/agendamento/
+Disallow: /apps/analytics/
+Disallow: /apps/clinic-page/
 
 # Sitemap
 Sitemap: https://atenmed.com.br/sitemap.xml
-
-# Disallow admin areas (if any)
-Disallow: /admin/
-Disallow: /private/
-Disallow: /temp/
-
-# Allow all CSS and JS files
-Allow: /assets/css/
-Allow: /assets/js/
-Allow: /assets/images/
-
-# Crawl delay (optional)
-Crawl-delay: 1
-
-
-
