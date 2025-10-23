@@ -170,7 +170,7 @@ function displayLeads(leads) {
                             <td><span class="badge badge-${getStatusClass(lead.status)}">${lead.status}</span></td>
                             <td>${new Date(lead.createdAt).toLocaleDateString('pt-BR')}</td>
                             <td>
-                                <button class="btn btn-secondary" onclick="viewLead('${lead.id}')">
+                                <button class="btn btn-secondary" onclick="viewLead('${lead._id || lead.id}')">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </td>
@@ -237,7 +237,7 @@ function displayContacts(contacts) {
                             <td><span class="badge badge-${getStatusClass(contact.status)}">${contact.status}</span></td>
                             <td>${new Date(contact.createdAt).toLocaleDateString('pt-BR')}</td>
                             <td>
-                                <button class="btn btn-secondary" onclick="viewContact('${contact.id}')">
+                                <button class="btn btn-secondary" onclick="viewContact('${contact._id || contact.id}')">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </td>
