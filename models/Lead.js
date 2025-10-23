@@ -18,12 +18,10 @@ const leadSchema = new mongoose.Schema({
     telefone: {
         type: String,
         required: [true, 'Telefone é obrigatório'],
-        trim: true,
-        match: [/^\(\d{2}\)\s\d{4,5}-\d{4}$/, 'Formato de telefone inválido']
+        trim: true
     },
     especialidade: {
         type: String,
-        required: [true, 'Especialidade é obrigatória'],
         enum: [
             'clinica-geral',
             'cardiologia',
@@ -34,6 +32,16 @@ const leadSchema = new mongoose.Schema({
             'outros'
         ]
     },
+    empresa: {
+        type: String,
+        trim: true,
+        maxlength: [200, 'Nome da empresa não pode ter mais de 200 caracteres']
+    },
+    cargo: {
+        type: String,
+        trim: true,
+        maxlength: [100, 'Cargo não pode ter mais de 100 caracteres']
+    },
     
     // Informações do lead
     status: {
@@ -43,13 +51,20 @@ const leadSchema = new mongoose.Schema({
     },
     origem: {
         type: String,
-        enum: ['site', 'whatsapp', 'indicacao', 'google', 'facebook', 'outros'],
+        enum: ['site', 'whatsapp', 'indicacao', 'google', 'facebook', 'formulario-contato', 'outros'],
         default: 'site'
     },
-    interesse: [{
+    interesse: {
         type: String,
-        enum: ['automacao-whatsapp', 'agendamento-inteligente', 'criacao-sites', 'todos']
-    }],
+        enum: ['baixo', 'medio', 'alto'],
+        default: 'medio'
+    },
+    
+    // Referência ao contato original (se veio do formulário)
+    contatoId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Contact'
+    },
     
     // Dados de acompanhamento
     observacoes: {

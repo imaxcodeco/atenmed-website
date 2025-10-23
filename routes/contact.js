@@ -94,13 +94,59 @@ router.post('/', [
         const contact = new Contact(contactData);
         await contact.save();
 
-        // Enviar notificação para contatos urgentes
-        if (contact.prioridade === 'urgente') {
-            try {
-                await emailService.sendUrgentContactNotification(contact);
-            } catch (emailError) {
-                logger.error('Erro ao enviar notificação urgente:', emailError);
+        // Enviar email de notificação para TODOS os contatos
+        try {
+            await emailService.sendContactNotification({
+                name: contact.nome,
+                email: contact.email,
+                phone: contact.telefone,
+                subject: contact.assunto,
+                message: contact.mensagem,
+                categoria: contact.categoria,
+                prioridade: contact.prioridade,
+                empresa: contact.empresa,
+                createdAt: contact.createdAt
+            });
+            logger.info(`📧 Email de notificação enviado para contato: ${contact.email}`);
+        } catch (emailError) {
+            logger.error('Erro ao enviar email de notificação:', emailError);
+            // Não falhar a requisição por erro de email
+        }
+
+        // Criar Lead automaticamente a partir do contato
+        try {
+            const Lead = require('../models/Lead');
+            
+            // Verificar se já existe lead com este email
+            const existingLead = await Lead.findOne({ email: contact.email });
+            
+            if (!existingLead) {
+                const leadData = {
+                    nome: contact.nome,
+                    email: contact.email,
+                    telefone: contact.telefone,
+                    empresa: contact.empresa,
+                    cargo: contact.cargo,
+                    origem: 'formulario-contato',
+                    status: 'novo',
+                    interesse: contact.categoria === 'vendas' ? 'alto' : 'medio',
+                    observacoes: `Assunto: ${contact.assunto}\n\nMensagem: ${contact.mensagem}`,
+                    utmSource: contact.utmSource,
+                    utmMedium: contact.utmMedium,
+                    utmCampaign: contact.utmCampaign,
+                    contatoId: contact._id
+                };
+                
+                const lead = new Lead(leadData);
+                await lead.save();
+                
+                logger.info(`✅ Lead criado automaticamente: ${lead.email} (ID: ${lead._id})`);
+            } else {
+                logger.info(`ℹ️ Lead já existe para o email: ${contact.email}`);
             }
+        } catch (leadError) {
+            logger.error('Erro ao criar lead automaticamente:', leadError);
+            // Não falhar a requisição por erro ao criar lead
         }
 
         // Log da criação
