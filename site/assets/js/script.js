@@ -212,7 +212,7 @@ async function submitForm(data) {
         });
         
         const result = await response.json();
-        
+
         if (response.ok && result.success) {
             // Salvar dados no localStorage para demonstração
             saveLeadData(data);
@@ -229,11 +229,26 @@ async function submitForm(data) {
                 behavior: 'smooth'
             });
         } else {
-            throw new Error(result.error || 'Erro ao processar solicitação');
+            // Tratamento de erros amigável
+            if (response.status === 409 || result?.code === 'LEAD_EXISTS') {
+                // Já existe lead com este e-mail – tratar como sucesso para o usuário
+                showNotification('✅ Já recebemos sua solicitação anteriormente. Nossa equipe entrará em contato em breve.', 'success');
+                contactForm.reset();
+                return;
+            }
+
+            if (response.status === 400 && Array.isArray(result?.errors)) {
+                const messages = result.errors.map(e => `• ${e.path}: ${e.msg}`).join('\n');
+                showNotification(`Por favor, corrija os seguintes erros:\n${messages}`, 'error');
+                return;
+            }
+
+            showNotification(result?.error || 'Erro ao processar solicitação', 'error');
+            return;
         }
     } catch (error) {
         console.error('Erro ao enviar formulário:', error);
-        showNotification('Ops! Ocorreu um erro. Tente novamente ou entre em contato pelo WhatsApp.', 'error');
+        showNotification(error?.message || 'Ops! Ocorreu um erro. Tente novamente ou entre em contato pelo WhatsApp.', 'error');
     } finally {
         // Restaurar botão
         submitButton.disabled = false;
