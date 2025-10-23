@@ -379,7 +379,7 @@ p {
 
 .why-choose-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: var(--spacing-8);
     margin-bottom: var(--spacing-12);
 }
@@ -1573,5 +1573,21 @@ img[data-src].loaded {
         display: block;
         width: auto;
         padding: 0.75rem 0;
+    }
+
+    .why-choose-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .why-cta-title {
+        font-size: var(--font-size-xl);
+    }
+}
+
+/* Tablet */
+@media (max-width: 1024px) and (min-width: 768px) {
+    .why-choose-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--spacing-6);
     }
 }
