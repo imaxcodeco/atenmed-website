@@ -71,6 +71,18 @@ jobs:
             # Start or restart with PM2
             pm2 restart atenmed --update-env || pm2 start ecosystem.config.js --env production
             pm2 save
+            
+            # Check PM2 status and logs
+            echo "=== PM2 STATUS ==="
+            pm2 status
+            echo "=== PM2 LOGS (last 20 lines) ==="
+            pm2 logs atenmed --lines 20 --nostream
+            echo "=== PORT 3000 CHECK ==="
+            netstat -tlnp | grep :3000 || echo "❌ Port 3000 not listening"
+            echo "=== NGINX STATUS ==="
+            sudo systemctl status nginx --no-pager -l
+            echo "=== NGINX CONFIG TEST ==="
+            sudo nginx -t
 
             # Wait for app to start (give it 10 seconds)
             echo "Aguardando app inicializar..."
