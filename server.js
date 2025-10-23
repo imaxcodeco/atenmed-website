@@ -206,6 +206,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/clinics', clinicRoutes);
+app.use('/api/test', require('./routes/test'));
 
 // Rotas de autenticação do Google Calendar
 app.get('/api/auth/google', (req, res) => {
