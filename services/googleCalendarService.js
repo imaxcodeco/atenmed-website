@@ -3,13 +3,14 @@ const logger = require('../utils/logger');
 let google; // será atribuído se disponível
 let GOOGLE_ENABLED = process.env.ENABLE_GOOGLE_CALENDAR !== 'false';
 
-if (GOOGLE_ENABLED) {
-    try {
+// Tentar carregar googleapis de forma segura
+try {
+    if (GOOGLE_ENABLED) {
         ({ google } = require('googleapis'));
-    } catch (err) {
-        GOOGLE_ENABLED = false;
-        logger.error('❌ googleapis não pôde ser carregado. Google Calendar será desativado nesta execução.', err.message);
     }
+} catch (err) {
+    GOOGLE_ENABLED = false;
+    logger.error('❌ googleapis não pôde ser carregado. Google Calendar será desativado nesta execução.', err.message);
 }
 
 // Se o Google Calendar estiver explicitamente desativado ou indisponível, exportar stub

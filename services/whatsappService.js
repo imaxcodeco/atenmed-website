@@ -4,8 +4,23 @@
  * Implementa bot conversacional para agendamento de consultas
  */
 
-const axios = require('axios');
 const logger = require('../utils/logger');
+
+// Carregar axios de forma segura
+let axios;
+try {
+    axios = require('axios');
+} catch (err) {
+    logger.error('❌ axios não pôde ser carregado. WhatsApp Service será desativado.', err.message);
+    // Exportar stub se axios não estiver disponível
+    module.exports = {
+        sendMessage: async () => { throw new Error('WhatsApp Service desativado - axios indisponível'); },
+        sendTemplateMessage: async () => { throw new Error('WhatsApp Service desativado - axios indisponível'); },
+        processWebhook: async () => { throw new Error('WhatsApp Service desativado - axios indisponível'); },
+        verifyWebhook: () => { throw new Error('WhatsApp Service desativado - axios indisponível'); }
+    };
+    return;
+}
 const Appointment = require('../models/Appointment');
 const Doctor = require('../models/Doctor');
 const Specialty = require('../models/Specialty');
