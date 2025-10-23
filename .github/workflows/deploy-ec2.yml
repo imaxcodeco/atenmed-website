@@ -58,8 +58,15 @@ jobs:
               grep -q '^JWT_SECRET=' .env && sed -i "s|^JWT_SECRET=.*|JWT_SECRET=${{ secrets.JWT_SECRET }}|" .env || echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
             fi
 
-            # Install production dependencies
-            npm ci || npm install
+            # Clean install production dependencies
+            rm -rf node_modules package-lock.json
+            npm install
+            
+            # Verify critical dependencies are installed
+            echo "Verificando dependências críticas..."
+            npm list googleapis axios || echo "❌ Dependências críticas não encontradas"
+            ls -la node_modules/googleapis || echo "❌ googleapis não encontrado"
+            ls -la node_modules/axios || echo "❌ axios não encontrado"
 
             # Start or restart with PM2
             pm2 restart atenmed --update-env || pm2 start ecosystem.config.js --env production
