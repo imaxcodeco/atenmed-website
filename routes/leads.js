@@ -35,15 +35,20 @@ router.post('/', [
         .normalizeEmail()
         .withMessage('Email inválido'),
     body('telefone')
-        .matches(/^\(\d{2}\)\s\d{4,5}-\d{4}$/)
-        .withMessage('Formato de telefone inválido'),
+        .trim()
+        .notEmpty()
+        .withMessage('Telefone é obrigatório'),
     body('especialidade')
+        .optional()
         .isIn(['clinica-geral', 'cardiologia', 'dermatologia', 'ginecologia', 'pediatria', 'odontologia', 'outros'])
         .withMessage('Especialidade inválida'),
     body('interesse')
         .optional()
-        .isArray()
-        .withMessage('Interesse deve ser um array'),
+        .isIn(['baixo', 'medio', 'alto'])
+        .withMessage('Interesse deve ser: baixo, medio ou alto'),
+    body('origem')
+        .optional()
+        .trim(),
     body('utmSource').optional().trim(),
     body('utmMedium').optional().trim(),
     body('utmCampaign').optional().trim()
@@ -54,7 +59,9 @@ router.post('/', [
             email,
             telefone,
             especialidade,
-            interesse = [],
+            interesse = 'medio',
+            origem = 'site',
+            observacoes,
             utmSource,
             utmMedium,
             utmCampaign
@@ -78,6 +85,8 @@ router.post('/', [
             telefone,
             especialidade,
             interesse,
+            origem,
+            observacoes,
             ip: req.ip,
             userAgent: req.get('User-Agent'),
             utmSource,
