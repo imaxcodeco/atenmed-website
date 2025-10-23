@@ -1,6 +1,6 @@
 :root {
-    --primary: #6366f1;
-    --primary-dark: #4f46e5;
+    --primary: #4ca5b2;
+    --primary-dark: #083e51;
     --secondary: #10b981;
     --accent: #f59e0b;
     --danger: #ef4444;
@@ -33,7 +33,7 @@
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #4ca5b2 0%, #083e51 100%);
     min-height: 100vh;
     color: var(--gray-800);
     line-height: 1.6;
