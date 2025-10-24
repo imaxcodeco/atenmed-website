@@ -47,19 +47,6 @@ if (process.env.NODE_ENV === 'production') {
     app.set('trust proxy', false); // Desenvolvimento sem proxy
 }
 
-// DEBUG: Log RAW de todas as requisições antes de qualquer processamento
-app.use((req, res, next) => {
-    if (req.path === '/api/auth/login') {
-        console.log('🔍 RAW REQUEST:', {
-            method: req.method,
-            path: req.path,
-            headers: req.headers,
-            body: req.body
-        });
-    }
-    next();
-});
-
 // Conectar ao banco de dados
 connectDB();
 
@@ -161,11 +148,10 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Sanitização de dados (EXCETO para webhooks do WhatsApp)
-// TEMPORARIAMENTE DESATIVADO PARA DEBUG
-// app.use(mongoSanitize());
-// Nota: xss() removido pois estava corrompendo JSON.
-// express-validator já faz sanitização adequada nas rotas.
+// Sanitização de dados contra NoSQL injection
+app.use(mongoSanitize());
+// Nota: xss() foi removido pois estava corrompendo JSON.
+// A sanitização XSS é feita pelo express-validator nas rotas.
 
 // Compressão
 app.use(compression());
@@ -201,6 +187,17 @@ app.get('/health', (req, res) => {
         uptime: process.uptime(),
         environment: process.env.NODE_ENV,
         version: process.env.npm_package_version || '1.0.0'
+    });
+});
+
+// Health check route (para monitoramento)
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'OK',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV,
+        version: '1.0.0'
     });
 });
 

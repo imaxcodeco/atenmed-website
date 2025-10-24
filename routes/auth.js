@@ -117,16 +117,12 @@ router.post('/login', [
         .withMessage('Senha é obrigatória')
 ], validateRequest, async (req, res) => {
     try {
-        console.log('✅ [1] Entrou na rota de login');
         const { email, senha } = req.body;
-        console.log('✅ [2] Email extraído:', email);
 
         // Buscar usuário incluindo senha
         const user = await User.findOne({ email }).select('+senha');
-        console.log('✅ [3] Usuário encontrado:', !!user);
         
         if (!user) {
-            console.log('❌ [3.1] Usuário não encontrado');
             return res.status(401).json({
                 success: false,
                 error: 'Credenciais inválidas',
@@ -153,12 +149,9 @@ router.post('/login', [
         }
 
         // Verificar senha
-        console.log('✅ [4] Verificando senha...');
         const isPasswordValid = await user.verificarSenha(senha);
-        console.log('✅ [5] Senha válida:', isPasswordValid);
         
         if (!isPasswordValid) {
-            console.log('❌ [5.1] Senha inválida');
             // Incrementar tentativas de login
             await user.incrementarTentativasLogin();
             
@@ -169,14 +162,12 @@ router.post('/login', [
             });
         }
 
-        console.log('✅ [6] Resetando tentativas e atualizando último login...');
         // Resetar tentativas de login
         await user.resetarTentativasLogin();
         
         // Atualizar último login
         await user.atualizarUltimoLogin();
 
-        console.log('✅ [7] Gerando token JWT...');
         // Gerar token JWT
         const token = jwt.sign(
             { 
@@ -187,14 +178,11 @@ router.post('/login', [
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
         );
-        console.log('✅ [8] Token gerado:', token ? 'SIM' : 'NÃO');
 
         // Preparar resposta
-        console.log('✅ [9] Preparando dados públicos do usuário...');
         const publicUserData = user.obterDadosPublicos();
-        console.log('✅ [10] Dados públicos preparados:', !!publicUserData);
 
-        // Enviar resposta ANTES do log (para não bloquear)
+        // Enviar resposta
         res.json({
             success: true,
             message: 'Login realizado com sucesso',
@@ -203,7 +191,6 @@ router.post('/login', [
                 user: publicUserData
             }
         });
-        console.log('✅ [11] Resposta enviada!');
 
         // Log do login (async, não bloqueia)
         try {
@@ -214,7 +201,7 @@ router.post('/login', [
                 userAgent: req.get('User-Agent')
             });
         } catch (logError) {
-            console.error('⚠️ Erro ao logar evento (não crítico):', logError.message);
+            logger.error('Erro ao logar evento de login:', logError);
         }
 
     } catch (error) {
