@@ -9,10 +9,37 @@
     <meta http-equiv="Expires" content="0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="dashboard.css?v=2024-10-24-006" rel="stylesheet">
+    <link href="dashboard.css?v=2024-10-24-007" rel="stylesheet">
     <style>
-        body, .main-content, .header, .stat-card, .content-card, .dashboard-container { background: #ffffff !important; }
-        .sidebar { background: #ffffff !important; }
+        /* Cores principais */
+        body, .main-content, .dashboard-container { background: #f8fafc !important; }
+        .header, .stat-card, .content-card { background: #ffffff !important; }
+        
+        /* Sidebar com gradiente azul igual ao login */
+        .sidebar { 
+            background: linear-gradient(135deg, #4ca5b2 0%, #083e51 100%) !important; 
+        }
+        
+        /* Textos da sidebar brancos */
+        .nav-item { color: rgba(255, 255, 255, 0.9) !important; }
+        .nav-item:hover { 
+            background: rgba(255, 255, 255, 0.15) !important; 
+            color: #ffffff !important; 
+        }
+        .nav-item.active { 
+            background: rgba(255, 255, 255, 0.2) !important; 
+            color: #ffffff !important; 
+        }
+        
+        /* Textos do header e cards legíveis */
+        .header h1 { color: #083e51 !important; }
+        .header p { color: #64748b !important; }
+        .stat-title { color: #64748b !important; }
+        .stat-value { color: #0f172a !important; }
+        .card-title { color: #0f172a !important; }
+        
+        /* Borda da sidebar */
+        .sidebar-header { border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important; }
     </style>
 </head>
 <body>
@@ -424,6 +451,6 @@
         </div>
     </div>
 
-    <script src="dashboard.js?v=2024-10-24-006"></script>
+    <script src="dashboard.js?v=2024-10-24-007"></script>
 </body>
 </html>
