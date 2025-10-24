@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
+const { initSentry } = require('./utils/sentry');
 const mongoSanitize = require('express-mongo-sanitize');
 const path = require('path');
 require('dotenv').config();
@@ -39,6 +40,9 @@ const whatsappService = require('./services/whatsappService');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Inicializar Sentry (deve vir antes de tudo)
+const sentryHandlers = initSentry(app);
+
 // ⚠️ IMPORTANTE: Trust proxy DEVE vir ANTES de qualquer middleware que use req.ip
 // Configurar trust proxy para produção (Nginx)
 if (process.env.NODE_ENV === 'production') {
@@ -46,6 +50,10 @@ if (process.env.NODE_ENV === 'production') {
 } else {
     app.set('trust proxy', false); // Desenvolvimento sem proxy
 }
+
+// Sentry request handler (deve vir logo após configurações básicas)
+app.use(sentryHandlers.requestHandler);
+app.use(sentryHandlers.tracingHandler);
 
 // Conectar ao banco de dados
 connectDB();
@@ -215,6 +223,9 @@ app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/clinics', clinicRoutes);
 app.use('/api/test', require('./routes/test'));
+
+// Bull Board - Dashboard de Filas
+app.use('/admin', require('./routes/queues-dashboard'));
 
 // Rotas de autenticação do Google Calendar
 app.get('/api/auth/google', (req, res) => {
@@ -437,6 +448,9 @@ app.get('*', (req, res) => {
 
 // Middleware de erro 404
 app.use(notFound);
+
+// Sentry error handler (deve vir antes do errorHandler customizado)
+app.use(sentryHandlers.errorHandler);
 
 // Middleware de tratamento de erros
 app.use(errorHandler);

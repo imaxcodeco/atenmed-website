@@ -235,4 +235,171 @@ router.get('/summary', authenticateToken, authorize('admin'), async (req, res) =
     }
 });
 
+// @route   GET /api/analytics/sales-funnel
+// @desc    Obter funil de vendas
+// @access  Admin
+router.get('/sales-funnel', authenticateToken, authorize('admin'), async (req, res) => {
+    try {
+        const [
+            totalLeads,
+            qualifiedLeads,
+            proposalLeads,
+            negotiationLeads,
+            closedLeads
+        ] = await Promise.all([
+            Lead.countDocuments(),
+            Lead.countDocuments({ status: 'qualificado' }),
+            Lead.countDocuments({ status: 'em_contato' }),
+            Lead.countDocuments({ status: { $in: ['qualificado', 'em_contato'] } }),
+            Lead.countDocuments({ status: 'convertido' }),
+        ]);
+
+        res.json({
+            success: true,
+            data: {
+                labels: ['Leads', 'Qualificados', 'Em Contato', 'Negociação', 'Fechados'],
+                values: [totalLeads, qualifiedLeads, proposalLeads, negotiationLeads, closedLeads]
+            }
+        });
+    } catch (error) {
+        logger.error('Erro ao buscar funil de vendas:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Erro ao buscar funil de vendas'
+        });
+    }
+});
+
+// @route   GET /api/analytics/specialties
+// @desc    Obter especialidades mais procuradas
+// @access  Admin
+router.get('/specialties', authenticateToken, authorize('admin'), async (req, res) => {
+    try {
+        const specialties = await Lead.aggregate([
+            {
+                $match: {
+                    especialidade: { $exists: true, $ne: null }
+                }
+            },
+            {
+                $group: {
+                    _id: '$especialidade',
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { count: -1 }
+            },
+            {
+                $limit: 5
+            }
+        ]);
+
+        const total = specialties.reduce((sum, item) => sum + item.count, 0);
+        
+        const labels = specialties.map(item => {
+            const specialtyMap = {
+                'cardiologia': 'Cardiologia',
+                'dermatologia': 'Dermatologia',
+                'pediatria': 'Pediatria',
+                'ortopedia': 'Ortopedia',
+                'ginecologia': 'Ginecologia',
+                'oftalmologia': 'Oftalmologia',
+                'psiquiatria': 'Psiquiatria',
+                'outros': 'Outros'
+            };
+            return specialtyMap[item._id] || item._id;
+        });
+        
+        const values = specialties.map(item => Math.round((item.count / total) * 100));
+
+        res.json({
+            success: true,
+            data: {
+                labels,
+                values
+            }
+        });
+    } catch (error) {
+        logger.error('Erro ao buscar especialidades:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Erro ao buscar especialidades'
+        });
+    }
+});
+
+// @route   GET /api/analytics/weekly-performance
+// @desc    Obter performance semanal
+// @access  Admin
+router.get('/weekly-performance', authenticateToken, authorize('admin'), async (req, res) => {
+    try {
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+        const leads = await Lead.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: oneWeekAgo }
+                }
+            },
+            {
+                $group: {
+                    _id: { $dayOfWeek: '$createdAt' },
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { '_id': 1 }
+            }
+        ]);
+
+        const contacts = await Contact.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: oneWeekAgo }
+                }
+            },
+            {
+                $group: {
+                    _id: { $dayOfWeek: '$createdAt' },
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { '_id': 1 }
+            }
+        ]);
+
+        const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+        const leadsData = new Array(7).fill(0);
+        const contactsData = new Array(7).fill(0);
+
+        leads.forEach(item => {
+            const dayIndex = item._id - 1; // MongoDB dayOfWeek é 1-7 (Sunday=1)
+            leadsData[dayIndex] = item.count;
+        });
+
+        contacts.forEach(item => {
+            const dayIndex = item._id - 1;
+            contactsData[dayIndex] = item.count;
+        });
+
+        res.json({
+            success: true,
+            data: {
+                labels: daysOfWeek,
+                leads: leadsData,
+                contacts: contactsData
+            }
+        });
+    } catch (error) {
+        logger.error('Erro ao buscar performance semanal:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Erro ao buscar performance semanal'
+        });
+    }
+});
+
 module.exports = router;
