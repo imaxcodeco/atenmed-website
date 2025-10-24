@@ -189,22 +189,33 @@ router.post('/login', [
         );
         console.log('✅ [8] Token gerado:', token ? 'SIM' : 'NÃO');
 
-        // Log do login
-        logger.logBusinessEvent('user_login', {
-            userId: user._id,
-            email: user.email,
-            ip: req.ip,
-            userAgent: req.get('User-Agent')
-        });
+        // Preparar resposta
+        console.log('✅ [9] Preparando dados públicos do usuário...');
+        const publicUserData = user.obterDadosPublicos();
+        console.log('✅ [10] Dados públicos preparados:', !!publicUserData);
 
+        // Enviar resposta ANTES do log (para não bloquear)
         res.json({
             success: true,
             message: 'Login realizado com sucesso',
             data: {
                 token,
-                user: user.obterDadosPublicos()
+                user: publicUserData
             }
         });
+        console.log('✅ [11] Resposta enviada!');
+
+        // Log do login (async, não bloqueia)
+        try {
+            logger.logBusinessEvent('user_login', {
+                userId: user._id,
+                email: user.email,
+                ip: req.ip,
+                userAgent: req.get('User-Agent')
+            });
+        } catch (logError) {
+            console.error('⚠️ Erro ao logar evento (não crítico):', logError.message);
+        }
 
     } catch (error) {
         logger.logError(error, req);
