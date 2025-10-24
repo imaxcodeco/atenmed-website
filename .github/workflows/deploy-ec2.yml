@@ -20,7 +20,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_PORT || 22 }}
-          script_stop: true
+          command_timeout: 10m
           script: |
             set -e
             # Ensure Node 18 and PM2 are installed
@@ -58,46 +58,40 @@ jobs:
               grep -q '^JWT_SECRET=' .env && sed -i "s|^JWT_SECRET=.*|JWT_SECRET=${{ secrets.JWT_SECRET }}|" .env || echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
             fi
 
-            # Clean install production dependencies
-            rm -rf node_modules package-lock.json
-            npm install
-            
-            # Verify critical dependencies are installed
-            echo "Verificando dependências críticas..."
-            npm list googleapis axios || echo "❌ Dependências críticas não encontradas"
-            ls -la node_modules/googleapis || echo "❌ googleapis não encontrado"
-            ls -la node_modules/axios || echo "❌ axios não encontrado"
+            # Install dependencies (only if package.json changed or node_modules missing)
+            if [ ! -d "node_modules" ] || [ package.json -nt node_modules ]; then
+              echo "📦 Installing dependencies..."
+              npm install --production
+            else
+              echo "✅ Dependencies already up to date"
+            fi
 
             # Start or restart with PM2
+            echo "🔄 Restarting application..."
             pm2 restart atenmed --update-env || pm2 start ecosystem.config.js --env production
             pm2 save
             
-            # Check PM2 status and logs
-            echo "=== PM2 STATUS ==="
-            pm2 status
-            echo "=== PM2 LOGS (last 20 lines) ==="
-            pm2 logs atenmed --lines 20 --nostream
-            echo "=== PORT 3000 CHECK ==="
-            netstat -tlnp | grep :3000 || echo "❌ Port 3000 not listening"
-            echo "=== NGINX STATUS ==="
-            sudo systemctl status nginx --no-pager -l
-            echo "=== NGINX CONFIG TEST ==="
-            sudo nginx -t
+            # Wait for app to initialize
+            echo "⏳ Waiting for app to start..."
+            sleep 15
 
-            # Wait for app to start (give it 10 seconds)
-            echo "Aguardando app inicializar..."
-            sleep 10
-
-            # Health check with retries
-            for i in 1 2 3 4 5; do
+            # Health check with extended retries
+            echo "🏥 Running health checks..."
+            for i in {1..10}; do
               if curl -fsS http://127.0.0.1:3000/health > /dev/null 2>&1; then
-                echo "✅ Health check OK!"
+                echo "✅ Application is healthy!"
+                pm2 status
                 exit 0
               fi
-              echo "Tentativa $i falhou, aguardando..."
-              sleep 3
+              echo "⏳ Attempt $i/10 failed, waiting 5 seconds..."
+              sleep 5
             done
-            echo "❌ Health check falhou após 5 tentativas"
-            pm2 logs atenmed --lines 50 --nostream
+            
+            # If we get here, health check failed
+            echo "❌ Health check failed after 10 attempts"
+            echo "=== PM2 STATUS ==="
+            pm2 status
+            echo "=== PM2 LOGS ==="
+            pm2 logs atenmed --lines 100 --nostream
             exit 1
 
