@@ -5,6 +5,7 @@ const { authenticateToken, authorize, logActivity } = require('../middleware/aut
 const { validationResult } = require('express-validator');
 const logger = require('../utils/logger');
 const emailService = require('../services/emailService');
+const { addEmailJob } = require('../services/queueService');
 
 const router = express.Router();
 
@@ -94,9 +95,9 @@ router.post('/', [
         const contact = new Contact(contactData);
         await contact.save();
 
-        // Enviar email de notificação para TODOS os contatos
+        // Adicionar email à fila (background job)
         try {
-            await emailService.sendContactNotification({
+            await addEmailJob('contact-notification', {
                 name: contact.nome,
                 email: contact.email,
                 phone: contact.telefone,
@@ -106,10 +107,12 @@ router.post('/', [
                 prioridade: contact.prioridade,
                 empresa: contact.empresa,
                 createdAt: contact.createdAt
+            }, {
+                priority: contact.prioridade === 'urgente' ? 1 : contact.prioridade === 'alta' ? 2 : 5
             });
-            logger.info(`📧 Email de notificação enviado para contato: ${contact.email}`);
+            logger.info(`📧 Email de notificação adicionado à fila para: ${contact.email}`);
         } catch (emailError) {
-            logger.error('Erro ao enviar email de notificação:', emailError);
+            logger.error('Erro ao adicionar email à fila:', emailError);
             // Não falhar a requisição por erro de email
         }
 

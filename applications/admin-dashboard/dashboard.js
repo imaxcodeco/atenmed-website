@@ -549,6 +549,11 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const section = item.getAttribute('data-section');
             showSection(section);
+            
+            // Carregar gráficos quando abrir Analytics
+            if (section === 'analytics' && typeof initAnalytics === 'function') {
+                setTimeout(() => initAnalytics(), 100);
+            }
         });
     });
     

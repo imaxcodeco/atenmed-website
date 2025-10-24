@@ -9,7 +9,7 @@
     <meta http-equiv="Expires" content="0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="dashboard.css?v=2024-10-24-008" rel="stylesheet">
+    <link href="dashboard.css?v=2024-10-24-009" rel="stylesheet">
     <style>
         /* Cores principais */
         body, .main-content, .dashboard-container { background: #f8fafc !important; }
@@ -366,16 +366,58 @@
 
             <!-- Analytics Section -->
             <section id="analytics" class="content-section" style="display: none;">
+                <!-- Gráfico de Leads por Mês -->
                 <div class="content-card">
                     <div class="card-header">
                         <h2 class="card-title">
-                            <i class="fas fa-chart-bar"></i>
-                            Analytics Avançados
+                            <i class="fas fa-chart-line"></i>
+                            Leads por Mês
                         </h2>
                     </div>
-                    <div style="text-align: center; padding: 3rem; color: var(--gray-500);">
-                        <i class="fas fa-chart-line" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                        <p>Analytics avançados em desenvolvimento...</p>
+                    <div style="height: 300px; padding: 1rem;">
+                        <canvas id="leadsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Grid de Gráficos -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+                    <!-- Gráfico de Taxa de Conversão -->
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-percentage"></i>
+                                Taxa de Conversão
+                            </h2>
+                        </div>
+                        <div style="height: 300px; padding: 1rem;">
+                            <canvas id="conversionChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Gráfico de Origem dos Leads -->
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-bullseye"></i>
+                                Origem dos Leads
+                            </h2>
+                        </div>
+                        <div style="height: 300px; padding: 1rem;">
+                            <canvas id="leadSourceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráfico de Receita -->
+                <div class="content-card" style="margin-top: 1.5rem;">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-dollar-sign"></i>
+                            Receita Mensal
+                        </h2>
+                    </div>
+                    <div style="height: 300px; padding: 1rem;">
+                        <canvas id="revenueChart"></canvas>
                     </div>
                 </div>
             </section>
@@ -489,6 +531,13 @@
         </div>
     </div>
 
-    <script src="dashboard.js?v=2024-10-24-008"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Analytics Script -->
+    <script src="analytics.js?v=2024-10-24-001"></script>
+    
+    <!-- Dashboard Script -->
+    <script src="dashboard.js?v=2024-10-24-009"></script>
 </body>
 </html>
