@@ -172,13 +172,14 @@
                 });
                 
                 const result = await response.json();
+                console.log('📥 Resposta da API:', result);
                 
                 if (response.ok && result.success) {
                     // Salvar token e dados do usuário
                     localStorage.setItem('atenmed_auth', JSON.stringify({
-                        token: result.token,
-                        user: result.user,
-                        email: result.user.email,
+                        token: result.data.token,
+                        user: result.data.user,
+                        email: result.data.user.email,
                         loginTime: new Date().toISOString()
                     }));
                     
