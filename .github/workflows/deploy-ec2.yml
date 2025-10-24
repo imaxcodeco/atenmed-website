@@ -61,7 +61,7 @@ jobs:
             # Install dependencies (only if package.json changed or node_modules missing)
             if [ ! -d "node_modules" ] || [ package.json -nt node_modules ]; then
               echo "📦 Installing dependencies..."
-              npm install --production
+              npm install
             else
               echo "✅ Dependencies already up to date"
             fi
