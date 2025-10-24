@@ -5,7 +5,6 @@ const morgan = require('morgan');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
-const xss = require('xss');
 const path = require('path');
 require('dotenv').config();
 
@@ -146,17 +145,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Sanitização de dados (EXCETO para webhooks do WhatsApp)
 app.use(mongoSanitize());
-app.use((req, res, next) => {
-    // Não sanitizar webhooks do WhatsApp (Meta precisa dos dados exatos)
-    if (req.path.startsWith('/api/whatsapp/webhook')) {
-        return next();
-    }
-    
-    if (req.body) {
-        req.body = JSON.parse(xss(JSON.stringify(req.body)));
-    }
-    next();
-});
+// Nota: xss() removido pois estava corrompendo JSON.
+// express-validator já faz sanitização adequada nas rotas.
 
 // Compressão
 app.use(compression());
