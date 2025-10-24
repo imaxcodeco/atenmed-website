@@ -117,14 +117,16 @@ router.post('/login', [
         .withMessage('Senha é obrigatória')
 ], validateRequest, async (req, res) => {
     try {
+        console.log('✅ [1] Entrou na rota de login');
         const { email, senha } = req.body;
-        // DEBUG TEMPORÁRIO - remover após testes
-        console.log('🔍 [DEBUG] Tipo de req.body:', typeof req.body, 'Conteúdo:', req.body);
+        console.log('✅ [2] Email extraído:', email);
 
         // Buscar usuário incluindo senha
         const user = await User.findOne({ email }).select('+senha');
+        console.log('✅ [3] Usuário encontrado:', !!user);
         
         if (!user) {
+            console.log('❌ [3.1] Usuário não encontrado');
             return res.status(401).json({
                 success: false,
                 error: 'Credenciais inválidas',
@@ -151,9 +153,12 @@ router.post('/login', [
         }
 
         // Verificar senha
+        console.log('✅ [4] Verificando senha...');
         const isPasswordValid = await user.verificarSenha(senha);
+        console.log('✅ [5] Senha válida:', isPasswordValid);
         
         if (!isPasswordValid) {
+            console.log('❌ [5.1] Senha inválida');
             // Incrementar tentativas de login
             await user.incrementarTentativasLogin();
             
@@ -164,12 +169,14 @@ router.post('/login', [
             });
         }
 
+        console.log('✅ [6] Resetando tentativas e atualizando último login...');
         // Resetar tentativas de login
         await user.resetarTentativasLogin();
         
         // Atualizar último login
         await user.atualizarUltimoLogin();
 
+        console.log('✅ [7] Gerando token JWT...');
         // Gerar token JWT
         const token = jwt.sign(
             { 
@@ -180,6 +187,7 @@ router.post('/login', [
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
         );
+        console.log('✅ [8] Token gerado:', token ? 'SIM' : 'NÃO');
 
         // Log do login
         logger.logBusinessEvent('user_login', {
