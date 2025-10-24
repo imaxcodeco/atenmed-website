@@ -158,15 +158,23 @@
             }
             
             try {
-                // Simular autenticação (em produção, isso seria uma chamada real para a API)
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                // Chamar API de autenticação
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
                 
-                // Verificar credenciais de demonstração
-                if (email === 'admin@atenmed.com.br' && password === 'admin123') {
-                    // Salvar sessão
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    // Salvar token e dados do usuário
                     localStorage.setItem('atenmed_auth', JSON.stringify({
-                        user: 'admin',
-                        email: email,
+                        token: result.token,
+                        user: result.user,
+                        email: result.user.email,
                         loginTime: new Date().toISOString()
                     }));
                     
@@ -176,12 +184,13 @@
                     // Redirecionar para dashboard
                     setTimeout(() => {
                         window.location.href = '/apps/admin/dashboard.html';
-                    }, 1500);
+                    }, 1000);
                 } else {
-                    throw new Error('Credenciais inválidas');
+                    throw new Error(result.error || 'Credenciais inválidas');
                 }
                 
             } catch (error) {
+                console.error('Erro no login:', error);
                 showMessage('E-mail ou senha incorretos. Tente novamente.', 'error');
             } finally {
                 // Restaurar botão

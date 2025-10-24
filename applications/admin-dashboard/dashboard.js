@@ -1,7 +1,7 @@
 // Dashboard JavaScript - AtenMed
 // Funcionalidades modernas e responsivas
 
-// Verificar autenticação
+// Verificar autenticação e obter token
 function checkAuth() {
     const auth = localStorage.getItem('atenmed_auth');
     if (!auth) {
@@ -27,6 +27,32 @@ function checkAuth() {
         window.location.href = '/site/login.html';
         return false;
     }
+}
+
+// Obter token JWT
+function getAuthToken() {
+    try {
+        const auth = localStorage.getItem('atenmed_auth');
+        if (auth) {
+            const authData = JSON.parse(auth);
+            return authData.token;
+        }
+    } catch (error) {
+        console.error('Erro ao obter token:', error);
+    }
+    return null;
+}
+
+// Criar headers com autenticação
+function getAuthHeaders() {
+    const token = getAuthToken();
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
 }
 
 // Logout
@@ -380,7 +406,9 @@ function exportData() {
 
 async function viewLead(leadId) {
     try {
-        const response = await fetch(`/api/leads/${leadId}`);
+        const response = await fetch(`/api/leads/${leadId}`, {
+            headers: getAuthHeaders()
+        });
         const result = await response.json();
         
         if (response.ok && result.success) {
@@ -406,7 +434,9 @@ async function viewLead(leadId) {
 
 async function viewContact(contactId) {
     try {
-        const response = await fetch(`/api/contact/${contactId}`);
+        const response = await fetch(`/api/contact/${contactId}`, {
+            headers: getAuthHeaders()
+        });
         const result = await response.json();
         
         if (response.ok && result.success) {
@@ -431,7 +461,9 @@ async function viewContact(contactId) {
 
 async function viewClient(clientId) {
     try {
-        const response = await fetch(`/api/clients/${clientId}`);
+        const response = await fetch(`/api/clients/${clientId}`, {
+            headers: getAuthHeaders()
+        });
         const result = await response.json();
         
         if (response.ok && result.success) {
