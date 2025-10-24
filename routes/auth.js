@@ -321,6 +321,84 @@ router.post('/change-password', [
     }
 });
 
+// @route   POST /api/auth/register-admin
+// @desc    Registrar novo usuário admin (apenas admins podem criar)
+// @access  Private (Admin only)
+router.post('/register-admin', [
+    authenticateToken,
+    authorize('admin'),
+    body('nome')
+        .trim()
+        .notEmpty()
+        .withMessage('Nome é obrigatório')
+        .isLength({ min: 2, max: 100 })
+        .withMessage('Nome deve ter entre 2 e 100 caracteres'),
+    body('email')
+        .trim()
+        .isEmail()
+        .normalizeEmail()
+        .withMessage('E-mail inválido'),
+    body('senha')
+        .isLength({ min: 6 })
+        .withMessage('Senha deve ter pelo menos 6 caracteres'),
+    body('telefone')
+        .optional()
+        .trim(),
+    body('departamento')
+        .optional()
+        .isIn(['vendas', 'suporte', 'desenvolvimento', 'marketing', 'administracao'])
+        .withMessage('Departamento inválido')
+], validateRequest, logActivity('register_admin'), async (req, res) => {
+    try {
+        const { nome, email, senha, telefone, departamento } = req.body;
+
+        // Verificar se email já existe
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(409).json({
+                success: false,
+                error: 'E-mail já cadastrado',
+                code: 'EMAIL_EXISTS'
+            });
+        }
+
+        // Criar novo usuário admin
+        const newUser = new User({
+            nome,
+            email,
+            senha,
+            telefone,
+            departamento: departamento || 'administracao',
+            role: 'admin',
+            ativo: true
+        });
+
+        await newUser.save();
+
+        // Log da criação
+        logger.logBusinessEvent('admin_user_created', {
+            createdBy: req.user._id,
+            createdByEmail: req.user.email,
+            newUserId: newUser._id,
+            newUserEmail: newUser.email
+        });
+
+        res.status(201).json({
+            success: true,
+            message: 'Usuário admin criado com sucesso',
+            data: newUser.obterDadosPublicos()
+        });
+
+    } catch (error) {
+        logger.logError(error, req);
+        res.status(500).json({
+            success: false,
+            error: 'Erro interno do servidor',
+            code: 'INTERNAL_ERROR'
+        });
+    }
+});
+
 // @route   POST /api/auth/logout
 // @desc    Logout (invalidar token)
 // @access  Private

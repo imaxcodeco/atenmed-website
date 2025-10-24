@@ -317,13 +317,104 @@
                             Configurações do Sistema
                         </h2>
                     </div>
-                    <div style="text-align: center; padding: 3rem; color: var(--gray-500);">
-                        <i class="fas fa-cog" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                        <p>Configurações em desenvolvimento...</p>
+                    <div class="settings-grid">
+                        <div class="setting-item" onclick="openChangePasswordModal()">
+                            <div class="setting-icon">
+                                <i class="fas fa-key"></i>
+                            </div>
+                            <div class="setting-content">
+                                <h3>Alterar Senha</h3>
+                                <p>Modifique sua senha de acesso</p>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        
+                        <div class="setting-item" onclick="openRegisterAdminModal()">
+                            <div class="setting-icon">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <div class="setting-content">
+                                <h3>Cadastrar Usuário Admin</h3>
+                                <p>Adicione novos administradores ao sistema</p>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
                     </div>
-        </div>
+                </div>
             </section>
-    </main>
+        </main>
+    </div>
+
+    <!-- Modal: Alterar Senha -->
+    <div id="changePasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-key"></i> Alterar Senha</h2>
+                <button class="modal-close" onclick="closeChangePasswordModal()">&times;</button>
+            </div>
+            <form id="changePasswordForm">
+                <div class="form-group">
+                    <label for="currentPassword">Senha Atual</label>
+                    <input type="password" id="currentPassword" name="currentPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">Nova Senha</label>
+                    <input type="password" id="newPassword" name="newPassword" required minlength="6">
+                    <small>Mínimo de 6 caracteres</small>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirmar Nova Senha</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required minlength="6">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeChangePasswordModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Alterar Senha</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Cadastrar Admin -->
+    <div id="registerAdminModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-plus"></i> Cadastrar Novo Admin</h2>
+                <button class="modal-close" onclick="closeRegisterAdminModal()">&times;</button>
+            </div>
+            <form id="registerAdminForm">
+                <div class="form-group">
+                    <label for="adminName">Nome Completo</label>
+                    <input type="text" id="adminName" name="adminName" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminEmail">E-mail</label>
+                    <input type="email" id="adminEmail" name="adminEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminPassword">Senha</label>
+                    <input type="password" id="adminPassword" name="adminPassword" required minlength="6">
+                    <small>Mínimo de 6 caracteres</small>
+                </div>
+                <div class="form-group">
+                    <label for="adminPhone">Telefone (opcional)</label>
+                    <input type="tel" id="adminPhone" name="adminPhone">
+                </div>
+                <div class="form-group">
+                    <label for="adminDepartment">Departamento</label>
+                    <select id="adminDepartment" name="adminDepartment">
+                        <option value="administracao">Administração</option>
+                        <option value="vendas">Vendas</option>
+                        <option value="suporte">Suporte</option>
+                        <option value="desenvolvimento">Desenvolvimento</option>
+                        <option value="marketing">Marketing</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeRegisterAdminModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Cadastrar Admin</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script src="dashboard.js"></script>

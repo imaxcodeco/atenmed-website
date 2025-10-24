@@ -617,3 +617,145 @@ document.addEventListener('DOMContentLoaded', function() {
     loadContacts();
     loadClients();
 });
+
+// === MODAL FUNCTIONS ===
+
+// Alterar Senha
+function openChangePasswordModal() {
+    const modal = document.getElementById('changePasswordModal');
+    modal.classList.add('show');
+    modal.style.display = 'flex';
+}
+
+function closeChangePasswordModal() {
+    const modal = document.getElementById('changePasswordModal');
+    modal.classList.remove('show');
+    setTimeout(() => modal.style.display = 'none', 300);
+    document.getElementById('changePasswordForm').reset();
+}
+
+// Cadastrar Admin
+function openRegisterAdminModal() {
+    const modal = document.getElementById('registerAdminModal');
+    modal.classList.add('show');
+    modal.style.display = 'flex';
+}
+
+function closeRegisterAdminModal() {
+    const modal = document.getElementById('registerAdminModal');
+    modal.classList.remove('show');
+    setTimeout(() => modal.style.display = 'none', 300);
+    document.getElementById('registerAdminForm').reset();
+}
+
+// Fechar modais ao clicar fora
+window.addEventListener('click', function(e) {
+    const changePasswordModal = document.getElementById('changePasswordModal');
+    const registerAdminModal = document.getElementById('registerAdminModal');
+    
+    if (e.target === changePasswordModal) {
+        closeChangePasswordModal();
+    }
+    if (e.target === registerAdminModal) {
+        closeRegisterAdminModal();
+    }
+});
+
+// === FORM HANDLERS ===
+
+// Handle Change Password Form
+document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    // Validar se as senhas coincidem
+    if (newPassword !== confirmPassword) {
+        showAlert('As senhas não coincidem', 'error');
+        return;
+    }
+    
+    // Validar tamanho mínimo
+    if (newPassword.length < 6) {
+        showAlert('A nova senha deve ter pelo menos 6 caracteres', 'error');
+        return;
+    }
+    
+    try {
+        const auth = getAuth();
+        if (!auth) {
+            window.location.href = '/site/login.html';
+            return;
+        }
+        
+        const response = await fetch('/api/auth/change-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${auth.token}`
+            },
+            body: JSON.stringify({
+                senhaAtual: currentPassword,
+                novaSenha: newPassword
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showAlert('Senha alterada com sucesso!', 'success');
+            closeChangePasswordModal();
+        } else {
+            showAlert(result.error || 'Erro ao alterar senha', 'error');
+        }
+    } catch (error) {
+        console.error('Erro ao alterar senha:', error);
+        showAlert('Erro ao alterar senha. Tente novamente.', 'error');
+    }
+});
+
+// Handle Register Admin Form
+document.getElementById('registerAdminForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        nome: document.getElementById('adminName').value,
+        email: document.getElementById('adminEmail').value,
+        senha: document.getElementById('adminPassword').value,
+        telefone: document.getElementById('adminPhone').value,
+        departamento: document.getElementById('adminDepartment').value
+    };
+    
+    try {
+        const auth = getAuth();
+        if (!auth) {
+            window.location.href = '/site/login.html';
+            return;
+        }
+        
+        const response = await fetch('/api/auth/register-admin', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${auth.token}`
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showAlert(`Usuário ${result.data.nome} cadastrado com sucesso!`, 'success');
+            closeRegisterAdminModal();
+        } else if (response.status === 409) {
+            showAlert('E-mail já cadastrado no sistema', 'error');
+        } else {
+            showAlert(result.error || 'Erro ao cadastrar usuário', 'error');
+        }
+    } catch (error) {
+        console.error('Erro ao cadastrar admin:', error);
+        showAlert('Erro ao cadastrar usuário. Tente novamente.', 'error');
+    }
+});
