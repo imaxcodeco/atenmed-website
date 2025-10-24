@@ -33,7 +33,7 @@
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: var(--white);
+    background: var(--gray-50);
     min-height: 100vh;
     color: var(--gray-800);
     line-height: 1.6;
@@ -47,19 +47,18 @@ body {
 
 /* Sidebar */
 .sidebar {
-    background: var(--white);
-    box-shadow: var(--shadow-lg);
+    background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%);
     padding: 2rem 0;
     position: sticky;
     top: 0;
     height: 100vh;
     overflow-y: auto;
-    border-right: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-xl);
 }
 
 .sidebar-header {
     padding: 0 2rem 2rem;
-    border-bottom: 1px solid var(--gray-200);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .logo {
@@ -88,22 +87,24 @@ body {
 .nav-item {
     display: block;
     padding: 0.875rem 2rem;
-    color: var(--gray-600);
+    color: rgba(255, 255, 255, 0.8);
     text-decoration: none;
-    transition: all 0.2s;
+    transition: all 0.3s;
     border-left: 3px solid transparent;
+    font-weight: 500;
 }
 
 .nav-item:hover {
-    background: var(--gray-50);
-    color: var(--primary);
-    border-left-color: var(--primary);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--white);
+    border-left-color: var(--white);
 }
 
 .nav-item.active {
-    background: var(--primary);
+    background: rgba(255, 255, 255, 0.15);
     color: var(--white);
-    border-left-color: var(--primary-dark);
+    border-left-color: var(--white);
+    font-weight: 600;
 }
 
 .nav-item i {
@@ -118,24 +119,25 @@ body {
 }
 
 .header {
-    background: var(--gray-50);
-    border-radius: 1rem;
-    padding: 2rem;
+    background: var(--white);
+    border-radius: 16px;
+    padding: 2.5rem;
     margin-bottom: 2rem;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-sm);
     border: 1px solid var(--gray-200);
 }
 
 .header h1 {
-    font-size: 2.5rem;
+    font-size: 2.25rem;
     font-weight: 700;
-    color: var(--gray-900);
+    color: var(--primary-dark);
     margin-bottom: 0.5rem;
+    letter-spacing: -0.5px;
 }
 
 .header p {
     color: var(--gray-600);
-    font-size: 1.125rem;
+    font-size: 1rem;
 }
 
 /* Stats Grid */
@@ -148,16 +150,17 @@ body {
 
 .stat-card {
     background: var(--white);
-    border-radius: 1rem;
-    padding: 2rem;
-    box-shadow: var(--shadow);
+    border-radius: 12px;
+    padding: 1.75rem;
+    box-shadow: var(--shadow-sm);
     border: 1px solid var(--gray-200);
-    transition: all 0.3s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary);
 }
 
 .stat-header {
@@ -186,10 +189,10 @@ body {
     color: var(--white);
 }
 
-.stat-icon.primary { background: var(--primary); }
-.stat-icon.success { background: var(--success); }
-.stat-icon.warning { background: var(--warning); }
-.stat-icon.info { background: var(--info); }
+.stat-icon.primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); }
+.stat-icon.success { background: linear-gradient(135deg, #10b981, #059669); }
+.stat-icon.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.stat-icon.info { background: linear-gradient(135deg, #3b82f6, #2563eb); }
 
 .stat-value {
     font-size: 2.5rem;
@@ -242,23 +245,24 @@ body {
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    font-weight: 500;
+    border-radius: 10px;
+    font-weight: 600;
     text-decoration: none;
     border: none;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-size: 0.875rem;
 }
 
 .btn-primary {
-    background: var(--primary);
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     color: var(--white);
+    box-shadow: 0 4px 12px rgba(76, 165, 178, 0.3);
 }
 
 .btn-primary:hover {
-    background: var(--primary-dark);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(76, 165, 178, 0.4);
 }
 
 .btn-secondary {
