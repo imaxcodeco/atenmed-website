@@ -39,6 +39,14 @@ const whatsappService = require('./services/whatsappService');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ⚠️ IMPORTANTE: Trust proxy DEVE vir ANTES de qualquer middleware que use req.ip
+// Configurar trust proxy para produção (Nginx)
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1); // Confiar apenas no primeiro proxy (Nginx)
+} else {
+    app.set('trust proxy', false); // Desenvolvimento sem proxy
+}
+
 // Conectar ao banco de dados
 connectDB();
 
@@ -116,13 +124,7 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// Trust proxy - configurar para AWS/Nginx mas de forma segura
-// Usar configuração mais específica para evitar problemas com express-rate-limit
-if (process.env.NODE_ENV === 'production') {
-    app.set('trust proxy', 1); // Confiar apenas no primeiro proxy (Nginx)
-} else {
-    app.set('trust proxy', false); // Desenvolvimento sem proxy
-}
+// Trust proxy já configurado no topo do arquivo (linha 44)
 
 // Rate limiting (EXCETO para webhooks do WhatsApp)
 const limiter = rateLimit({
