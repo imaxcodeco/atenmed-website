@@ -9,7 +9,7 @@
     <meta http-equiv="Expires" content="0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="dashboard.css?v=2024-10-24-007" rel="stylesheet">
+    <link href="dashboard.css?v=2024-10-24-008" rel="stylesheet">
     <style>
         /* Cores principais */
         body, .main-content, .dashboard-container { background: #f8fafc !important; }
@@ -19,6 +19,9 @@
         .sidebar { 
             background: linear-gradient(135deg, #4ca5b2 0%, #083e51 100%) !important; 
         }
+        
+        /* Logo branco */
+        .logo img { filter: brightness(0) invert(1) !important; }
         
         /* Textos da sidebar brancos */
         .nav-item { color: rgba(255, 255, 255, 0.9) !important; }
@@ -32,14 +35,49 @@
         }
         
         /* Textos do header e cards legíveis */
-        .header h1 { color: #083e51 !important; }
+        .header h1, .header h2 { color: #083e51 !important; }
         .header p { color: #64748b !important; }
         .stat-title { color: #64748b !important; }
         .stat-value { color: #0f172a !important; }
         .card-title { color: #0f172a !important; }
         
+        /* Tabelas */
+        table { background: #ffffff !important; }
+        th { 
+            background: #f8fafc !important; 
+            color: #0f172a !important; 
+            font-weight: 600 !important;
+        }
+        td { color: #334155 !important; }
+        tr:hover { background: #f8fafc !important; }
+        
+        /* Formulários */
+        .form-group label { color: #0f172a !important; font-weight: 500 !important; }
+        .form-group input, .form-group select, .form-group textarea { 
+            background: #ffffff !important; 
+            border: 1px solid #e2e8f0 !important; 
+            color: #0f172a !important; 
+        }
+        
+        /* Badges */
+        .badge { font-weight: 500 !important; }
+        .badge.success { background: #10b981 !important; color: white !important; }
+        .badge.warning { background: #f59e0b !important; color: white !important; }
+        .badge.danger { background: #ef4444 !important; color: white !important; }
+        .badge.info { background: #3b82f6 !important; color: white !important; }
+        
+        /* Seções de conteúdo */
+        .content-section { background: transparent !important; }
+        
         /* Borda da sidebar */
         .sidebar-header { border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important; }
+        
+        /* Ações de tabela */
+        .actions button, .actions a { 
+            padding: 0.5rem 1rem !important;
+            border-radius: 6px !important;
+            font-weight: 500 !important;
+        }
     </style>
 </head>
 <body>
@@ -451,6 +489,6 @@
         </div>
     </div>
 
-    <script src="dashboard.js?v=2024-10-24-007"></script>
+    <script src="dashboard.js?v=2024-10-24-008"></script>
 </body>
 </html>
