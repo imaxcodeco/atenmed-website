@@ -140,7 +140,14 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // Middleware de parsing
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({
+    limit: '10mb',
+    verify: (req, res, buf) => {
+        if (req.path === '/api/auth/login') {
+            console.log('RAW BODY LOGIN:', buf.toString());
+        }
+    }
+}));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Sanitização de dados (EXCETO para webhooks do WhatsApp)
