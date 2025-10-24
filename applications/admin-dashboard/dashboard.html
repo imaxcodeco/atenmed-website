@@ -318,7 +318,7 @@
                         </h2>
                     </div>
                     <div class="settings-grid">
-                        <div class="setting-item" onclick="openChangePasswordModal()">
+                        <div class="setting-item" id="btnChangePassword">
                             <div class="setting-icon">
                                 <i class="fas fa-key"></i>
                             </div>
@@ -329,7 +329,7 @@
                             <i class="fas fa-chevron-right"></i>
                         </div>
                         
-                        <div class="setting-item" onclick="openRegisterAdminModal()">
+                        <div class="setting-item" id="btnRegisterAdmin">
                             <div class="setting-icon">
                                 <i class="fas fa-user-plus"></i>
                             </div>
@@ -350,7 +350,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2><i class="fas fa-key"></i> Alterar Senha</h2>
-                <button class="modal-close" onclick="closeChangePasswordModal()">&times;</button>
+                <button class="modal-close" id="closeChangePasswordBtn">&times;</button>
             </div>
             <form id="changePasswordForm">
                 <div class="form-group">
@@ -367,7 +367,7 @@
                     <input type="password" id="confirmPassword" name="confirmPassword" required minlength="6">
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeChangePasswordModal()">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" id="cancelChangePasswordBtn">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Alterar Senha</button>
                 </div>
             </form>
@@ -379,7 +379,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2><i class="fas fa-user-plus"></i> Cadastrar Novo Admin</h2>
-                <button class="modal-close" onclick="closeRegisterAdminModal()">&times;</button>
+                <button class="modal-close" id="closeRegisterAdminBtn">&times;</button>
             </div>
             <form id="registerAdminForm">
                 <div class="form-group">
@@ -410,13 +410,13 @@
                     </select>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeRegisterAdminModal()">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" id="cancelRegisterAdminBtn">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Cadastrar Admin</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <script src="dashboard.js?v=2024-10-24-001"></script>
+    <script src="dashboard.js?v=2024-10-24-002"></script>
 </body>
 </html>

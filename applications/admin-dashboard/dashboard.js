@@ -622,6 +622,38 @@ document.addEventListener('DOMContentLoaded', function() {
         registerAdminForm.addEventListener('submit', handleRegisterAdmin);
     }
     
+    // Event listeners para os botões de abrir modais
+    const btnChangePassword = document.getElementById('btnChangePassword');
+    if (btnChangePassword) {
+        btnChangePassword.addEventListener('click', openChangePasswordModal);
+    }
+    
+    const btnRegisterAdmin = document.getElementById('btnRegisterAdmin');
+    if (btnRegisterAdmin) {
+        btnRegisterAdmin.addEventListener('click', openRegisterAdminModal);
+    }
+    
+    // Event listeners para os botões de fechar modais
+    const closeChangePasswordBtn = document.getElementById('closeChangePasswordBtn');
+    if (closeChangePasswordBtn) {
+        closeChangePasswordBtn.addEventListener('click', closeChangePasswordModal);
+    }
+    
+    const cancelChangePasswordBtn = document.getElementById('cancelChangePasswordBtn');
+    if (cancelChangePasswordBtn) {
+        cancelChangePasswordBtn.addEventListener('click', closeChangePasswordModal);
+    }
+    
+    const closeRegisterAdminBtn = document.getElementById('closeRegisterAdminBtn');
+    if (closeRegisterAdminBtn) {
+        closeRegisterAdminBtn.addEventListener('click', closeRegisterAdminModal);
+    }
+    
+    const cancelRegisterAdminBtn = document.getElementById('cancelRegisterAdminBtn');
+    if (cancelRegisterAdminBtn) {
+        cancelRegisterAdminBtn.addEventListener('click', closeRegisterAdminModal);
+    }
+    
     // Carregar dados iniciais
     loadDashboardData();
     loadLeads();
