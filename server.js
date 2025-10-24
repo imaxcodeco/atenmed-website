@@ -155,14 +155,21 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // Middleware de parsing
-app.use(express.json({
-    limit: '10mb',
-    verify: (req, res, buf) => {
-        if (req.path === '/api/auth/login') {
-            console.log('RAW BODY LOGIN:', buf.toString());
+app.use((req, res, next) => {
+    express.json({
+        limit: '10mb',
+        verify: (req, res, buf) => {
+            if (req.path === '/api/auth/login') {
+                console.log('✅ RAW BODY RECEBIDO:', buf.toString());
+            }
         }
-    }
-}));
+    })(req, res, (err) => {
+        if (err) {
+            console.error('❌ ERRO NO EXPRESS.JSON():', err.message, err.stack);
+        }
+        next(err);
+    });
+});
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Sanitização de dados (EXCETO para webhooks do WhatsApp)
