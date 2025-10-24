@@ -118,6 +118,8 @@ router.post('/login', [
 ], validateRequest, async (req, res) => {
     try {
         const { email, senha } = req.body;
+        // DEBUG TEMPORÁRIO - remover após testes
+        console.log('🔍 [DEBUG] Tipo de req.body:', typeof req.body, 'Conteúdo:', req.body);
 
         // Buscar usuário incluindo senha
         const user = await User.findOne({ email }).select('+senha');
