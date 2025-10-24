@@ -611,6 +611,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Event listeners para os formulários de configurações
+    const changePasswordForm = document.getElementById('changePasswordForm');
+    if (changePasswordForm) {
+        changePasswordForm.addEventListener('submit', handleChangePassword);
+    }
+    
+    const registerAdminForm = document.getElementById('registerAdminForm');
+    if (registerAdminForm) {
+        registerAdminForm.addEventListener('submit', handleRegisterAdmin);
+    }
+    
     // Carregar dados iniciais
     loadDashboardData();
     loadLeads();
@@ -631,7 +642,8 @@ function closeChangePasswordModal() {
     const modal = document.getElementById('changePasswordModal');
     modal.classList.remove('show');
     setTimeout(() => modal.style.display = 'none', 300);
-    document.getElementById('changePasswordForm').reset();
+    const form = document.getElementById('changePasswordForm');
+    if (form) form.reset();
 }
 
 // Cadastrar Admin
@@ -645,7 +657,8 @@ function closeRegisterAdminModal() {
     const modal = document.getElementById('registerAdminModal');
     modal.classList.remove('show');
     setTimeout(() => modal.style.display = 'none', 300);
-    document.getElementById('registerAdminForm').reset();
+    const form = document.getElementById('registerAdminForm');
+    if (form) form.reset();
 }
 
 // Fechar modais ao clicar fora
@@ -664,7 +677,7 @@ window.addEventListener('click', function(e) {
 // === FORM HANDLERS ===
 
 // Handle Change Password Form
-document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
+async function handleChangePassword(e) {
     e.preventDefault();
     
     const currentPassword = document.getElementById('currentPassword').value;
@@ -714,10 +727,10 @@ document.getElementById('changePasswordForm').addEventListener('submit', async f
         console.error('Erro ao alterar senha:', error);
         showAlert('Erro ao alterar senha. Tente novamente.', 'error');
     }
-});
+}
 
 // Handle Register Admin Form
-document.getElementById('registerAdminForm').addEventListener('submit', async function(e) {
+async function handleRegisterAdmin(e) {
     e.preventDefault();
     
     const formData = {
@@ -758,4 +771,4 @@ document.getElementById('registerAdminForm').addEventListener('submit', async fu
         console.error('Erro ao cadastrar admin:', error);
         showAlert('Erro ao cadastrar usuário. Tente novamente.', 'error');
     }
-});
+}
