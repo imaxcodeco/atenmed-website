@@ -212,9 +212,8 @@ body {
 /* Content Cards */
 .content-card {
     background: var(--white);
-    border-radius: 1rem;
+    border-radius: 12px;
     padding: 2rem;
-    box-shadow: var(--shadow);
     border: 1px solid var(--gray-200);
     margin-bottom: 2rem;
 }
@@ -513,7 +512,7 @@ body {
 .setting-icon {
     width: 60px;
     height: 60px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    background: var(--primary);
     border-radius: 12px;
     display: flex;
     align-items: center;
