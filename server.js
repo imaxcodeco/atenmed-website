@@ -23,7 +23,7 @@ const appointmentRoutes = require('./routes/appointments');
 const confirmationRoutes = require('./routes/confirmations');
 const waitlistRoutes = require('./routes/waitlist');
 const analyticsRoutes = require('./routes/analytics');
-const whatsappRoutes = require('./routes/whatsapp');
+const whatsappRoutes = require('./routes/whatsappV2');
 const clientRoutes = require('./routes/clients');
 const clinicRoutes = require('./routes/clinics');
 
@@ -35,7 +35,7 @@ const notFound = require('./middleware/notFound');
 const googleCalendarService = require('./services/googleCalendarService');
 const reminderService = require('./services/reminderService');
 const waitlistService = require('./services/waitlistService');
-const whatsappService = require('./services/whatsappService');
+const whatsappService = require('./services/whatsappServiceV2');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
