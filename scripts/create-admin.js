@@ -7,41 +7,8 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-// Modelo User inline (para evitar dependências circulares)
-const userSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true,
-        trim: true
-    },
-    email: {
-        type: String,
-        required: true,
-        unique: true,
-        lowercase: true,
-        trim: true
-    },
-    password: {
-        type: String,
-        required: true,
-        minlength: 6
-    },
-    role: {
-        type: String,
-        enum: ['user', 'admin'],
-        default: 'user'
-    },
-    active: {
-        type: Boolean,
-        default: true
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    }
-});
-
-const User = mongoose.model('User', userSchema);
+// Importar modelo User real
+const User = require('../models/User');
 
 async function createAdmin() {
     try {
@@ -55,23 +22,20 @@ async function createAdmin() {
         if (existingAdmin) {
             console.log('⚠️  Usuário admin já existe!');
             console.log('📧 Email:', existingAdmin.email);
-            console.log('👤 Nome:', existingAdmin.name);
+            console.log('👤 Nome:', existingAdmin.nome);
             console.log('🔑 Role:', existingAdmin.role);
-            console.log('\n💡 Para resetar a senha, delete o usuário primeiro no MongoDB Atlas');
-            return;
+            console.log('\n💡 Deletando usuário antigo para recriar...');
+            await User.deleteOne({ email: 'admin@atenmed.com.br' });
+            console.log('✅ Usuário antigo deletado');
         }
 
-        // Hash da senha
-        const salt = await bcrypt.genSalt(12);
-        const hashedPassword = await bcrypt.hash('admin123', salt);
-
-        // Criar admin
+        // Criar admin (a senha será hasheada automaticamente pelo pre-save hook)
         const admin = await User.create({
-            name: 'Administrador',
+            nome: 'Administrador',
             email: 'admin@atenmed.com.br',
-            password: hashedPassword,
+            senha: 'admin123',
             role: 'admin',
-            active: true
+            ativo: true
         });
 
         console.log('✅ Usuário administrador criado com sucesso!\n');
