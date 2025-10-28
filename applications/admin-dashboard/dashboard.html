@@ -198,19 +198,19 @@
                         </h2>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                        <button class="btn btn-primary" onclick="showSection('clients')">
+                        <button class="btn btn-primary" id="btnNovoCliente">
                             <i class="fas fa-user-plus"></i>
                             Novo Cliente
                         </button>
-                        <button class="btn btn-secondary" onclick="refreshData()">
+                        <button class="btn btn-secondary" id="btnAtualizarDados">
                             <i class="fas fa-sync-alt"></i>
                             Atualizar Dados
                         </button>
-                        <button class="btn btn-secondary" onclick="exportData()">
+                        <button class="btn btn-secondary" id="btnExportarRelatorio">
                             <i class="fas fa-download"></i>
                             Exportar Relatório
                         </button>
-                        <button class="btn btn-secondary" onclick="showSection('settings')">
+                        <button class="btn btn-secondary" id="btnConfiguracoes">
                             <i class="fas fa-cog"></i>
                             Configurações
                         </button>
@@ -306,7 +306,7 @@
                             <i class="fas fa-users"></i>
                             Clientes Cadastrados
                         </h2>
-                        <button class="btn btn-secondary" onclick="loadClients()">
+                        <button class="btn btn-secondary" id="btnAtualizarClientes">
                             <i class="fas fa-sync-alt"></i>
                             Atualizar
                         </button>
@@ -328,7 +328,7 @@
                             <i class="fas fa-bullseye"></i>
                             Leads Recentes
                         </h2>
-                        <button class="btn btn-secondary" onclick="refreshLeads()">
+                        <button class="btn btn-secondary" id="btnAtualizarLeads">
                             <i class="fas fa-sync-alt"></i>
                             Atualizar
                         </button>
@@ -350,7 +350,7 @@
                             <i class="fas fa-envelope"></i>
                             Contatos Recentes
                         </h2>
-                        <button class="btn btn-secondary" onclick="refreshContacts()">
+                        <button class="btn btn-secondary" id="btnAtualizarContatos">
                             <i class="fas fa-sync-alt"></i>
                             Atualizar
                         </button>

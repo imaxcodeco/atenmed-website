@@ -1,6 +1,53 @@
 // Dashboard JavaScript - AtenMed
 // Funcionalidades modernas e responsivas
 
+// Inicializar event listeners quando o DOM carregar
+document.addEventListener('DOMContentLoaded', () => {
+    setupEventListeners();
+});
+
+// Configurar todos os event listeners (compatível com CSP)
+function setupEventListeners() {
+    // Botões de ações rápidas
+    const btnNovoCliente = document.getElementById('btnNovoCliente');
+    if (btnNovoCliente) {
+        btnNovoCliente.addEventListener('click', () => showSection('clients'));
+    }
+    
+    const btnAtualizarDados = document.getElementById('btnAtualizarDados');
+    if (btnAtualizarDados) {
+        btnAtualizarDados.addEventListener('click', refreshData);
+    }
+    
+    const btnExportarRelatorio = document.getElementById('btnExportarRelatorio');
+    if (btnExportarRelatorio) {
+        btnExportarRelatorio.addEventListener('click', exportData);
+    }
+    
+    const btnConfiguracoes = document.getElementById('btnConfiguracoes');
+    if (btnConfiguracoes) {
+        btnConfiguracoes.addEventListener('click', () => showSection('settings'));
+    }
+    
+    // Botões de atualizar
+    const btnAtualizarClientes = document.getElementById('btnAtualizarClientes');
+    if (btnAtualizarClientes) {
+        btnAtualizarClientes.addEventListener('click', loadClients);
+    }
+    
+    const btnAtualizarLeads = document.getElementById('btnAtualizarLeads');
+    if (btnAtualizarLeads) {
+        btnAtualizarLeads.addEventListener('click', refreshLeads);
+    }
+    
+    const btnAtualizarContatos = document.getElementById('btnAtualizarContatos');
+    if (btnAtualizarContatos) {
+        btnAtualizarContatos.addEventListener('click', refreshContacts);
+    }
+    
+    console.log('Event listeners configurados com sucesso!');
+}
+
 // Verificar autenticação e obter token
 function checkAuth() {
     const auth = localStorage.getItem('atenmed_auth');
