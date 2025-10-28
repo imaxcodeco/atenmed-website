@@ -270,7 +270,7 @@ async function handleIncomingMessage(message, webhookMetadata = null) {
 
         if (messageText === 'cancelar') {
             session.reset();
-            await sendMessage(phoneNumber, '❌ Operação cancelada. Digite *menu* para começar novamente.');
+            await sendMessage(phoneNumber, 'Operacao cancelada. Digite *menu* para comecar novamente.');
             return;
         }
 
@@ -283,7 +283,7 @@ async function handleIncomingMessage(message, webhookMetadata = null) {
     } catch (error) {
         logger.error('Erro ao processar mensagem:', error);
         try {
-            await sendMessage(message.from, '❌ Desculpe, ocorreu um erro. Digite *menu* para tentar novamente.');
+            await sendMessage(message.from, 'Desculpe, ocorreu um erro. Digite *menu* para tentar novamente.');
         } catch (sendError) {
             logger.error('Erro ao enviar mensagem de erro:', sendError);
         }
@@ -538,9 +538,9 @@ async function handleSpecialtySelection(phoneNumber, messageText, session) {
 
         if (!specialtyNumber || specialtyNumber < 1 || specialtyNumber > specialties.length) {
             await sendMessage(phoneNumber, 
-                `Hmm, número inválido... 🤔\n\n` +
-                `Digite o *número* da especialidade que você quer.\n` +
-                `Ou digite *menu* para voltar ao início.`
+                `Hmm, numero invalido...\n\n` +
+                `Digite o *numero* da especialidade que voce quer.\n` +
+                `Ou digite *menu* para voltar ao inicio.`
             );
             return;
         }
@@ -577,8 +577,8 @@ async function handleDoctorSelection(phoneNumber, messageText, session) {
 
         if (!doctorNumber || doctorNumber < 1 || doctorNumber > doctors.length) {
             await sendMessage(phoneNumber, 
-                `Número inválido... 🤔\n\n` +
-                `Digite o *número* do médico que você quer.`
+                `Numero invalido...\n\n` +
+                `Digite o *numero* do medico que voce quer.`
             );
             return;
         }
@@ -607,7 +607,7 @@ async function handleDateSelection(phoneNumber, messageText, session) {
 
     if (!match) {
         await sendMessage(phoneNumber, 
-            `Data inválida! 📅\n\n` +
+            `Data invalida!\n\n` +
             `Use o formato: DD/MM\n` +
             `Exemplo: 15/12`
         );
@@ -624,7 +624,7 @@ async function handleDateSelection(phoneNumber, messageText, session) {
 
     if (selectedDate < today) {
         await sendMessage(phoneNumber, 
-            `Essa data já passou! ⏰\n\n` +
+            `Essa data ja passou!\n\n` +
             `Por favor, escolha uma data futura.`
         );
         return;
@@ -643,7 +643,7 @@ async function handleTimeSelection(phoneNumber, messageText, session) {
 
     if (!match) {
         await sendMessage(phoneNumber, 
-            `Horário inválido! ⏰\n\n` +
+            `Horario invalido!\n\n` +
             `Use o formato: HH:MM\n` +
             `Exemplo: 14:30`
         );
@@ -674,7 +674,7 @@ async function handleTimeSelection(phoneNumber, messageText, session) {
 async function handlePatientName(phoneNumber, messageText, session) {
     if (messageText.length < 3) {
         await sendMessage(phoneNumber, 
-            `Nome muito curto! 🤔\n\n` +
+            `Nome muito curto!\n\n` +
             `Por favor, digite seu *nome completo*.`
         );
         return;
@@ -694,13 +694,13 @@ async function handleConfirmation(phoneNumber, messageText, session) {
     } else if (response === 'não' || response === 'nao' || response === '2' || response === 'n') {
         session.reset();
         await sendMessage(phoneNumber, 
-            `Tudo bem! ❌\n\n` +
+            `Tudo bem!\n\n` +
             `Agendamento cancelado.\n` +
             `Digite *menu* quando quiser tentar novamente!`
         );
     } else {
         await sendMessage(phoneNumber, 
-            `Não entendi... 🤔\n\n` +
+            `Nao entendi...\n\n` +
             `Digite *sim* para confirmar ou *não* para cancelar.`
         );
     }
@@ -731,7 +731,7 @@ async function listSpecialties(phoneNumber, clinicId = null) {
     let message = `Legal! Vamos agendar sua consulta!\n\nQual especialidade voce precisa?\n\n`;
     
     specialties.forEach((spec, index) => {
-        message += `${index + 1}️⃣ ${spec.name}\n`;
+        message += `${index + 1} ${spec.name}\n`;
     });
     
     message += `\nDigite o *número* da especialidade!`;
@@ -765,27 +765,27 @@ async function listDoctors(phoneNumber, specialtyId, clinicId = null) {
         message += `\n`;
     });
     
-    message += `Digite o *número* do médico que você prefere!`;
+    message += `Digite o *numero* do medico que voce prefere!`;
     
     await sendMessage(phoneNumber, message);
 }
 
 async function listAvailableDates(phoneNumber, doctorId) {
-    const message = `Perfeito! 👌\n\n` +
-        `Agora me diz: *qual data você prefere?*\n\n` +
-        `📅 Use o formato: DD/MM\n` +
+    const message = `Perfeito!\n\n` +
+        `Agora me diz: *qual data voce prefere?*\n\n` +
+        `Use o formato: DD/MM\n` +
         `Exemplo: 15/12\n\n` +
-        `_Dica: Temos horários disponíveis de segunda a sexta!_`;
+        `_Dica: Temos horarios disponiveis de segunda a sexta!_`;
     
     await sendMessage(phoneNumber, message);
 }
 
 async function listAvailableTimes(phoneNumber, doctorId, date) {
-    const message = `Show! 📅\n\n` +
-        `Agora escolha o *horário*:\n\n` +
-        `⏰ Use o formato: HH:MM\n` +
+    const message = `Show!\n\n` +
+        `Agora escolha o *horario*:\n\n` +
+        `Use o formato: HH:MM\n` +
         `Exemplo: 14:30\n\n` +
-        `_Atendemos de 08:00 às 18:00_`;
+        `_Atendemos de 08:00 as 18:00_`;
     
     await sendMessage(phoneNumber, message);
 }
@@ -794,14 +794,14 @@ async function confirmAppointment(phoneNumber, session) {
     const data = session.data;
     const date = new Date(data.scheduledDate + 'T' + data.scheduledTime);
     
-    const message = `Perfeito! Vou confirmar os dados: ✅\n\n` +
-        `👤 *Paciente:* ${data.patientName}\n` +
-        `👨‍⚕️ *Médico:* ${data.doctorName}\n` +
-        `📅 *Data:* ${date.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n` +
-        `⏰ *Horário:* ${data.scheduledTime}\n\n` +
-        `Está tudo certo? 🤔\n\n` +
-        `1️⃣ *Sim, confirmar!* ✅\n` +
-        `2️⃣ *Não, cancelar* ❌`;
+    const message = `Perfeito! Vou confirmar os dados:\n\n` +
+        `*Paciente:* ${data.patientName}\n` +
+        `*Medico:* ${data.doctorName}\n` +
+        `*Data:* ${date.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n` +
+        `*Horario:* ${data.scheduledTime}\n\n` +
+        `Esta tudo certo?\n\n` +
+        `1 *Sim, confirmar!*\n` +
+        `2 *Nao, cancelar*`;
     
     await sendMessage(phoneNumber, message);
 }
@@ -842,14 +842,14 @@ async function createAppointment(phoneNumber, session) {
         const date = new Date(data.scheduledDate + 'T' + data.scheduledTime);
         
         await sendMessage(phoneNumber,
-            `🎉 *Consulta agendada com sucesso!*\n\n` +
-            `👤 ${data.patientName}\n` +
-            `📅 ${date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}\n` +
-            `⏰ ${data.scheduledTime}\n` +
-            `👨‍⚕️ Dr(a). ${data.doctorName}\n\n` +
-            `📱 Você vai receber um lembrete antes da consulta!\n\n` +
-            `Qualquer dúvida, é só mandar mensagem! 😊\n\n` +
-            `_Digite *menu* para mais opções._`,
+            `*Consulta agendada com sucesso!*\n\n` +
+            `${data.patientName}\n` +
+            `${date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}\n` +
+            `${data.scheduledTime}\n` +
+            `Dr(a). ${data.doctorName}\n\n` +
+            `Voce vai receber um lembrete antes da consulta!\n\n` +
+            `Qualquer duvida, e so mandar mensagem!\n\n` +
+            `_Digite *menu* para mais opcoes._`,
             'high'
         );
 
@@ -1041,7 +1041,7 @@ async function handleHumanSupport(phoneNumber, messageText, session) {
 async function sendWelcomeMessage(phoneNumber, clinic = null) {
     const hour = new Date().getHours();
     let greeting;
-
+    
     if (hour < 12) {
         greeting = 'Bom dia!';
     } else if (hour < 18) {
@@ -1051,7 +1051,7 @@ async function sendWelcomeMessage(phoneNumber, clinic = null) {
     }
 
     const clinicName = clinic ? clinic.name : 'AtenMed';
-    
+
     const welcomes = [
         `${greeting} Tudo bem? Aqui e da *${clinicName}*!`,
         `${greeting} Como vai? Sou da equipe *${clinicName}*!`,
