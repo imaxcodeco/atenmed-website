@@ -494,29 +494,53 @@ async function handleInitialState(phoneNumber, messageText, session) {
             break;
 
         default:
-            // Usar IA se disponível
+            // Usar Gemini AI para resposta inteligente
             if (session.useAI) {
-                const aiResponse = await aiService.generateResponse(
-                    messageText,
-                    session.conversationHistory
-                );
-                if (aiResponse) {
-                    await sendMessage(phoneNumber, aiResponse);
-                    session.addToHistory(aiResponse, false);
-                    return;
+                try {
+                    // Analisar intencao primeiro
+                    const intent = await aiService.analyzeIntent(messageText);
+                    logger.info(`Intencao detectada: ${intent}`);
+                    
+                    // Se intencao for agendar, iniciar fluxo
+                    if (intent === 'agendar') {
+                        session.setState('awaiting_specialty');
+                        const aiResponse = await aiService.generateResponse(
+                            messageText,
+                            session.conversationHistory,
+                            session.data.patientName
+                        );
+                        await sendMessage(phoneNumber, aiResponse || 'Legal! Vamos marcar sua consulta! Qual especialidade voce precisa?');
+                        await listSpecialties(phoneNumber, session.clinicId);
+                        return;
+                    }
+                    
+                    // Resposta natural do Gemini
+                    const aiResponse = await aiService.generateResponse(
+                        messageText,
+                        session.conversationHistory,
+                        session.data.patientName
+                    );
+                    
+                    if (aiResponse) {
+                        await sendMessage(phoneNumber, aiResponse);
+                        session.addToHistory(aiResponse, false);
+                        return;
+                    }
+                } catch (aiError) {
+                    logger.error('Erro ao usar Gemini:', aiError);
                 }
             }
 
-            // Resposta padrão
+            // Resposta padrão se IA falhar
             await sendMessage(phoneNumber, 
-                `Ops! Não entendi... 😅\n\n` +
-                `Digite o *número* da opção que você quer:\n` +
+                `Ops! Nao entendi...\n\n` +
+                `Digite o *numero* da opcao que voce quer:\n` +
                 `1 - Marcar consulta\n` +
                 `2 - Ver consultas\n` +
                 `3 - Cancelar\n` +
                 `4 - Lista de espera\n` +
-                `5 - Falar com alguém\n\n` +
-                `Ou digite *menu* para ver todas as opções!`
+                `5 - Falar com alguem\n\n` +
+                `Ou digite *menu* para ver todas as opcoes!`
             );
     }
 }

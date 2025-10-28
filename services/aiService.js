@@ -1,314 +1,395 @@
 /**
- * AtenMed - AI Service
- * Serviço de IA conversacional para WhatsApp Bot
- * Suporta: OpenAI GPT e Google Gemini
+ * AtenMed - AI Service Powered by Google Gemini
+ * Servico de IA conversacional ultra-humanizado para WhatsApp Bot
  */
 
 const axios = require('axios');
 const logger = require('../utils/logger');
 
-// ===== CONFIGURAÇÃO =====
-const AI_PROVIDER = process.env.AI_PROVIDER || 'openai'; // 'openai' ou 'gemini'
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+// ===== CONFIGURACAO =====
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-pro'; // Modelo mais avancado
 
-// Contexto do sistema (personalidade do bot)
-const SYSTEM_CONTEXT = `Você é um assistente virtual amigável da AtenMed, uma clínica médica brasileira.
+// Contexto aprimorado - Personalidade humanizada
+const SYSTEM_CONTEXT = `Voce e Maria, uma atendente virtual super simpatica da AtenMed, uma clinica medica brasileira.
 
-PERSONALIDADE:
-- Seja extremamente amigável, empático e prestativo
-- Use linguagem casual brasileira (puts, eita, opa, show, legal)
-- Seja breve e direto nas respostas
-- Use emojis contextuais (mas sem exagero)
-- Demonstre entusiasmo em ajudar
+🎭 PERSONALIDADE (SEJA EXATAMENTE ASSIM):
+- Voce e brasileira, de Sao Paulo, jovem (25 anos), animada e super prestativa
+- Fale como uma pessoa real: use "a gente", "pra", "voce", "ta", "ne"
+- Use expressoes brasileiras naturais: "opa", "show", "legal", "massa", "beleza"
+- Seja calorosa mas profissional - como uma amiga que trabalha na clinica
+- Demonstre empatia genuina com problemas de saude
+- Seja paciente e compreensiva, nunca robotica
+- Use emojis COM MODERACAO (1-2 por mensagem)
 
-RESTRIÇÕES:
-- NUNCA marque consultas diretamente - apenas colete informações
-- NÃO invente horários ou disponibilidade - isso é verificado no sistema
-- Se não souber algo, seja honesto e ofereça ajuda humana
-- Mantenha foco em agendamento médico
+💬 ESTILO DE CONVERSA:
+- Respostas curtas (maximo 2-3 linhas)
+- Linguagem simples e direta
+- Perguntas claras e especificas
+- Evite formalidades excessivas
+- Nao use "Senhor", "Senhora" - use "voce"
 
-EXEMPLOS DE COMO RESPONDER:
-Paciente: "Oi, quero marcar"
-Você: "Oi! 😊 Legal, vamos marcar uma consulta! Pra qual especialidade você precisa? Cardiologia, Clínica Geral, Odontologia...?"
+🎯 SUA FUNCAO:
+- Ajudar no agendamento de consultas
+- Responder duvidas simples sobre a clinica
+- Ser um intermediario amigavel entre paciente e sistema
+- Se nao souber algo, seja honesta: "Deixa eu verificar isso pra voce!"
+
+⚠️ RESTRICOES IMPORTANTES:
+- NUNCA confirme horarios ou datas sem o sistema validar
+- NUNCA invente informacoes sobre medicos ou especialidades
+- Se a pessoa pedir algo que voce nao pode fazer, explique gentilmente
+- Quando em duvida, oferta transferir para atendimento humano
+
+📝 EXEMPLOS DE COMO RESPONDER:
+
+Paciente: "oi"
+Voce: "Oi! Tudo bem? Sou a Maria, da AtenMed! Em que posso te ajudar hoje?"
+
+Paciente: "quero marcar consulta"
+Voce: "Legal! Vamos marcar sim! Qual especialidade voce precisa? Temos cardiologia, clinica geral, ortopedia..."
+
+Paciente: "to com dor nas costas"
+Voce: "Puxa, sinto muito pela dor! Vamos cuidar disso. Acho que ortopedia seria ideal pra voce. Quer que eu veja os horarios disponiveis?"
 
 Paciente: "sim"
-Você: "Show! Bora então! 👍"
+Voce: "Otimo! Me passa seu nome completo pra eu puxar aqui?"
 
-Paciente: "quero um médico"
-Você: "Claro! Vamos te ajudar! Qual especialidade você precisa? 😊"
+Paciente: "quanto custa"
+Voce: "Boa pergunta! Os valores variam por especialidade. Quer que eu transfira voce pra alguem da equipe que pode te passar os precos certinhos?"
 
-IMPORTANTE: Seja sempre positivo, acolhedor e eficiente!`;
+IMPORTANTE: Seja sempre calma, positiva e faca a pessoa se sentir acolhida! Voce representa a clinica.`;
 
-// ===== INICIALIZAÇÃO =====
+// ===== INICIALIZACAO =====
 function initialize() {
-    if (AI_PROVIDER === 'openai' && !OPENAI_API_KEY) {
-        logger.warn('⚠️ OpenAI API Key não configurada. IA desabilitada.');
+    if (!GEMINI_API_KEY) {
+        logger.warn('⚠️ Gemini API Key nao configurada. IA desabilitada.');
         return false;
     }
     
-    if (AI_PROVIDER === 'gemini' && !GEMINI_API_KEY) {
-        logger.warn('⚠️ Gemini API Key não configurada. IA desabilitada.');
-        return false;
-    }
-    
-    logger.info(`🤖 AI Service inicializado com ${AI_PROVIDER.toUpperCase()}`);
+    logger.info(`🤖 AI Service inicializado com GEMINI ${GEMINI_MODEL}`);
+    logger.info('💬 Modo de conversa humanizada ATIVADO');
     return true;
 }
 
-// ===== PROCESSAR MENSAGEM COM IA =====
-async function processMessage(userMessage, conversationHistory = []) {
-    try {
-        if (AI_PROVIDER === 'openai') {
-            return await processWithOpenAI(userMessage, conversationHistory);
-        } else if (AI_PROVIDER === 'gemini') {
-            return await processWithGemini(userMessage, conversationHistory);
-        }
-        
-        return null;
-    } catch (error) {
-        logger.error('Erro ao processar com IA:', error);
-        return null;
-    }
-}
-
-// ===== OPENAI GPT =====
-async function processWithOpenAI(userMessage, conversationHistory) {
-    if (!OPENAI_API_KEY) return null;
-    
-    try {
-        const messages = [
-            { role: 'system', content: SYSTEM_CONTEXT },
-            ...conversationHistory.map(msg => ({
-                role: msg.isUser ? 'user' : 'assistant',
-                content: msg.text
-            })),
-            { role: 'user', content: userMessage }
-        ];
-
-        const response = await axios.post(
-            'https://api.openai.com/v1/chat/completions',
-            {
-                model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
-                messages: messages,
-                max_tokens: 200,
-                temperature: 0.8,
-                presence_penalty: 0.6,
-                frequency_penalty: 0.3
-            },
-            {
-                headers: {
-                    'Authorization': `Bearer ${OPENAI_API_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                timeout: 10000
-            }
-        );
-
-        const aiResponse = response.data.choices[0].message.content;
-        logger.info(`🤖 OpenAI: ${aiResponse.substring(0, 50)}...`);
-        
-        return aiResponse;
-    } catch (error) {
-        logger.error('Erro OpenAI:', error.response?.data || error.message);
-        return null;
-    }
-}
-
-// ===== GOOGLE GEMINI =====
-async function processWithGemini(userMessage, conversationHistory) {
+// ===== PROCESSAR MENSAGEM COM CONTEXTO COMPLETO =====
+async function generateResponse(userMessage, conversationHistory = [], patientName = null) {
     if (!GEMINI_API_KEY) return null;
     
     try {
-        // Construir histórico para Gemini
-        let fullContext = SYSTEM_CONTEXT + '\n\nHistórico da conversa:\n';
+        // Construir contexto rico
+        let prompt = SYSTEM_CONTEXT + '\n\n';
         
-        conversationHistory.forEach(msg => {
-            fullContext += `${msg.isUser ? 'Paciente' : 'Você'}: ${msg.text}\n`;
-        });
+        if (patientName) {
+            prompt += `NOME DO PACIENTE: ${patientName}\n`;
+            prompt += `(Use o nome dele/dela naturalmente na conversa!)\n\n`;
+        }
         
-        fullContext += `Paciente: ${userMessage}\nVocê:`;
+        prompt += '=== HISTORICO DA CONVERSA ===\n';
+        
+        // Adicionar historico recente (ultimas 10 mensagens)
+        const recentHistory = conversationHistory.slice(-10);
+        if (recentHistory.length > 0) {
+            recentHistory.forEach(msg => {
+                prompt += `${msg.isUser ? 'Paciente' : 'Voce (Maria)'}: ${msg.text}\n`;
+            });
+        } else {
+            prompt += '(Esta e a primeira interacao)\n';
+        }
+        
+        prompt += `\nPaciente: ${userMessage}\n`;
+        prompt += `Voce (Maria): `;
 
         const response = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
             {
                 contents: [{
                     parts: [{
-                        text: fullContext
+                        text: prompt
                     }]
                 }],
                 generationConfig: {
-                    temperature: 0.8,
-                    maxOutputTokens: 200,
-                    topP: 0.8,
-                    topK: 40
-                }
+                    temperature: 0.9,        // Mais criativo e natural
+                    maxOutputTokens: 150,    // Respostas curtas
+                    topP: 0.95,
+                    topK: 40,
+                    stopSequences: ['Paciente:', 'Usuario:']
+                },
+                safetySettings: [
+                    {
+                        category: 'HARM_CATEGORY_HARASSMENT',
+                        threshold: 'BLOCK_NONE'
+                    },
+                    {
+                        category: 'HARM_CATEGORY_HATE_SPEECH',
+                        threshold: 'BLOCK_NONE'
+                    }
+                ]
             },
             {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                timeout: 10000
+                timeout: 15000
             }
         );
 
-        const aiResponse = response.data.candidates[0].content.parts[0].text;
-        logger.info(`🤖 Gemini: ${aiResponse.substring(0, 50)}...`);
+        if (!response.data.candidates || response.data.candidates.length === 0) {
+            logger.warn('Gemini retornou resposta vazia');
+            return null;
+        }
+
+        const aiResponse = response.data.candidates[0].content.parts[0].text.trim();
         
-        return aiResponse;
+        // Limpar resposta (remover prefixos indesejados)
+        const cleanResponse = aiResponse
+            .replace(/^(Voce \(Maria\):?|Maria:?)\s*/i, '')
+            .trim();
+        
+        logger.info(`🤖 Gemini: ${cleanResponse.substring(0, 60)}...`);
+        
+        stats.totalRequests++;
+        stats.successfulRequests++;
+        
+        return cleanResponse;
+        
     } catch (error) {
-        logger.error('Erro Gemini:', error.response?.data || error.message);
+        stats.totalRequests++;
+        stats.failedRequests++;
+        
+        if (error.response) {
+            logger.error('Erro Gemini API:', {
+                status: error.response.status,
+                data: error.response.data
+            });
+        } else {
+            logger.error('Erro Gemini:', error.message);
+        }
+        
         return null;
     }
 }
 
-// ===== ANÁLISE DE INTENÇÃO =====
+// ===== ANALISE INTELIGENTE DE INTENCAO =====
 async function analyzeIntent(userMessage) {
+    if (!GEMINI_API_KEY) return 'outro';
+    
     try {
-        const intentPrompt = `Analise a intenção do usuário e responda APENAS com uma destas opções:
-- agendar: quer marcar consulta
-- consultar: quer ver agendamentos
-- cancelar: quer cancelar
-- confirmar: está confirmando algo (sim, ok, confirmo)
-- negar: está negando algo (não, nao)
-- ajuda: precisa de ajuda/atendente
-- saudacao: está cumprimentando
-- numero: digitou apenas um número
-- outro: outra coisa
+        const intentPrompt = `Voce e um classificador de intencoes para um sistema de agendamento medico.
 
-Mensagem do usuário: "${userMessage}"
+Analise a mensagem do usuario e classifique em UMA destas categorias:
 
-Responda APENAS com uma palavra (agendar, consultar, etc):`;
+- **agendar**: quer marcar/agendar consulta (ex: "quero marcar", "preciso de medico", "to doente")
+- **consultar**: quer ver consultas agendadas (ex: "minhas consultas", "meus agendamentos")
+- **cancelar**: quer cancelar consulta (ex: "cancelar", "desmarcar", "nao vou mais")
+- **remarcar**: quer mudar data/horario (ex: "remarcar", "mudar horario")
+- **confirmar**: esta confirmando algo (ex: "sim", "ok", "confirmo", "ta bom")
+- **negar**: esta negando algo (ex: "nao", "nada", "cancelar")
+- **duvida**: tem duvida sobre procedimentos/valores (ex: "quanto custa", "aceita convenio")
+- **urgencia**: caso urgente/emergencia (ex: "urgente", "emergencia", "dor forte")
+- **ajuda**: precisa falar com humano (ex: "atendente", "falar com alguem")
+- **saudacao**: esta cumprimentando (ex: "oi", "ola", "bom dia")
+- **numero**: digitou apenas numeros
+- **outro**: outras mensagens
 
-        if (AI_PROVIDER === 'openai' && OPENAI_API_KEY) {
-            const response = await axios.post(
-                'https://api.openai.com/v1/chat/completions',
-                {
-                    model: 'gpt-3.5-turbo',
-                    messages: [
-                        { role: 'system', content: 'Você é um classificador de intenções.' },
-                        { role: 'user', content: intentPrompt }
-                    ],
-                    max_tokens: 10,
-                    temperature: 0.3
-                },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-                        'Content-Type': 'application/json'
-                    },
-                    timeout: 5000
+Mensagem: "${userMessage}"
+
+Responda APENAS com a categoria (uma palavra):`;
+
+        const response = await axios.post(
+            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+            {
+                contents: [{ parts: [{ text: intentPrompt }] }],
+                generationConfig: { 
+                    maxOutputTokens: 15, 
+                    temperature: 0.1  // Mais deterministico
                 }
-            );
+            },
+            {
+                headers: { 'Content-Type': 'application/json' },
+                timeout: 5000
+            }
+        );
 
-            const intent = response.data.choices[0].message.content.trim().toLowerCase();
-            logger.info(`🎯 Intenção detectada: ${intent}`);
-            return intent;
-            
-        } else if (AI_PROVIDER === 'gemini' && GEMINI_API_KEY) {
-            const response = await axios.post(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`,
-                {
-                    contents: [{ parts: [{ text: intentPrompt }] }],
-                    generationConfig: { maxOutputTokens: 10, temperature: 0.3 }
-                },
-                {
-                    headers: { 'Content-Type': 'application/json' },
-                    timeout: 5000
-                }
-            );
-
-            const intent = response.data.candidates[0].content.parts[0].text.trim().toLowerCase();
-            logger.info(`🎯 Intenção detectada: ${intent}`);
-            return intent;
+        if (!response.data.candidates || response.data.candidates.length === 0) {
+            return 'outro';
         }
+
+        const intent = response.data.candidates[0].content.parts[0].text
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z]/g, '');
         
-        return 'outro';
+        logger.info(`🎯 Intencao detectada: ${intent}`);
+        return intent;
+        
     } catch (error) {
-        logger.error('Erro ao analisar intenção:', error.message);
+        logger.error('Erro ao analisar intencao:', error.message);
         return 'outro';
     }
 }
 
-// ===== EXTRAIR INFORMAÇÕES =====
-async function extractInformation(userMessage, infoType) {
+// ===== EXTRAIR NOME DO PACIENTE =====
+async function extractPatientName(userMessage) {
+    if (!GEMINI_API_KEY) return null;
+    
     try {
-        let extractPrompt = '';
+        const prompt = `Extraia APENAS o nome completo da pessoa desta mensagem.
         
-        switch (infoType) {
-            case 'name':
-                extractPrompt = `Extraia APENAS o nome da pessoa desta mensagem. Se não houver nome, responda "NENHUM".
+Regras:
+- Se houver nome completo, retorne ele
+- Se houver apenas primeiro nome, retorne apenas ele
+- Se NAO houver nome, responda exatamente: NENHUM
+- Nao adicione nada alem do nome
+
 Mensagem: "${userMessage}"
+
 Nome:`;
-                break;
-                
-            case 'date':
-                extractPrompt = `Extraia APENAS a data desta mensagem no formato DD/MM/AAAA. Se não houver data válida, responda "NENHUM".
-Mensagem: "${userMessage}"
-Data:`;
-                break;
-                
-            case 'specialty':
-                extractPrompt = `Identifique a especialidade médica mencionada. Opções: cardiologia, clinica geral, odontologia, ortopedia, pediatria.
-Se não identificar ou for outra, responda "NENHUM".
-Mensagem: "${userMessage}"
-Especialidade:`;
-                break;
-                
-            default:
-                return null;
+
+        const response = await axios.post(
+            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+            {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { maxOutputTokens: 30, temperature: 0.1 }
+            },
+            {
+                headers: { 'Content-Type': 'application/json' },
+                timeout: 5000
+            }
+        );
+
+        if (!response.data.candidates || response.data.candidates.length === 0) {
+            return null;
         }
 
-        if (AI_PROVIDER === 'openai' && OPENAI_API_KEY) {
-            const response = await axios.post(
-                'https://api.openai.com/v1/chat/completions',
-                {
-                    model: 'gpt-3.5-turbo',
-                    messages: [
-                        { role: 'system', content: 'Você extrai informações específicas de mensagens.' },
-                        { role: 'user', content: extractPrompt }
-                    ],
-                    max_tokens: 50,
-                    temperature: 0.3
-                },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-                        'Content-Type': 'application/json'
-                    },
-                    timeout: 5000
-                }
-            );
+        const extracted = response.data.candidates[0].content.parts[0].text.trim();
+        
+        if (extracted === 'NENHUM' || extracted.length < 3) {
+            return null;
+        }
+        
+        logger.info(`📝 Nome extraido: ${extracted}`);
+        return extracted;
+        
+    } catch (error) {
+        logger.error('Erro ao extrair nome:', error.message);
+        return null;
+    }
+}
 
-            const extracted = response.data.choices[0].message.content.trim();
-            return extracted === 'NENHUM' ? null : extracted;
+// ===== IDENTIFICAR ESPECIALIDADE =====
+async function identifySpecialty(userMessage, availableSpecialties) {
+    if (!GEMINI_API_KEY) return null;
+    
+    try {
+        const specialtiesList = availableSpecialties.map(s => s.name).join(', ');
+        
+        const prompt = `O paciente mencionou um problema de saude. Identifique qual especialidade seria mais adequada.
+
+Especialidades disponiveis: ${specialtiesList}
+
+Mensagem do paciente: "${userMessage}"
+
+Responda APENAS com o nome da especialidade mais adequada, ou "NENHUM" se nao conseguir identificar.
+
+Especialidade:`;
+
+        const response = await axios.post(
+            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+            {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { maxOutputTokens: 30, temperature: 0.3 }
+            },
+            {
+                headers: { 'Content-Type': 'application/json' },
+                timeout: 5000
+            }
+        );
+
+        if (!response.data.candidates || response.data.candidates.length === 0) {
+            return null;
+        }
+
+        const identified = response.data.candidates[0].content.parts[0].text.trim();
+        
+        if (identified === 'NENHUM') {
+            return null;
+        }
+        
+        // Buscar a especialidade que mais combina
+        const matchedSpecialty = availableSpecialties.find(s => 
+            identified.toLowerCase().includes(s.name.toLowerCase()) ||
+            s.name.toLowerCase().includes(identified.toLowerCase())
+        );
+        
+        if (matchedSpecialty) {
+            logger.info(`🏥 Especialidade identificada: ${matchedSpecialty.name}`);
+            return matchedSpecialty;
         }
         
         return null;
+        
     } catch (error) {
-        logger.error('Erro ao extrair informação:', error.message);
+        logger.error('Erro ao identificar especialidade:', error.message);
+        return null;
+    }
+}
+
+// ===== GERAR MENSAGEM EMPATICA =====
+async function generateEmpathicResponse(userSymptom) {
+    if (!GEMINI_API_KEY) return null;
+    
+    try {
+        const prompt = `O paciente mencionou: "${userSymptom}"
+
+Como Maria, atendente empatica da clinica, responda de forma acolhedora e oferea ajuda para agendar.
+
+Sua resposta (maximo 2 linhas, tom amigavel brasileiro):`;
+
+        const response = await axios.post(
+            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+            {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { maxOutputTokens: 100, temperature: 0.9 }
+            },
+            {
+                headers: { 'Content-Type': 'application/json' },
+                timeout: 8000
+            }
+        );
+
+        if (!response.data.candidates || response.data.candidates.length === 0) {
+            return null;
+        }
+
+        const empathicResponse = response.data.candidates[0].content.parts[0].text.trim();
+        logger.info(`💝 Resposta empatica gerada`);
+        
+        return empathicResponse;
+        
+    } catch (error) {
+        logger.error('Erro ao gerar resposta empatica:', error.message);
         return null;
     }
 }
 
 // ===== VERIFICAR SE DEVE USAR IA =====
 function shouldUseAI() {
-    return (AI_PROVIDER === 'openai' && OPENAI_API_KEY) || 
-           (AI_PROVIDER === 'gemini' && GEMINI_API_KEY);
+    return !!GEMINI_API_KEY;
 }
 
-// ===== ESTATÍSTICAS =====
+// ===== ESTATISTICAS =====
 let stats = {
     totalRequests: 0,
     successfulRequests: 0,
-    failedRequests: 0,
-    avgResponseTime: 0
+    failedRequests: 0
 };
 
 function getStats() {
     return {
         ...stats,
-        provider: AI_PROVIDER,
+        provider: 'Gemini',
+        model: GEMINI_MODEL,
         enabled: shouldUseAI(),
         successRate: stats.totalRequests > 0 
             ? ((stats.successfulRequests / stats.totalRequests) * 100).toFixed(1) + '%'
@@ -316,13 +397,24 @@ function getStats() {
     };
 }
 
+// ===== RESET STATS =====
+function resetStats() {
+    stats = {
+        totalRequests: 0,
+        successfulRequests: 0,
+        failedRequests: 0
+    };
+}
+
 // ===== EXPORTAR =====
 module.exports = {
     initialize,
-    processMessage,
+    generateResponse,
     analyzeIntent,
-    extractInformation,
+    extractPatientName,
+    identifySpecialty,
+    generateEmpathicResponse,
     shouldUseAI,
-    getStats
+    getStats,
+    resetStats
 };
-
