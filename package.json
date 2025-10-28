@@ -18,6 +18,7 @@
     "test-webhook": "node test-webhook.js",
     "test-webhook-local": "node test-webhook-local.js",
     "test-whatsapp": "node test-whatsapp-completo.js",
+    "test-webhook-msg": "node test-webhook-mensagem.js",
     "build": "npm run build:css",
     "build:css": "npx tailwindcss -i ./site/assets/css/tailwind-input.css -o ./site/assets/css/tailwind.css --minify",
     "watch:css": "npx tailwindcss -i ./site/assets/css/tailwind-input.css -o ./site/assets/css/tailwind.css --watch",
