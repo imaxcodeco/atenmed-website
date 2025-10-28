@@ -457,7 +457,7 @@
                     <h1>Gerenciar Clínicas</h1>
                     <p>Cadastre e gerencie as clínicas com números WhatsApp</p>
                 </div>
-                <button class="btn btn-add" onclick="openModal()">
+                <button class="btn btn-add" id="btnNovaClinica">
                     + Nova Clínica
                 </button>
             </div>
@@ -487,7 +487,7 @@
                 <div class="empty-state-icon">🏥</div>
                 <h3>Nenhuma clínica cadastrada</h3>
                 <p>Comece adicionando sua primeira clínica com número WhatsApp</p>
-                <button class="btn btn-add" onclick="openModal()">
+                <button class="btn btn-add" id="btnPrimeiraClinica">
                     + Cadastrar Primeira Clínica
                 </button>
             </div>
@@ -499,10 +499,10 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title" id="modalTitle">Nova Clínica</h2>
-                <button class="close-modal" onclick="closeModal()">&times;</button>
+                <button class="close-modal" id="btnCloseModal">&times;</button>
             </div>
 
-            <form id="clinicForm" onsubmit="saveClinic(event)">
+            <form id="clinicForm">
                 <input type="hidden" id="clinicId">
 
                 <div class="form-group">

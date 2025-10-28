@@ -10,7 +10,73 @@ let editingClinicId = null;
 // Inicializar
 document.addEventListener('DOMContentLoaded', () => {
     loadClinics();
+    setupEventListeners();
 });
+
+// Configurar event listeners
+function setupEventListeners() {
+    // Botão nova clínica
+    const btnNovaClinica = document.getElementById('btnNovaClinica');
+    if (btnNovaClinica) {
+        btnNovaClinica.addEventListener('click', () => openModal());
+    }
+    
+    // Botão primeira clínica (empty state)
+    const btnPrimeiraClinica = document.getElementById('btnPrimeiraClinica');
+    if (btnPrimeiraClinica) {
+        btnPrimeiraClinica.addEventListener('click', () => openModal());
+    }
+    
+    // Botão fechar modal
+    const btnCloseModal = document.getElementById('btnCloseModal');
+    if (btnCloseModal) {
+        btnCloseModal.addEventListener('click', closeModal);
+    }
+    
+    // Formulário
+    const clinicForm = document.getElementById('clinicForm');
+    if (clinicForm) {
+        clinicForm.addEventListener('submit', saveClinic);
+    }
+    
+    // Modal - fechar ao clicar fora
+    const modal = document.getElementById('clinicModal');
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target.id === 'clinicModal') {
+                closeModal();
+            }
+        });
+    }
+    
+    // Delegação de eventos para botões dos cards (gerados dinamicamente)
+    const clinicsContainer = document.getElementById('clinicsContainer');
+    if (clinicsContainer) {
+        clinicsContainer.addEventListener('click', (e) => {
+            const target = e.target;
+            
+            // Botão editar
+            if (target.classList.contains('btn-edit')) {
+                const clinicId = target.dataset.clinicId;
+                editClinic(clinicId);
+            }
+            
+            // Botão toggle
+            if (target.classList.contains('btn-toggle')) {
+                const clinicId = target.dataset.clinicId;
+                const newStatus = target.dataset.newStatus === 'true';
+                toggleClinic(clinicId, newStatus);
+            }
+            
+            // Botão delete
+            if (target.classList.contains('btn-delete')) {
+                const clinicId = target.dataset.clinicId;
+                const clinicName = target.dataset.clinicName;
+                deleteClinic(clinicId, clinicName);
+            }
+        });
+    }
+}
 
 // Verificar autenticação
 function getAuthToken() {
@@ -122,13 +188,13 @@ function renderClinics() {
             </div>
 
             <div class="clinic-actions">
-                <button class="btn btn-edit" onclick="editClinic('${clinic._id}')">
+                <button class="btn btn-edit" data-clinic-id="${clinic._id}">
                     Editar
                 </button>
-                <button class="btn btn-toggle" onclick="toggleClinic('${clinic._id}', ${!clinic.active})">
+                <button class="btn btn-toggle" data-clinic-id="${clinic._id}" data-new-status="${!clinic.active}">
                     ${clinic.active ? 'Desativar' : 'Ativar'}
                 </button>
-                <button class="btn btn-delete" onclick="deleteClinic('${clinic._id}', '${clinic.name}')">
+                <button class="btn btn-delete" data-clinic-id="${clinic._id}" data-clinic-name="${clinic.name}">
                     Excluir
                 </button>
             </div>
@@ -358,11 +424,4 @@ function showSuccess(message) {
 function showError(message) {
     alert('Erro: ' + message);
 }
-
-// Fechar modal ao clicar fora
-document.getElementById('clinicModal')?.addEventListener('click', (e) => {
-    if (e.target.id === 'clinicModal') {
-        closeModal();
-    }
-});
 
