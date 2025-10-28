@@ -216,6 +216,7 @@ clinicSchema.index({ 'address.city': 1 });
 clinicSchema.index({ active: 1 });
 clinicSchema.index({ isActive: 1 });
 clinicSchema.index({ 'subscription.plan': 1 });
+clinicSchema.index({ 'contact.whatsapp': 1 }); // Para roteamento do WhatsApp
 
 // Virtual para especialidades
 clinicSchema.virtual('specialties', {

@@ -124,8 +124,11 @@ router.post('/webhook', express.json({
                             for (const message of change.value.messages) {
                                 logger.info(`📨 Processando mensagem de ${message.from}`);
                                 
+                                // Passar metadata para identificar a clínica
+                                const metadata = change.value?.metadata || null;
+                                
                                 // Processar mensagem de forma assíncrona
-                                whatsappService.handleIncomingMessage(message)
+                                whatsappService.handleIncomingMessage(message, metadata)
                                     .catch(err => {
                                         logger.error('Erro ao processar mensagem:', err);
                                         logger.error('Mensagem:', JSON.stringify(message, null, 2));

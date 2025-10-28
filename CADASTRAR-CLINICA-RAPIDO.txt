@@ -1,0 +1,295 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║    🏥 CADASTRAR CLÍNICA COM WHATSAPP - GUIA RÁPIDO 🏥               ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ O QUE FOI IMPLEMENTADO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Sistema Multi-Clínica
+✅ Cada clínica com seu número próprio
+✅ Automação personalizada por clínica
+✅ Identificação automática via número
+✅ Filtros de especialidades e médicos por clínica
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 OPÇÃO 1: USAR SCRIPT AUTOMÁTICO (MAIS FÁCIL)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# No servidor
+cd /var/www/atenmed
+node scripts/cadastrar-clinica-whatsapp.js
+
+# O script vai pedir:
+- Nome da clínica
+- Telefone
+- Email
+- Número WhatsApp  ← IMPORTANTE!
+- Endereço
+- Horário de funcionamento
+
+# Exemplo de número WhatsApp:
+5511987654321
+(11) 98765-4321
+11 98765-4321
+
+# Todos os formatos acima funcionam!
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 OPÇÃO 2: VIA MONGODB (RÁPIDO)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Conectar
+mongo
+use atenmed
+
+# Cadastrar clínica
+db.clinics.insertOne({
+    name: 'Nome da Sua Clínica',
+    slug: 'nome-da-sua-clinica',
+    contact: {
+        phone: '(11) 3333-4444',
+        email: 'contato@clinica.com.br',
+        whatsapp: '5511987654321',
+        website: 'https://clinica.com.br'
+    },
+    address: {
+        street: 'Rua das Flores',
+        number: '123',
+        city: 'São Paulo',
+        state: 'SP'
+    },
+    workingHours: {
+        start: 8,
+        end: 18
+    },
+    features: {
+        whatsappBot: true
+    },
+    active: true,
+    createdAt: new Date(),
+    updatedAt: new Date()
+})
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 OPÇÃO 3: VIA API
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+curl -X POST https://atenmed.com.br/api/clinics \
+  -H "Authorization: Bearer SEU_TOKEN_ADMIN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Nome da Sua Clínica",
+    "contact": {
+      "phone": "(11) 3333-4444",
+      "email": "contato@clinica.com.br",
+      "whatsapp": "5511987654321",
+      "website": "https://clinica.com.br"
+    },
+    "address": {
+      "street": "Rua das Flores",
+      "number": "123",
+      "city": "São Paulo",
+      "state": "SP"
+    },
+    "features": {
+      "whatsappBot": true
+    },
+    "active": true
+  }'
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ IMPORTANTE: FORMATO DO NÚMERO WHATSAPP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ CORRETO:
+   "whatsapp": "5511987654321"
+
+   Onde:
+   55    → Código do país (Brasil)
+   11    → DDD
+   98765 → Primeiros dígitos
+   4321  → Últimos dígitos
+
+
+❌ ERRADO:
+   "(11) 98765-4321"  → Tem formatação
+   "11987654321"      → Falta código do país (55)
+   "98765-4321"       → Falta DDD e país
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 CADASTRAR MÉDICOS VINCULADOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Depois de cadastrar a clínica, cadastre os médicos:
+
+db.doctors.insertOne({
+    name: 'Dr. João Silva',
+    email: 'joao@clinica.com.br',
+    crm: {
+        number: '123456',
+        state: 'SP'
+    },
+    specialties: [ObjectId('ID_DA_ESPECIALIDADE')],
+    clinic: ObjectId('ID_DA_CLINICA'),  ← IMPORTANTE!
+    googleCalendarId: 'calendario@gmail.com',
+    active: true,
+    createdAt: new Date(),
+    updatedAt: new Date()
+})
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🧪 TESTAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Do seu WhatsApp, envie para o número da clínica:
+
+   oi
+
+
+2. O bot deve responder:
+
+   Bom dia! ☀️ Tudo bem? Aqui é da Nome da Sua Clínica!
+   
+   Em que posso te ajudar hoje? 😊
+   
+   1️⃣ Quero marcar uma consulta
+   2️⃣ Ver minhas consultas agendadas
+   3️⃣ Preciso cancelar uma consulta
+   4️⃣ Entrar na lista de espera
+   5️⃣ Falar com alguém da equipe
+
+
+3. Verificar logs:
+
+   tail -f /var/www/atenmed/logs/combined.log
+
+   Você deve ver:
+   
+   📩 Mensagem recebida de 5511999999999: oi
+   🏥 Clínica identificada: Nome da Sua Clínica
+   🏥 Direcionada para: Nome da Sua Clínica
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 VERIFICAR CLÍNICA CADASTRADA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Via MongoDB
+mongo
+use atenmed
+db.clinics.find({ 'contact.whatsapp': '5511987654321' })
+
+# Ver todas as clínicas
+db.clinics.find({ active: true }, { name: 1, 'contact.whatsapp': 1 })
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 COMO FUNCIONA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+WhatsApp Business API (Central)
+        ↓
+   Recebe mensagem no número 5511987654321
+        ↓
+   Sistema busca: qual clínica tem este número?
+        ↓
+   Encontra: "Clínica Saúde Total"
+        ↓
+   Bot responde: "Aqui é da Clínica Saúde Total!"
+        ↓
+   Filtra: Apenas médicos desta clínica
+        ↓
+   Agenda: Vinculado à Clínica Saúde Total
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 EXEMPLO COMPLETO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Você tem 3 clínicas:
+
+┌─────────────────────────────────────────────────────────────────┐
+│ Clínica A: (11) 98765-4321                                      │
+│   - Dr. João (Cardiologia)                                      │
+│   - Dra. Maria (Dermatologia)                                   │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ Clínica B: (21) 98765-4321                                      │
+│   - Dr. Pedro (Ortopedia)                                       │
+│   - Dr. Carlos (Pediatria)                                      │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ Clínica C: (47) 98765-4321                                      │
+│   - Dra. Ana (Ginecologia)                                      │
+│   - Dr. Paulo (Neurologia)                                      │
+└─────────────────────────────────────────────────────────────────┘
+
+
+Paciente manda para (11) 98765-4321:
+   → Vê apenas: Cardiologia, Dermatologia
+   → Vê apenas: Dr. João, Dra. Maria
+
+Paciente manda para (21) 98765-4321:
+   → Vê apenas: Ortopedia, Pediatria
+   → Vê apenas: Dr. Pedro, Dr. Carlos
+
+Paciente manda para (47) 98765-4321:
+   → Vê apenas: Ginecologia, Neurologia
+   → Vê apenas: Dra. Ana, Dr. Paulo
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ CHECKLIST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[ ] Clínica cadastrada com número WhatsApp
+[ ] Número no formato correto (5511987654321)
+[ ] Médicos vinculados à clínica
+[ ] Especialidades cadastradas
+[ ] Mensagem de teste enviada
+[ ] Bot respondeu com nome da clínica
+[ ] Logs mostram "Clínica identificada"
+[ ] Agendamento teste criado
+[ ] Vinculado à clínica correta
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📚 DOCUMENTAÇÃO COMPLETA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⭐ GUIA-MULTI-CLINICA-WHATSAPP.md  ← Guia completo e detalhado
+   CADASTRAR-CLINICA-RAPIDO.txt    ← Este arquivo
+   GUIA-AUTOMACAO-WHATSAPP.md      ← Guia da automação
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 DEPLOY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ssh -i "C:\Users\Ian_1\Documents\AtenMed\site-atenmed.pem" ubuntu@3.129.206.231
+
+cd /var/www/atenmed && git pull origin reorganizacao-estrutura
+
+~/.nvm/versions/node/$(ls ~/.nvm/versions/node | tail -1)/bin/pm2 restart atenmed
+
+tail -f logs/combined.log
+
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║       🎉 SISTEMA MULTI-CLÍNICA PRONTO! 🎉                           ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
