@@ -12,14 +12,27 @@ document.addEventListener('DOMContentLoaded', () => {
     loadClinics();
 });
 
+// Verificar autenticação
+function getAuthToken() {
+    try {
+        const auth = localStorage.getItem('atenmed_auth');
+        if (!auth) {
+            window.location.href = '/site/login.html';
+            return null;
+        }
+        const authData = JSON.parse(auth);
+        return authData.token;
+    } catch (error) {
+        window.location.href = '/site/login.html';
+        return null;
+    }
+}
+
 // Carregar clínicas
 async function loadClinics() {
     try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            window.location.href = '/site/login.html';
-            return;
-        }
+        const token = getAuthToken();
+        if (!token) return;
 
         const response = await fetch(`${API_BASE}/clinics`, {
             headers: {
@@ -204,7 +217,9 @@ async function saveClinic(event) {
     submitBtn.textContent = 'Salvando...';
 
     try {
-        const token = localStorage.getItem('token');
+        const token = getAuthToken();
+        if (!token) return;
+        
         const clinicId = document.getElementById('clinicId').value;
 
         const data = {
@@ -270,7 +285,8 @@ function editClinic(clinicId) {
 // Toggle status da clínica
 async function toggleClinic(clinicId, newStatus) {
     try {
-        const token = localStorage.getItem('token');
+        const token = getAuthToken();
+        if (!token) return;
         
         const response = await fetch(`${API_BASE}/clinics/${clinicId}`, {
             method: 'PUT',
@@ -301,7 +317,8 @@ async function deleteClinic(clinicId, clinicName) {
     }
 
     try {
-        const token = localStorage.getItem('token');
+        const token = getAuthToken();
+        if (!token) return;
         
         const response = await fetch(`${API_BASE}/clinics/${clinicId}`, {
             method: 'DELETE',
