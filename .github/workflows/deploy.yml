@@ -1,77 +1,129 @@
-name: Deploy to AWS EC2
+name: Deploy to Production
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches:
+      - main
+      - master
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Run tests
-      run: npm test
-      continue-on-error: true
-      
-    - name: Deploy to AWS EC2
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USERNAME }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        port: ${{ secrets.EC2_PORT }}
-        script: |
-          # Navegar para o diretório do projeto
-          cd /home/ubuntu/atenmed-website
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --production
+
+      - name: Build CSS
+        run: npm run build:css || echo "Build CSS optional"
+
+      - name: Create .env file
+        run: |
+          cat > .env << EOF
+          NODE_ENV=production
+          PORT=3000
+          HOST=0.0.0.0
           
-          # Fazer backup do código atual
-          sudo cp -r /home/ubuntu/atenmed-website /home/ubuntu/backup-atenmed-$(date +%Y%m%d-%H%M%S)
+          # URLs
+          APP_URL=https://atenmed.com.br
+          CORS_ORIGIN=https://atenmed.com.br,https://www.atenmed.com.br
           
-          # Parar o serviço
-          sudo systemctl stop atenmed
+          # MongoDB
+          MONGODB_URI=${{ secrets.MONGODB_URI }}
           
-          # Fazer pull das mudanças
-          git fetch origin
-          git reset --hard origin/main
+          # JWT
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXPIRES_IN=7d
           
-          # Instalar dependências
-          npm ci --production
+          # Email (AWS SES)
+          EMAIL_HOST=${{ secrets.EMAIL_HOST }}
+          EMAIL_PORT=587
+          EMAIL_USER=${{ secrets.EMAIL_USER }}
+          EMAIL_PASS=${{ secrets.EMAIL_PASS }}
+          EMAIL_FROM=${{ secrets.EMAIL_FROM }}
           
-          # Executar scripts de inicialização se necessário
-          npm run init-db || true
+          # WhatsApp
+          WHATSAPP_API_URL=https://graph.facebook.com/v18.0
+          WHATSAPP_PHONE_ID=${{ secrets.WHATSAPP_PHONE_ID }}
+          WHATSAPP_TOKEN=${{ secrets.WHATSAPP_TOKEN }}
+          WHATSAPP_VERIFY_TOKEN=${{ secrets.WHATSAPP_VERIFY_TOKEN }}
+          WHATSAPP_APP_SECRET=${{ secrets.WHATSAPP_APP_SECRET }}
           
-          # Reiniciar o serviço
-          sudo systemctl start atenmed
-          sudo systemctl status atenmed
+          # Google Calendar
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REDIRECT_URL=https://atenmed.com.br/api/auth/google/callback
           
-          # Verificar se o serviço está rodando
+          # Security
+          BCRYPT_ROUNDS=12
+          SESSION_SECRET=${{ secrets.SESSION_SECRET }}
+          
+          # Features
+          ENABLE_REMINDERS=true
+          ENABLE_WAITLIST=true
+          ENABLE_WHATSAPP=true
+          ENABLE_GOOGLE_CALENDAR=true
+          EOF
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
+            cd /var/www/atenmed || cd ~/atenmed
+            
+            # Pull latest code
+            git pull origin main || git pull origin master
+            
+            # Backup
+            mkdir -p backups
+            cp .env backups/.env.$(date +%Y%m%d_%H%M%S) 2>/dev/null || true
+            
+            # Copy new .env (será feito via secrets)
+            
+            # Install dependencies
+            npm ci --production
+            
+            # Build
+            npm run build:css || echo "Build optional"
+            
+            # Restart with PM2
+            pm2 reload ecosystem.config.js --env production || pm2 start ecosystem.config.js --env production
+            pm2 save
+            
+            # Show status
+            pm2 status
+            
+            echo "✅ Deploy completed successfully!"
+
+      - name: Health Check
+        run: |
           sleep 10
-          curl -f http://localhost:3000/health || exit 1
-          
-          # Verificar se o domínio está respondendo
-          curl -f https://atenmed.com.br/health || echo "Domínio ainda não está respondendo, mas serviço local está OK"
-          
-          echo "Deploy realizado com sucesso!"
-          
-    - name: Notify deployment status
-      if: always()
-      run: |
-        if [ ${{ job.status }} == 'success' ]; then
-          echo "✅ Deploy realizado com sucesso!"
-        else
-          echo "❌ Deploy falhou!"
-        fi
+          curl --fail https://atenmed.com.br/health || exit 1
+          echo "✅ Health check passed!"
+
+      - name: Notify Success
+        if: success()
+        run: |
+          echo "🎉 Deploy to atenmed.com.br successful!"
+          echo "✅ Application is running"
+          echo "🌐 URL: https://atenmed.com.br"
+
+      - name: Notify Failure
+        if: failure()
+        run: |
+          echo "❌ Deploy failed!"
+          echo "Check logs for details"

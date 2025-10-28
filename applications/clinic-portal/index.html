@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal da Clínica - AtenMed</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: linear-gradient(180deg, #184354 0%, #2c5f6f 100%);
+            color: white;
+            padding: 2rem 0;
+            overflow-y: auto;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+        }
+
+        .logo-section {
+            padding: 0 1.5rem 2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 1rem;
+        }
+
+        .logo-section h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .logo-section h1 span {
+            color: #6dd5ed;
+        }
+
+        .logo-section p {
+            font-size: 0.85rem;
+            opacity: 0.7;
+        }
+
+        .quick-links {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 1rem;
+        }
+
+        .quick-links h3 {
+            font-size: 0.8rem;
+            opacity: 0.6;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+        }
+
+        .quick-link {
+            display: block;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .quick-link:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .menu {
+            list-style: none;
+        }
+
+        .menu-item {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-left: 4px solid transparent;
+        }
+
+        .menu-item:hover {
+            background: rgba(255,255,255,0.1);
+            border-left-color: #6dd5ed;
+        }
+
+        .menu-item.active {
+            background: rgba(255,255,255,0.15);
+            border-left-color: #6dd5ed;
+        }
+
+        .menu-item .icon {
+            font-size: 1.2rem;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: white;
+            padding: 1.5rem 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            color: #184354;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #45a7b1, #6dd5ed);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .btn-logout {
+            padding: 0.6rem 1.2rem;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-logout:hover {
+            background: #d32f2f;
+            transform: translateY(-2px);
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-left: 4px solid #45a7b1;
+        }
+
+        .stat-card h3 {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #184354;
+        }
+
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            color: #184354;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #45a7b1;
+        }
+
+        .form-group input:disabled {
+            background: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #45a7b1, #6dd5ed);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(69, 167, 177, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            padding: 1rem 2rem;
+            background: white;
+            color: #45a7b1;
+            border: 2px solid #45a7b1;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background: #45a7b1;
+            color: white;
+        }
+
+        .color-picker-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .color-picker-wrapper input[type="color"] {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .color-preview {
+            flex: 1;
+            padding: 0.75rem;
+            background: #f9fafb;
+            border-radius: 8px;
+            font-family: monospace;
+        }
+
+        .plan-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .plan-free { background: #e0e0e0; color: #666; }
+        .plan-basic { background: #e3f2fd; color: #1976d2; }
+        .plan-pro { background: #f3e5f5; color: #7b1fa2; }
+        .plan-enterprise { background: #fff3e0; color: #e65100; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-active { background: #d4edda; color: #155724; }
+        .status-trial { background: #fff3cd; color: #856404; }
+        .status-suspended { background: #f8d7da; color: #721c24; }
+
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .alert.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .invoice-table th,
+        .invoice-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .invoice-table th {
+            background: #f9fafb;
+            font-weight: 700;
+            color: #184354;
+        }
+
+        .invoice-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #999;
+        }
+
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        .loader {
+            text-align: center;
+            padding: 3rem;
+            color: #45a7b1;
+        }
+
+        .public-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 10px;
+            margin-top: 1rem;
+        }
+
+        .public-link input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-family: monospace;
+        }
+
+        .btn-copy {
+            padding: 0.5rem 1rem;
+            background: #45a7b1;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-copy:hover {
+            background: #3a8a93;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo-section">
+            <h1>🏥 Aten<span>Med</span></h1>
+            <p>Portal da Clínica</p>
+        </div>
+
+        <div class="quick-links">
+            <h3>🔗 Links Rápidos</h3>
+            <a href="/" class="quick-link" target="_blank">🏠 Landing Page</a>
+            <a href="/planos" class="quick-link" target="_blank">📋 Página de Planos</a>
+            <a href="/crm" class="quick-link">💼 CRM / Vendas</a>
+            <a href="/health" class="quick-link" target="_blank">❤️ Status da API</a>
+        </div>
+
+        <ul class="menu">
+            <li class="menu-item active" onclick="showSection('dashboard')">
+                <span class="icon">📊</span>
+                <span>Dashboard</span>
+            </li>
+            <li class="menu-item" onclick="showSection('clinic')">
+                <span class="icon">🏥</span>
+                <span>Minha Clínica</span>
+            </li>
+            <li class="menu-item" onclick="showSection('personalization')">
+                <span class="icon">🎨</span>
+                <span>Personalização</span>
+            </li>
+            <li class="menu-item" onclick="showSection('schedule')">
+                <span class="icon">⏰</span>
+                <span>Horários</span>
+            </li>
+            <li class="menu-item" onclick="showSection('invoices')">
+                <span class="icon">💰</span>
+                <span>Faturas</span>
+            </li>
+            <li class="menu-item" onclick="showSection('settings')">
+                <span class="icon">⚙️</span>
+                <span>Configurações</span>
+            </li>
+            <li class="menu-item" onclick="showSection('support')">
+                <span class="icon">💬</span>
+                <span>Suporte</span>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <h1 id="clinicName">Carregando...</h1>
+            </div>
+            <div class="user-menu">
+                <div class="user-avatar" id="userAvatar">?</div>
+                <button class="btn-logout" onclick="logout()">Sair</button>
+            </div>
+        </div>
+
+        <div id="globalAlert" class="alert"></div>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="content-section active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Agendamentos (Mês)</h3>
+                    <div class="value" id="statAppointments">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Pacientes Ativos</h3>
+                    <div class="value" id="statPatients">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Visualizações</h3>
+                    <div class="value" id="statViews">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Taxa de Confirmação</h3>
+                    <div class="value" id="statConfirmation">-</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📱 Sua Página Pública</h2>
+                <p style="color: #666; margin-bottom: 1rem;">
+                    Compartilhe este link com seus pacientes para agendamento online:
+                </p>
+                <div class="public-link">
+                    <input type="text" id="publicUrl" readonly>
+                    <button class="btn-copy" onclick="copyPublicUrl()">📋 Copiar</button>
+                    <button class="btn-copy" onclick="openPublicUrl()">🔗 Abrir</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📊 Informações da Conta</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Plano Atual:</label>
+                        <div id="currentPlan">-</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Status:</label>
+                        <div id="subscriptionStatus">-</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Próxima Fatura:</label>
+                        <div id="nextInvoice">-</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Desde:</label>
+                        <div id="memberSince">-</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Clinic Section -->
+        <section id="clinic" class="content-section">
+            <div class="card">
+                <h2>🏥 Dados da Clínica</h2>
+                <form id="clinicForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="clinicNameInput">Nome da Clínica *</label>
+                            <input type="text" id="clinicNameInput" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="clinicSlug">URL (Slug)</label>
+                            <input type="text" id="clinicSlug" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label for="clinicEmail">Email</label>
+                            <input type="email" id="clinicEmail">
+                        </div>
+                        <div class="form-group">
+                            <label for="clinicPhone">Telefone</label>
+                            <input type="tel" id="clinicPhone">
+                        </div>
+                        <div class="form-group">
+                            <label for="clinicWhatsApp">WhatsApp</label>
+                            <input type="tel" id="clinicWhatsApp">
+                        </div>
+                        <div class="form-group">
+                            <label for="clinicWebsite">Website</label>
+                            <input type="url" id="clinicWebsite">
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="clinicDescription">Descrição</label>
+                            <textarea id="clinicDescription" rows="3"></textarea>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin: 2rem 0 1rem; color: #184354;">📍 Endereço</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="addressStreet">Rua</label>
+                            <input type="text" id="addressStreet">
+                        </div>
+                        <div class="form-group">
+                            <label for="addressNumber">Número</label>
+                            <input type="text" id="addressNumber">
+                        </div>
+                        <div class="form-group">
+                            <label for="addressNeighborhood">Bairro</label>
+                            <input type="text" id="addressNeighborhood">
+                        </div>
+                        <div class="form-group">
+                            <label for="addressCity">Cidade</label>
+                            <input type="text" id="addressCity">
+                        </div>
+                        <div class="form-group">
+                            <label for="addressState">Estado</label>
+                            <input type="text" id="addressState" maxlength="2">
+                        </div>
+                        <div class="form-group">
+                            <label for="addressZipCode">CEP</label>
+                            <input type="text" id="addressZipCode">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" style="margin-top: 2rem;">
+                        💾 Salvar Alterações
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Personalization Section -->
+        <section id="personalization" class="content-section">
+            <div class="card">
+                <h2>🎨 Personalização Visual</h2>
+                <form id="brandingForm">
+                    <h3 style="margin-bottom: 1rem; color: #184354;">Cores da Marca</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Cor Primária</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" id="primaryColor" value="#45a7b1">
+                                <input type="text" id="primaryColorText" class="color-preview" value="#45a7b1">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Cor Secundária</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" id="secondaryColor" value="#184354">
+                                <input type="text" id="secondaryColorText" class="color-preview" value="#184354">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Cor de Destaque</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" id="accentColor" value="#6dd5ed">
+                                <input type="text" id="accentColorText" class="color-preview" value="#6dd5ed">
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin: 2rem 0 1rem; color: #184354;">Logo e Imagens</h3>
+                    <div class="form-group">
+                        <label>URL do Logo</label>
+                        <input type="url" id="logoUrl" placeholder="https://...">
+                        <small style="color: #666; margin-top: 0.5rem; display: block;">
+                            📝 Dica: Faça upload da imagem no Imgur ou use um link direto
+                        </small>
+                    </div>
+
+                    <button type="submit" class="btn-primary" style="margin-top: 2rem;">
+                        🎨 Aplicar Personalização
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Schedule Section -->
+        <section id="schedule" class="content-section">
+            <div class="card">
+                <h2>⏰ Horários de Atendimento</h2>
+                <form id="scheduleForm">
+                    <div id="scheduleInputs"></div>
+                    <button type="submit" class="btn-primary" style="margin-top: 2rem;">
+                        💾 Salvar Horários
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Invoices Section -->
+        <section id="invoices" class="content-section">
+            <div class="card">
+                <h2>💰 Faturas</h2>
+                <div id="invoicesContent">
+                    <div class="loader">Carregando faturas...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings" class="content-section">
+            <div class="card">
+                <h2>⚙️ Configurações da Conta</h2>
+                <form id="settingsForm">
+                    <h3 style="margin-bottom: 1rem; color: #184354;">Alterar Senha</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="currentPassword">Senha Atual</label>
+                            <input type="password" id="currentPassword">
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">Nova Senha</label>
+                            <input type="password" id="newPassword">
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirmar Nova Senha</label>
+                            <input type="password" id="confirmPassword">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary" style="margin-top: 1rem;">
+                        🔒 Alterar Senha
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Support Section -->
+        <section id="support" class="content-section">
+            <div class="card">
+                <h2>💬 Suporte</h2>
+                <p style="color: #666; margin-bottom: 2rem;">
+                    Nossa equipe está pronta para ajudar você!
+                </p>
+
+                <div style="display: grid; gap: 1.5rem;">
+                    <div style="padding: 1.5rem; background: #f9fafb; border-radius: 10px;">
+                        <h3 style="color: #184354; margin-bottom: 0.5rem;">📱 WhatsApp</h3>
+                        <p style="color: #666;">(11) 99999-9999</p>
+                        <a href="https://wa.me/5511999999999" target="_blank" class="btn-secondary" style="display: inline-block; margin-top: 1rem; text-decoration: none;">
+                            Iniciar Conversa
+                        </a>
+                    </div>
+
+                    <div style="padding: 1.5rem; background: #f9fafb; border-radius: 10px;">
+                        <h3 style="color: #184354; margin-bottom: 0.5rem;">📧 Email</h3>
+                        <p style="color: #666;">suporte@atenmed.com.br</p>
+                        <p style="color: #999; font-size: 0.9rem; margin-top: 0.5rem;">
+                            Resposta em até 24 horas úteis
+                        </p>
+                    </div>
+
+                    <div style="padding: 1.5rem; background: #f9fafb; border-radius: 10px;">
+                        <h3 style="color: #184354; margin-bottom: 0.5rem;">🕐 Horário de Atendimento</h3>
+                        <p style="color: #666;">Segunda a Sexta: 9h às 18h</p>
+                        <p style="color: #999; font-size: 0.9rem; margin-top: 0.5rem;">
+                            Exceto feriados nacionais
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📚 Recursos Úteis</h2>
+                <ul style="list-style: none; display: grid; gap: 1rem;">
+                    <li>
+                        <a href="/docs/ONBOARDING-MANUAL.md" target="_blank" style="color: #45a7b1; text-decoration: none; font-weight: 600;">
+                            📖 Manual de Onboarding
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" style="color: #45a7b1; text-decoration: none; font-weight: 600;">
+                            🎥 Vídeos Tutoriais
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" style="color: #45a7b1; text-decoration: none; font-weight: 600;">
+                            ❓ FAQ - Perguntas Frequentes
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <script src="portal.js"></script>
+</body>
+</html>
+

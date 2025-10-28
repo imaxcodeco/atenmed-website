@@ -26,6 +26,7 @@ const analyticsRoutes = require('./routes/analytics');
 const whatsappRoutes = require('./routes/whatsappV2');
 const clientRoutes = require('./routes/clients');
 const clinicRoutes = require('./routes/clinics');
+const invoiceRoutes = require('./routes/invoices');
 
 // Importar middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -36,6 +37,9 @@ const googleCalendarService = require('./services/googleCalendarService');
 const reminderService = require('./services/reminderService');
 const waitlistService = require('./services/waitlistService');
 const whatsappService = require('./services/whatsappServiceV2');
+
+// Importar middlewares de subscription e limites
+const { checkSubscriptionStatus, checkPlanLimits } = require('./middleware/subscriptionStatus');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -183,6 +187,8 @@ app.use('/apps/admin', express.static(path.join(__dirname, 'applications/admin-d
 app.use('/apps/agendamento', express.static(path.join(__dirname, 'applications/smart-scheduling')));
 app.use('/apps/analytics', express.static(path.join(__dirname, 'applications/analytics-dashboard')));
 app.use('/apps/clinic-page', express.static(path.join(__dirname, 'applications/clinic-page')));
+app.use('/apps/crm', express.static(path.join(__dirname, 'applications/crm-pipeline')));
+app.use('/apps/portal', express.static(path.join(__dirname, 'applications/clinic-portal')));
 
 // Assets do site principal (compatibilidade)
 app.use('/assets', express.static(path.join(__dirname, 'site/assets')));
@@ -215,13 +221,19 @@ app.use('/api/leads', leadRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/appointments', appointmentRoutes);
-app.use('/api/confirmations', confirmationRoutes);
-app.use('/api/waitlist', waitlistRoutes);
+
+// Rotas com verificação de subscription e limites
+app.use('/api/appointments', checkSubscriptionStatus, checkPlanLimits, appointmentRoutes);
+app.use('/api/confirmations', checkSubscriptionStatus, confirmationRoutes);
+app.use('/api/waitlist', checkSubscriptionStatus, waitlistRoutes);
 app.use('/api/analytics', analyticsRoutes);
-app.use('/api/whatsapp', whatsappRoutes);
+
+// Rotas críticas do WhatsApp com verificação
+app.use('/api/whatsapp', whatsappRoutes); // Webhook não deve ter limite, mas send sim (verificado na rota)
+
 app.use('/api/clients', clientRoutes);
 app.use('/api/clinics', clinicRoutes);
+app.use('/api/invoices', invoiceRoutes);
 app.use('/api/test', require('./routes/test'));
 
 // Bull Board - Dashboard de Filas
@@ -408,6 +420,14 @@ app.get('/analytics', (req, res) => {
     res.sendFile(path.join(__dirname, 'applications/analytics-dashboard/index.html'));
 });
 
+app.get(['/crm', '/pipeline', '/vendas'], (req, res) => {
+    res.sendFile(path.join(__dirname, 'applications/crm-pipeline/index.html'));
+});
+
+app.get(['/portal', '/minha-clinica'], (req, res) => {
+    res.sendFile(path.join(__dirname, 'applications/clinic-portal/index.html'));
+});
+
 // Rotas para páginas do site principal (com e sem .html)
 app.get(['/sobre', '/sobre.html'], (req, res) => {
     res.sendFile(path.join(__dirname, 'site/sobre.html'));
@@ -415,6 +435,10 @@ app.get(['/sobre', '/sobre.html'], (req, res) => {
 
 app.get(['/servicos', '/servicos.html'], (req, res) => {
     res.sendFile(path.join(__dirname, 'site/servicos.html'));
+});
+
+app.get(['/planos', '/planos.html', '/precos', '/pricing'], (req, res) => {
+    res.sendFile(path.join(__dirname, 'site/planos.html'));
 });
 
 app.get(['/login', '/login.html'], (req, res) => {

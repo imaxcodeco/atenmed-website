@@ -7,6 +7,7 @@ const express = require('express');
 const router = express.Router();
 const whatsappService = require('../services/whatsappServiceV2');
 const { authenticateToken, authorize } = require('../middleware/auth');
+const { checkSubscriptionStatus, checkPlanLimits } = require('../middleware/subscriptionStatus');
 const logger = require('../utils/logger');
 
 // Middleware para capturar raw body (necessário para signature verification)
@@ -167,7 +168,7 @@ router.post('/webhook', express.json({
  * @desc    Enviar mensagem manual (para testes ou admin)
  * @access  Private (Admin only)
  */
-router.post('/send', authenticateToken, authorize('admin'), async (req, res) => {
+router.post('/send', authenticateToken, authorize('admin'), checkSubscriptionStatus, checkPlanLimits, async (req, res) => {
     try {
         const { to, message, priority } = req.body;
 
@@ -215,7 +216,7 @@ router.post('/send', authenticateToken, authorize('admin'), async (req, res) => 
  * @desc    Enviar mensagem de teste
  * @access  Private (Admin only)
  */
-router.post('/send-test', authenticateToken, authorize('admin'), async (req, res) => {
+router.post('/send-test', authenticateToken, authorize('admin'), checkSubscriptionStatus, async (req, res) => {
     try {
         const { phone, message } = req.body;
         

@@ -46,18 +46,54 @@ const leadSchema = new mongoose.Schema({
     // Informações do lead
     status: {
         type: String,
-        enum: ['novo', 'contatado', 'qualificado', 'proposta', 'fechado', 'perdido'],
+        enum: ['novo', 'contato_feito', 'negociacao', 'proposta_enviada', 'fechado', 'perdido'],
         default: 'novo'
     },
     origem: {
         type: String,
-        enum: ['site', 'whatsapp', 'indicacao', 'google', 'facebook', 'formulario-contato', 'outros'],
+        enum: ['site', 'whatsapp', 'indicacao', 'google', 'facebook', 'formulario-contato', 'pagina-planos', 'outros'],
         default: 'site'
     },
     interesse: {
         type: String,
         enum: ['baixo', 'medio', 'alto'],
         default: 'medio'
+    },
+    
+    // Informações SaaS
+    nomeClinica: {
+        type: String,
+        trim: true,
+        maxlength: [200, 'Nome da clínica não pode ter mais de 200 caracteres']
+    },
+    numeroMedicos: {
+        type: Number,
+        min: 1,
+        max: 100
+    },
+    cidade: {
+        type: String,
+        trim: true
+    },
+    planoInteresse: {
+        type: String,
+        enum: ['free', 'basic', 'pro', 'enterprise'],
+        default: 'basic'
+    },
+    valorMensal: {
+        type: Number,
+        min: 0
+    },
+    dataFechamento: {
+        type: Date
+    },
+    motivoPerda: {
+        type: String,
+        maxlength: [500, 'Motivo não pode ter mais de 500 caracteres']
+    },
+    vendedorResponsavel: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
     },
     
     // Referência ao contato original (se veio do formulário)
@@ -123,7 +159,13 @@ const leadSchema = new mongoose.Schema({
     },
     planoEscolhido: {
         type: String,
-        enum: ['basico', 'profissional', 'completo']
+        enum: ['free', 'basic', 'pro', 'enterprise']
+    },
+    
+    // Clínica criada (após fechamento)
+    clinicaId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Clinic'
     }
 }, {
     timestamps: true,

@@ -53,6 +53,10 @@ router.post('/', [
     body('origem')
         .optional()
         .trim(),
+    body('nomeClinica').optional().trim(),
+    body('numeroMedicos').optional(),
+    body('cidade').optional().trim(),
+    body('planoInteresse').optional().isIn(['free', 'basic', 'pro', 'enterprise']),
     body('utmSource').optional().trim(),
     body('utmMedium').optional().trim(),
     body('utmCampaign').optional().trim()
@@ -66,6 +70,11 @@ router.post('/', [
             interesse = 'medio',
             origem = 'site',
             observacoes,
+            nomeClinica,
+            numeroMedicos,
+            cidade,
+            planoInteresse = 'basic',
+            mensagem,
             utmSource,
             utmMedium,
             utmCampaign
@@ -90,7 +99,11 @@ router.post('/', [
             especialidade,
             interesse: Array.isArray(interesse) ? 'alto' : interesse,
             origem,
-            observacoes,
+            observacoes: observacoes || mensagem,
+            nomeClinica,
+            numeroMedicos: typeof numeroMedicos === 'string' ? numeroMedicos : numeroMedicos,
+            cidade,
+            planoInteresse,
             ip: req.ip,
             userAgent: req.get('User-Agent'),
             utmSource,
@@ -154,7 +167,8 @@ router.get('/', [
     // authorize('admin', 'vendedor'),
     query('page').optional().isInt({ min: 1 }).withMessage('Página deve ser um número positivo'),
     query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limite deve ser entre 1 e 100'),
-    query('status').optional().isIn(['novo', 'contatado', 'qualificado', 'proposta', 'fechado', 'perdido']),
+    query('status').optional().isIn(['novo', 'contato_feito', 'negociacao', 'proposta_enviada', 'fechado', 'perdido']),
+    query('planoInteresse').optional().isIn(['free', 'basic', 'pro', 'enterprise']),
     query('especialidade').optional().isIn(['clinica-geral', 'cardiologia', 'dermatologia', 'ginecologia', 'pediatria', 'odontologia', 'outros']),
     query('dataInicio').optional().isISO8601().withMessage('Data início inválida'),
     query('dataFim').optional().isISO8601().withMessage('Data fim inválida')
@@ -173,6 +187,10 @@ router.get('/', [
         
         if (req.query.especialidade) {
             filters.especialidade = req.query.especialidade;
+        }
+        
+        if (req.query.planoInteresse) {
+            filters.planoInteresse = req.query.planoInteresse;
         }
         
         if (req.query.dataInicio || req.query.dataFim) {
@@ -256,11 +274,14 @@ router.put('/:id', [
     authenticateToken,
     authorize('admin', 'vendedor'),
     param('id').isMongoId().withMessage('ID inválido'),
-    body('status').optional().isIn(['novo', 'contatado', 'qualificado', 'proposta', 'fechado', 'perdido']),
+    body('status').optional().isIn(['novo', 'contato_feito', 'negociacao', 'proposta_enviada', 'fechado', 'perdido']),
     body('observacoes').optional().isLength({ max: 1000 }).withMessage('Observações muito longas'),
     body('proximoContato').optional().isISO8601().withMessage('Data inválida'),
     body('valorProposta').optional().isFloat({ min: 0 }).withMessage('Valor deve ser positivo'),
-    body('planoEscolhido').optional().isIn(['basico', 'profissional', 'completo'])
+    body('planoInteresse').optional().isIn(['free', 'basic', 'pro', 'enterprise']),
+    body('planoEscolhido').optional().isIn(['free', 'basic', 'pro', 'enterprise']),
+    body('motivoPerda').optional().isLength({ max: 500 }),
+    body('vendedorResponsavel').optional().isMongoId()
 ], validateRequest, logActivity('update_lead'), async (req, res) => {
     try {
         const lead = await Lead.findById(req.params.id);
@@ -274,12 +295,22 @@ router.put('/:id', [
         }
 
         // Atualizar campos permitidos
-        const allowedFields = ['status', 'observacoes', 'proximoContato', 'valorProposta', 'planoEscolhido'];
+        const allowedFields = [
+            'status', 'observacoes', 'proximoContato', 'valorProposta', 
+            'planoInteresse', 'planoEscolhido', 'motivoPerda', 'vendedorResponsavel',
+            'nomeClinica', 'numeroMedicos', 'cidade', 'valorMensal', 'clinicaId'
+        ];
         allowedFields.forEach(field => {
             if (req.body[field] !== undefined) {
                 lead[field] = req.body[field];
             }
         });
+
+        // Se status mudou para fechado, registrar data
+        if (req.body.status === 'fechado' && lead.status !== 'fechado') {
+            lead.dataFechamento = new Date();
+            lead.convertido = true;
+        }
 
         await lead.save();
 
@@ -342,6 +373,77 @@ router.post('/:id/historico', [
     }
 });
 
+// @route   PATCH /api/leads/:id/status
+// @desc    Atualizar apenas o status do lead (para pipeline)
+// @access  Private (Admin, Vendedor)
+router.patch('/:id/status', [
+    authenticateToken,
+    authorize('admin', 'vendedor'),
+    param('id').isMongoId().withMessage('ID inválido'),
+    body('status').isIn(['novo', 'contato_feito', 'negociacao', 'proposta_enviada', 'fechado', 'perdido']).withMessage('Status inválido'),
+    body('observacoes').optional().trim(),
+    body('motivoPerda').optional().trim()
+], validateRequest, logActivity('update_lead_status'), async (req, res) => {
+    try {
+        const lead = await Lead.findById(req.params.id);
+        
+        if (!lead) {
+            return res.status(404).json({
+                success: false,
+                error: 'Lead não encontrado',
+                code: 'LEAD_NOT_FOUND'
+            });
+        }
+
+        const oldStatus = lead.status;
+        lead.status = req.body.status;
+        
+        // Se tem observação, adicionar ao histórico
+        if (req.body.observacoes) {
+            lead.historico.push({
+                tipo: 'outros',
+                descricao: `Status alterado de "${oldStatus}" para "${req.body.status}". ${req.body.observacoes}`,
+                usuario: req.user.email,
+                data: new Date()
+            });
+        }
+
+        // Se foi marcado como perdido e tem motivo
+        if (req.body.status === 'perdido' && req.body.motivoPerda) {
+            lead.motivoPerda = req.body.motivoPerda;
+        }
+
+        // Se foi marcado como fechado
+        if (req.body.status === 'fechado') {
+            lead.dataFechamento = new Date();
+            lead.convertido = true;
+            
+            // Calcular valor mensal baseado no plano
+            if (!lead.valorMensal && lead.planoInteresse) {
+                const planValues = { free: 0, basic: 99, pro: 249, enterprise: 599 };
+                lead.valorMensal = planValues[lead.planoInteresse] || 0;
+            }
+        }
+
+        lead.ultimoContato = new Date();
+        await lead.save();
+
+        res.json({
+            success: true,
+            message: 'Status atualizado com sucesso',
+            data: lead
+        });
+
+    } catch (error) {
+        logger.logError(error, req);
+        res.status(500).json({
+            success: false,
+            error: 'Erro interno do servidor',
+            code: 'INTERNAL_ERROR'
+        });
+    }
+});
+
 // @route   GET /api/leads/stats/overview
 // @desc    Obter estatísticas gerais dos leads
 // @access  Private (Admin, Vendedor)
@@ -364,6 +466,68 @@ router.get('/stats/overview', [
                 total: totalLeads,
                 hoje: leadsHoje,
                 porStatus: stats
+            }
+        });
+
+    } catch (error) {
+        logger.logError(error, req);
+        res.status(500).json({
+            success: false,
+            error: 'Erro interno do servidor',
+            code: 'INTERNAL_ERROR'
+        });
+    }
+});
+
+// @route   GET /api/leads/stats/pipeline
+// @desc    Obter estatísticas do pipeline de vendas
+// @access  Private (Admin, Vendedor)
+router.get('/stats/pipeline', [
+    authenticateToken,
+    authorize('admin', 'vendedor')
+], async (req, res) => {
+    try {
+        const pipeline = await Lead.aggregate([
+            {
+                $group: {
+                    _id: '$status',
+                    count: { $sum: 1 },
+                    valorTotal: { $sum: '$valorMensal' }
+                }
+            }
+        ]);
+
+        // MRR (Monthly Recurring Revenue) - Apenas fechados
+        const mrr = await Lead.aggregate([
+            { $match: { status: 'fechado', valorMensal: { $exists: true, $gt: 0 } } },
+            { $group: { _id: null, total: { $sum: '$valorMensal' } } }
+        ]);
+
+        // Leads por plano
+        const porPlano = await Lead.aggregate([
+            { $match: { planoInteresse: { $exists: true } } },
+            {
+                $group: {
+                    _id: '$planoInteresse',
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        // Taxa de conversão
+        const totalLeads = await Lead.countDocuments();
+        const totalFechados = await Lead.countDocuments({ status: 'fechado' });
+        const taxaConversao = totalLeads > 0 ? ((totalFechados / totalLeads) * 100).toFixed(2) : 0;
+
+        res.json({
+            success: true,
+            data: {
+                pipeline,
+                mrr: mrr[0]?.total || 0,
+                porPlano,
+                taxaConversao: parseFloat(taxaConversao),
+                totalLeads,
+                totalFechados
             }
         });
 

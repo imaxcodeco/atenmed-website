@@ -230,3 +230,4 @@ Leia `SOLUCAO-WHATSAPP-IMPLEMENTADA.md` para entender tudo que foi implementado.
 
 
 
+

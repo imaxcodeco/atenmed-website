@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pipeline de Vendas - AtenMed CRM</title>
+    <link rel="stylesheet" href="../admin-dashboard/dashboard.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Barra de Navegação */
+        .top-nav {
+            background: linear-gradient(135deg, #184354 0%, #2c5f6f 100%);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav-brand span {
+            color: #6dd5ed;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+
+        .nav-links a.active {
+            background: #6dd5ed;
+            color: #184354;
+        }
+
+        .nav-user {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: white;
+        }
+
+        .nav-user-name {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .nav-logout {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-logout:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .main-content {
+            padding: 2rem;
+        }
+
+        .header {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            color: #184354;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #45a7b1, #6dd5ed);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(69, 167, 177, 0.3);
+        }
+
+        .stat-card h3 {
+            font-size: 0.9rem;
+            font-weight: 500;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .pipeline-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .pipeline-column {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            min-height: 400px;
+        }
+
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid;
+        }
+
+        .column-header h2 {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .column-header .count {
+            background: #f0f0f0;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .column-novo .column-header { border-color: #6dd5ed; }
+        .column-novo .column-header h2 { color: #6dd5ed; }
+        
+        .column-contato .column-header { border-color: #45a7b1; }
+        .column-contato .column-header h2 { color: #45a7b1; }
+        
+        .column-negociacao .column-header { border-color: #ff9800; }
+        .column-negociacao .column-header h2 { color: #ff9800; }
+        
+        .column-proposta .column-header { border-color: #9c27b0; }
+        .column-proposta .column-header h2 { color: #9c27b0; }
+        
+        .column-fechado .column-header { border-color: #4caf50; }
+        .column-fechado .column-header h2 { color: #4caf50; }
+        
+        .column-perdido .column-header { border-color: #f44336; }
+        .column-perdido .column-header h2 { color: #f44336; }
+
+        .lead-card {
+            background: #f9fafb;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+
+        .lead-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .column-novo .lead-card { border-left-color: #6dd5ed; }
+        .column-contato .lead-card { border-left-color: #45a7b1; }
+        .column-negociacao .lead-card { border-left-color: #ff9800; }
+        .column-proposta .lead-card { border-left-color: #9c27b0; }
+        .column-fechado .lead-card { border-left-color: #4caf50; }
+        .column-perdido .lead-card { border-left-color: #f44336; }
+
+        .lead-card h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: #184354;
+        }
+
+        .lead-card .clinic-name {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .lead-card .plan-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-free { background: #e0e0e0; color: #666; }
+        .plan-basic { background: #e3f2fd; color: #1976d2; }
+        .plan-pro { background: #f3e5f5; color: #7b1fa2; }
+        .plan-enterprise { background: #fff3e0; color: #e65100; }
+
+        .lead-card .value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #4caf50;
+            margin-bottom: 0.5rem;
+        }
+
+        .lead-card .meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: #999;
+            margin-top: 0.5rem;
+        }
+
+        .lead-card .actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .lead-card .btn-action {
+            flex: 1;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-next {
+            background: #45a7b1;
+            color: white;
+        }
+
+        .btn-next:hover {
+            background: #3a8a93;
+        }
+
+        .btn-view {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .btn-view:hover {
+            background: #e0e0e0;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            color: #184354;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #45a7b1;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #45a7b1, #6dd5ed);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(69, 167, 177, 0.4);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .loader {
+            text-align: center;
+            padding: 3rem;
+            color: #45a7b1;
+        }
+
+        @media (max-width: 1400px) {
+            .pipeline-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 1000px) {
+            .pipeline-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 700px) {
+            .pipeline-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Barra de Navegação Superior -->
+    <nav class="top-nav">
+        <a href="/" class="nav-brand">Aten<span>Med</span></a>
+        
+        <div class="nav-links">
+            <a href="/">🏠 Início</a>
+            <a href="/planos">📋 Planos</a>
+            <a href="/crm" class="active">💼 CRM</a>
+            <a href="/portal">🏥 Portal</a>
+            <a href="/health" target="_blank">❤️ Status</a>
+        </div>
+
+        <div class="nav-user">
+            <span class="nav-user-name" id="userName">Carregando...</span>
+            <button class="nav-logout" onclick="logout()">Sair</button>
+        </div>
+    </nav>
+
+    <div class="main-content">
+    <div class="header">
+        <h1>🎯 Pipeline de Vendas</h1>
+        <p>Gerencie seus leads e acompanhe o funil de vendas</p>
+        
+        <div class="header-stats">
+            <div class="stat-card">
+                <h3>Total de Leads</h3>
+                <div class="value" id="totalLeads">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Taxa de Conversão</h3>
+                <div class="value" id="taxaConversao">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>MRR (Receita Mensal)</h3>
+                <div class="value" id="mrr">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Leads Hoje</h3>
+                <div class="value" id="leadsHoje">-</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="pipeline-container">
+        <!-- Novo -->
+        <div class="pipeline-column column-novo">
+            <div class="column-header">
+                <h2>🆕 Novos</h2>
+                <span class="count" id="count-novo">0</span>
+            </div>
+            <div id="leads-novo" class="leads-list">
+                <div class="loader">Carregando...</div>
+            </div>
+        </div>
+
+        <!-- Contato Feito -->
+        <div class="pipeline-column column-contato">
+            <div class="column-header">
+                <h2>📞 Contato Feito</h2>
+                <span class="count" id="count-contato_feito">0</span>
+            </div>
+            <div id="leads-contato_feito" class="leads-list">
+                <div class="loader">Carregando...</div>
+            </div>
+        </div>
+
+        <!-- Negociação -->
+        <div class="pipeline-column column-negociacao">
+            <div class="column-header">
+                <h2>💬 Negociação</h2>
+                <span class="count" id="count-negociacao">0</span>
+            </div>
+            <div id="leads-negociacao" class="leads-list">
+                <div class="loader">Carregando...</div>
+            </div>
+        </div>
+
+        <!-- Proposta Enviada -->
+        <div class="pipeline-column column-proposta">
+            <div class="column-header">
+                <h2>📋 Proposta Enviada</h2>
+                <span class="count" id="count-proposta_enviada">0</span>
+            </div>
+            <div id="leads-proposta_enviada" class="leads-list">
+                <div class="loader">Carregando...</div>
+            </div>
+        </div>
+
+        <!-- Fechado -->
+        <div class="pipeline-column column-fechado">
+            <div class="column-header">
+                <h2>✅ Fechados</h2>
+                <span class="count" id="count-fechado">0</span>
+            </div>
+            <div id="leads-fechado" class="leads-list">
+                <div class="loader">Carregando...</div>
+            </div>
+        </div>
+
+        <!-- Perdido -->
+        <div class="pipeline-column column-perdido">
+            <div class="column-header">
+                <h2>❌ Perdidos</h2>
+                <span class="count" id="count-perdido">0</span>
+            </div>
+            <div id="leads-perdido" class="leads-list">
+                <div class="loader">Carregando...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Atualização de Status -->
+    <div id="statusModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Atualizar Status do Lead</h2>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <div class="form-group">
+                <label>Lead:</label>
+                <div id="modalLeadInfo" style="padding: 1rem; background: #f9fafb; border-radius: 8px; margin-bottom: 1rem;">
+                    <!-- Info do lead será inserida aqui -->
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="newStatus">Novo Status:</label>
+                <select id="newStatus">
+                    <option value="novo">🆕 Novo</option>
+                    <option value="contato_feito">📞 Contato Feito</option>
+                    <option value="negociacao">💬 Negociação</option>
+                    <option value="proposta_enviada">📋 Proposta Enviada</option>
+                    <option value="fechado">✅ Fechado</option>
+                    <option value="perdido">❌ Perdido</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="observacoes">Observações (opcional):</label>
+                <textarea id="observacoes" rows="3" placeholder="Adicione observações sobre esta mudança..."></textarea>
+            </div>
+
+            <div class="form-group" id="motivoPerdaGroup" style="display: none;">
+                <label for="motivoPerda">Motivo da Perda:</label>
+                <textarea id="motivoPerda" rows="2" placeholder="Por que o lead foi perdido?"></textarea>
+            </div>
+
+            <button class="btn-submit" onclick="updateLeadStatus()">
+                💾 Atualizar Status
+            </button>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        let currentLeadId = null;
+        let allLeads = [];
+
+        // Status display names
+        const statusLabels = {
+            novo: '🆕 Novos',
+            contato_feito: '📞 Contato Feito',
+            negociacao: '💬 Negociação',
+            proposta_enviada: '📋 Proposta Enviada',
+            fechado: '✅ Fechados',
+            perdido: '❌ Perdidos'
+        };
+
+        const nextStatus = {
+            novo: 'contato_feito',
+            contato_feito: 'negociacao',
+            negociacao: 'proposta_enviada',
+            proposta_enviada: 'fechado',
+            fechado: null,
+            perdido: null
+        };
+
+        // Load pipeline data
+        async function loadPipeline() {
+            try {
+                // Load stats
+                const statsResponse = await fetch('/api/leads/stats/pipeline');
+                const statsData = await statsResponse.json();
+                
+                if (statsData.success) {
+                    document.getElementById('totalLeads').textContent = statsData.data.totalLeads;
+                    document.getElementById('taxaConversao').textContent = statsData.data.taxaConversao + '%';
+                    document.getElementById('mrr').textContent = 'R$ ' + statsData.data.mrr.toFixed(2);
+                }
+
+                // Load all leads
+                const leadsResponse = await fetch('/api/leads?limit=1000');
+                const leadsData = await leadsResponse.json();
+                
+                if (leadsData.success) {
+                    allLeads = leadsData.data.leads;
+                    renderPipeline();
+                }
+
+                // Count today's leads
+                const today = new Date().toISOString().split('T')[0];
+                const todayLeads = allLeads.filter(lead => {
+                    const leadDate = new Date(lead.createdAt).toISOString().split('T')[0];
+                    return leadDate === today;
+                });
+                document.getElementById('leadsHoje').textContent = todayLeads.length;
+
+            } catch (error) {
+                console.error('Erro ao carregar pipeline:', error);
+                alert('Erro ao carregar dados do pipeline');
+            }
+        }
+
+        function renderPipeline() {
+            const statuses = ['novo', 'contato_feito', 'negociacao', 'proposta_enviada', 'fechado', 'perdido'];
+            
+            statuses.forEach(status => {
+                const leads = allLeads.filter(lead => lead.status === status);
+                const container = document.getElementById(`leads-${status}`);
+                const countEl = document.getElementById(`count-${status}`);
+                
+                countEl.textContent = leads.length;
+                
+                if (leads.length === 0) {
+                    container.innerHTML = '<div class="empty-state">Nenhum lead neste estágio</div>';
+                    return;
+                }
+                
+                container.innerHTML = leads.map(lead => createLeadCard(lead)).join('');
+            });
+        }
+
+        function createLeadCard(lead) {
+            const planLabels = {
+                free: '🌱 FREE',
+                basic: '🚀 BASIC',
+                pro: '💎 PRO',
+                enterprise: '🏢 ENTERPRISE'
+            };
+
+            const planValues = {
+                free: 0,
+                basic: 99,
+                pro: 249,
+                enterprise: 599
+            };
+
+            const valor = lead.valorMensal || planValues[lead.planoInteresse] || 0;
+            const plan = lead.planoInteresse || 'basic';
+            const daysAgo = Math.floor((Date.now() - new Date(lead.createdAt)) / (1000 * 60 * 60 * 24));
+            const next = nextStatus[lead.status];
+
+            return `
+                <div class="lead-card">
+                    <h3>${lead.nome}</h3>
+                    ${lead.nomeClinica ? `<div class="clinic-name">🏥 ${lead.nomeClinica}</div>` : ''}
+                    <span class="plan-badge plan-${plan}">${planLabels[plan]}</span>
+                    ${valor > 0 ? `<div class="value">R$ ${valor}/mês</div>` : ''}
+                    <div class="meta">
+                        <span>📧 ${lead.email}</span>
+                        <span>${daysAgo === 0 ? 'Hoje' : daysAgo + 'd atrás'}</span>
+                    </div>
+                    <div class="actions">
+                        ${next ? `<button class="btn-action btn-next" onclick="moveToNextStatus('${lead._id}', '${next}')">
+                            Mover para ${statusLabels[next].split(' ')[1]}
+                        </button>` : ''}
+                        <button class="btn-action btn-view" onclick="openModal('${lead._id}')">
+                            Atualizar
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function openModal(leadId) {
+            const lead = allLeads.find(l => l._id === leadId);
+            if (!lead) return;
+
+            currentLeadId = leadId;
+            
+            const planLabels = {
+                free: '🌱 FREE',
+                basic: '🚀 BASIC',
+                pro: '💎 PRO',
+                enterprise: '🏢 ENTERPRISE'
+            };
+
+            document.getElementById('modalLeadInfo').innerHTML = `
+                <strong>${lead.nome}</strong><br>
+                ${lead.nomeClinica ? `🏥 ${lead.nomeClinica}<br>` : ''}
+                📧 ${lead.email}<br>
+                📱 ${lead.telefone}<br>
+                ${lead.planoInteresse ? `${planLabels[lead.planoInteresse]}<br>` : ''}
+                Status atual: <strong>${statusLabels[lead.status]}</strong>
+            `;
+
+            document.getElementById('newStatus').value = lead.status;
+            document.getElementById('observacoes').value = '';
+            document.getElementById('motivoPerda').value = '';
+            
+            document.getElementById('statusModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('statusModal').classList.remove('active');
+            currentLeadId = null;
+        }
+
+        // Show/hide motivo perda field
+        document.getElementById('newStatus').addEventListener('change', (e) => {
+            const motivoPerdaGroup = document.getElementById('motivoPerdaGroup');
+            if (e.target.value === 'perdido') {
+                motivoPerdaGroup.style.display = 'block';
+            } else {
+                motivoPerdaGroup.style.display = 'none';
+            }
+        });
+
+        async function moveToNextStatus(leadId, newStatus) {
+            if (!confirm(`Mover lead para "${statusLabels[newStatus]}"?`)) return;
+
+            try {
+                const response = await fetch(`/api/leads/${leadId}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('✅ Status atualizado com sucesso!');
+                    loadPipeline();
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('❌ Erro ao atualizar status: ' + error.message);
+            }
+        }
+
+        async function updateLeadStatus() {
+            if (!currentLeadId) return;
+
+            const newStatus = document.getElementById('newStatus').value;
+            const observacoes = document.getElementById('observacoes').value;
+            const motivoPerda = document.getElementById('motivoPerda').value;
+
+            try {
+                const response = await fetch(`/api/leads/${currentLeadId}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        status: newStatus,
+                        observacoes,
+                        motivoPerda: newStatus === 'perdido' ? motivoPerda : undefined
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('✅ Status atualizado com sucesso!');
+                    closeModal();
+                    loadPipeline();
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('❌ Erro ao atualizar status: ' + error.message);
+            }
+        }
+
+        // Close modal on ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // Carregar nome do usuário
+        async function loadUserName() {
+            try {
+                const response = await fetch('/api/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById('userName').textContent = user.nome || user.email;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar usuário:', error);
+            }
+        }
+
+        // Logout
+        function logout() {
+            if (confirm('Deseja realmente sair?')) {
+                localStorage.removeItem('token');
+                window.location.href = '/login.html';
+            }
+        }
+
+        // Load on page load
+        loadUserName();
+        loadPipeline();
+
+        // Refresh every 30 seconds
+        setInterval(loadPipeline, 30000);
+    </script>
+</body>
+</html>
+

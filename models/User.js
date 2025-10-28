@@ -52,6 +52,18 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['vendas', 'suporte', 'desenvolvimento', 'marketing', 'administracao']
     },
+    
+    // Multi-tenancy: vinculação com clínica
+    clinic: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Clinic',
+        index: true
+    },
+    clinicRole: {
+        type: String,
+        enum: ['owner', 'admin', 'doctor', 'receptionist', 'viewer'],
+        default: 'viewer'
+    },
     permissoes: [{
         type: String,
         enum: [

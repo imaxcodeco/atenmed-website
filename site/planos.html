@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planos e Preços - AtenMed | Transforme sua Clínica</title>
+    <meta name="description" content="Escolha o plano ideal para sua clínica. Automação WhatsApp, agendamento online e muito mais. Sem setup, sem mensalidade fixa inicial.">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-img {
+            height: 50px;
+        }
+
+        .nav-list {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-link {
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-link:hover {
+            color: #45a7b1;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 4rem 0 2rem;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #45a7b1, #184354);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            color: #666;
+            max-width: 700px;
+            margin: 0 auto 2rem;
+        }
+
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #45a7b1, #6dd5ed);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Pricing Cards */
+        .pricing-section {
+            padding: 3rem 0 5rem;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(69, 167, 177, 0.3);
+        }
+
+        .pricing-card.popular {
+            border: 3px solid #45a7b1;
+            transform: scale(1.05);
+        }
+
+        .pricing-card.popular::before {
+            content: '🔥 MAIS POPULAR';
+            position: absolute;
+            top: 20px;
+            right: -35px;
+            background: linear-gradient(135deg, #45a7b1, #6dd5ed);
+            color: white;
+            padding: 0.5rem 3rem;
+            transform: rotate(45deg);
+            font-size: 0.75rem;
+            font-weight: 700;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .plan-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #184354;
+        }
+
+        .plan-description {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+            min-height: 40px;
+        }
+
+        .plan-price {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #45a7b1;
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-price span {
+            font-size: 1.2rem;
+            color: #666;
+            font-weight: 400;
+        }
+
+        .plan-period {
+            color: #999;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+
+        .plan-features li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: start;
+            gap: 0.75rem;
+        }
+
+        .plan-features li::before {
+            content: '✓';
+            color: #45a7b1;
+            font-weight: bold;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .plan-features li.disabled {
+            color: #ccc;
+        }
+
+        .plan-features li.disabled::before {
+            content: '✗';
+            color: #ccc;
+        }
+
+        .cta-button {
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #45a7b1, #6dd5ed);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(69, 167, 177, 0.4);
+        }
+
+        .cta-button.secondary {
+            background: white;
+            color: #45a7b1;
+            border: 2px solid #45a7b1;
+        }
+
+        /* Interest Form */
+        .interest-form-section {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 3rem auto;
+            max-width: 800px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+
+        .interest-form-section h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #184354;
+        }
+
+        .interest-form-section p {
+            text-align: center;
+            color: #666;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #45a7b1;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .submit-button {
+            padding: 1.2rem 3rem;
+            background: linear-gradient(135deg, #45a7b1, #6dd5ed);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(69, 167, 177, 0.5);
+        }
+
+        .submit-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        /* Comparison Table */
+        .comparison-section {
+            margin: 4rem 0;
+        }
+
+        .comparison-section h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #184354;
+        }
+
+        .comparison-table {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        /* Footer CTA */
+        .footer-cta {
+            text-align: center;
+            padding: 4rem 0;
+            background: linear-gradient(135deg, #184354, #45a7b1);
+            color: white;
+            margin-top: 4rem;
+        }
+
+        .footer-cta h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer-cta p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .footer-cta .cta-button {
+            background: white;
+            color: #45a7b1;
+            display: inline-block;
+            width: auto;
+            padding: 1.2rem 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero p {
+                font-size: 1.1rem;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-card.popular {
+                transform: scale(1);
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="assets/images/logo-transp.png" alt="AtenMed Logo" class="logo-img">
+                </div>
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="/" class="nav-link">Início</a></li>
+                        <li><a href="/servicos" class="nav-link">Serviços</a></li>
+                        <li><a href="/sobre" class="nav-link">Sobre</a></li>
+                        <li><a href="#interesse" class="nav-link">Contato</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <span class="badge">✨ Transformação Digital para Clínicas</span>
+            <h1>Escolha o Plano Ideal<br>para sua Clínica</h1>
+            <p>Automação WhatsApp, agendamento online e muito mais.<br>Sem complicação, sem surpresas.</p>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing-section">
+        <div class="container">
+            <div class="pricing-grid">
+                <!-- FREE Plan -->
+                <div class="pricing-card">
+                    <h3 class="plan-name">🌱 FREE</h3>
+                    <p class="plan-description">Para experimentar a plataforma</p>
+                    <div class="plan-price">R$ 0<span>/mês</span></div>
+                    <p class="plan-period">Grátis para sempre</p>
+                    <ul class="plan-features">
+                        <li>Até 50 agendamentos/mês</li>
+                        <li>Página básica da clínica</li>
+                        <li>Agendamento online</li>
+                        <li>Marca "Powered by AtenMed"</li>
+                        <li>Cores padrão</li>
+                        <li class="disabled">WhatsApp automatizado</li>
+                        <li class="disabled">Lembretes automáticos</li>
+                        <li class="disabled">Google Calendar</li>
+                        <li class="disabled">Personalização visual</li>
+                    </ul>
+                    <a href="#interesse" class="cta-button secondary" onclick="selectPlan('free')">Começar Grátis</a>
+                </div>
+
+                <!-- BASIC Plan -->
+                <div class="pricing-card popular">
+                    <h3 class="plan-name">🚀 BASIC</h3>
+                    <p class="plan-description">Ideal para consultórios pequenos</p>
+                    <div class="plan-price">R$ 99<span>/mês</span></div>
+                    <p class="plan-period">Faturamento mensal</p>
+                    <ul class="plan-features">
+                        <li>Até 300 agendamentos/mês</li>
+                        <li>WhatsApp automatizado</li>
+                        <li>Lembretes automáticos</li>
+                        <li>Google Calendar integrado</li>
+                        <li>Página personalizada</li>
+                        <li>Logo próprio</li>
+                        <li>Cores customizadas</li>
+                        <li>Sem marca AtenMed</li>
+                        <li>Suporte por email</li>
+                        <li class="disabled">Domínio próprio</li>
+                        <li class="disabled">API access</li>
+                    </ul>
+                    <a href="#interesse" class="cta-button" onclick="selectPlan('basic')">Quero o Basic</a>
+                </div>
+
+                <!-- PRO Plan -->
+                <div class="pricing-card">
+                    <h3 class="plan-name">💎 PRO</h3>
+                    <p class="plan-description">Para clínicas em crescimento</p>
+                    <div class="plan-price">R$ 249<span>/mês</span></div>
+                    <p class="plan-period">Faturamento mensal</p>
+                    <ul class="plan-features">
+                        <li><strong>Agendamentos ilimitados</strong></li>
+                        <li>Tudo do Basic +</li>
+                        <li>White label completo</li>
+                        <li>Domínio próprio</li>
+                        <li>Analytics avançado</li>
+                        <li>API access</li>
+                        <li>Multi-localização (3 unidades)</li>
+                        <li>Até 20 médicos</li>
+                        <li>Suporte prioritário</li>
+                        <li>Relatórios personalizados</li>
+                    </ul>
+                    <a href="#interesse" class="cta-button" onclick="selectPlan('pro')">Quero o Pro</a>
+                </div>
+
+                <!-- ENTERPRISE Plan -->
+                <div class="pricing-card">
+                    <h3 class="plan-name">🏢 ENTERPRISE</h3>
+                    <p class="plan-description">Soluções sob medida</p>
+                    <div class="plan-price">R$ 599<span>/mês</span></div>
+                    <p class="plan-period">Customizado para você</p>
+                    <ul class="plan-features">
+                        <li><strong>Tudo ilimitado</strong></li>
+                        <li>Tudo do Pro +</li>
+                        <li>Multi-clínicas</li>
+                        <li>Manager dedicado</li>
+                        <li>Customizações exclusivas</li>
+                        <li>SLA garantido</li>
+                        <li>Treinamento da equipe</li>
+                        <li>Integração com sistemas</li>
+                        <li>Suporte 24/7</li>
+                        <li>Consultoria estratégica</li>
+                    </ul>
+                    <a href="#interesse" class="cta-button" onclick="selectPlan('enterprise')">Falar com Vendas</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interest Form Section -->
+    <section id="interesse" class="interest-form-section container">
+        <h2>🎯 Demonstração Gratuita</h2>
+        <p>Preencha o formulário e nossa equipe entrará em contato com você!</p>
+        
+        <div id="alert" class="alert"></div>
+
+        <form id="interestForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="nome">Seu Nome *</label>
+                    <input type="text" id="nome" name="nome" required placeholder="Dr(a). João Silva">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input type="email" id="email" name="email" required placeholder="joao@clinica.com.br">
+                </div>
+
+                <div class="form-group">
+                    <label for="telefone">WhatsApp *</label>
+                    <input type="tel" id="telefone" name="telefone" required placeholder="(11) 99999-9999">
+                </div>
+
+                <div class="form-group">
+                    <label for="nomeClinica">Nome da Clínica *</label>
+                    <input type="text" id="nomeClinica" name="nomeClinica" required placeholder="Clínica Saúde Total">
+                </div>
+
+                <div class="form-group">
+                    <label for="numeroMedicos">Número de Médicos *</label>
+                    <select id="numeroMedicos" name="numeroMedicos" required>
+                        <option value="">Selecione...</option>
+                        <option value="1">1 médico</option>
+                        <option value="2-5">2-5 médicos</option>
+                        <option value="6-10">6-10 médicos</option>
+                        <option value="11+">11+ médicos</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="cidade">Cidade *</label>
+                    <input type="text" id="cidade" name="cidade" required placeholder="São Paulo - SP">
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="planoInteresse">Plano de Interesse *</label>
+                    <select id="planoInteresse" name="planoInteresse" required>
+                        <option value="">Selecione um plano...</option>
+                        <option value="free">🌱 FREE - Grátis</option>
+                        <option value="basic">🚀 BASIC - R$ 99/mês (MAIS POPULAR)</option>
+                        <option value="pro">💎 PRO - R$ 249/mês</option>
+                        <option value="enterprise">🏢 ENTERPRISE - R$ 599/mês</option>
+                    </select>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="mensagem">Como podemos ajudar? (Opcional)</label>
+                    <textarea id="mensagem" name="mensagem" placeholder="Conte-nos um pouco sobre suas necessidades..."></textarea>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-button">
+                📨 Solicitar Demonstração Gratuita
+            </button>
+        </form>
+    </section>
+
+    <!-- Footer CTA -->
+    <section class="footer-cta">
+        <div class="container">
+            <h2>Pronto para Transformar sua Clínica?</h2>
+            <p>Junte-se a centenas de clínicas que já confiam no AtenMed</p>
+            <a href="#interesse" class="cta-button">Começar Agora - É Grátis!</a>
+        </div>
+    </section>
+
+    <script>
+        // Função para pré-selecionar plano
+        function selectPlan(plan) {
+            const planSelect = document.getElementById('planoInteresse');
+            planSelect.value = plan;
+            
+            // Smooth scroll to form
+            document.getElementById('interesse').scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start'
+            });
+            
+            // Highlight the select field
+            setTimeout(() => {
+                planSelect.style.borderColor = '#45a7b1';
+                planSelect.style.boxShadow = '0 0 0 3px rgba(69, 167, 177, 0.2)';
+                
+                setTimeout(() => {
+                    planSelect.style.borderColor = '#e0e0e0';
+                    planSelect.style.boxShadow = 'none';
+                }, 2000);
+            }, 500);
+        }
+
+        // Form submission
+        document.getElementById('interestForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitButton = e.target.querySelector('.submit-button');
+            const alert = document.getElementById('alert');
+            
+            // Disable button
+            submitButton.disabled = true;
+            submitButton.textContent = '⏳ Enviando...';
+            
+            // Get form data
+            const formData = {
+                nome: document.getElementById('nome').value,
+                email: document.getElementById('email').value,
+                telefone: document.getElementById('telefone').value,
+                nomeClinica: document.getElementById('nomeClinica').value,
+                numeroMedicos: document.getElementById('numeroMedicos').value,
+                cidade: document.getElementById('cidade').value,
+                planoInteresse: document.getElementById('planoInteresse').value,
+                mensagem: document.getElementById('mensagem').value,
+                origem: 'pagina-planos'
+            };
+            
+            try {
+                const response = await fetch('/api/leads', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Success
+                    alert.className = 'alert success show';
+                    alert.textContent = '✅ Recebemos seu interesse! Nossa equipe entrará em contato em breve pelo WhatsApp informado.';
+                    
+                    // Reset form
+                    e.target.reset();
+                    
+                    // Track conversion (if analytics available)
+                    if (typeof gtag !== 'undefined') {
+                        gtag('event', 'generate_lead', {
+                            'event_category': 'Formulário',
+                            'event_label': formData.planoInteresse,
+                            'value': formData.planoInteresse === 'basic' ? 99 : 
+                                    formData.planoInteresse === 'pro' ? 249 : 
+                                    formData.planoInteresse === 'enterprise' ? 599 : 0
+                        });
+                    }
+                    
+                    // Scroll to alert
+                    alert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    
+                } else {
+                    throw new Error(data.error || 'Erro ao enviar formulário');
+                }
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                alert.className = 'alert error show';
+                alert.textContent = '❌ Erro ao enviar. Tente novamente ou entre em contato via WhatsApp: (11) 99999-9999';
+            } finally {
+                // Re-enable button
+                submitButton.disabled = false;
+                submitButton.textContent = '📨 Solicitar Demonstração Gratuita';
+            }
+        });
+
+        // Format phone number on input
+        document.getElementById('telefone').addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.slice(0, 11);
+            
+            if (value.length > 6) {
+                value = value.replace(/^(\d{2})(\d{5})(\d{0,4}).*/, '($1) $2-$3');
+            } else if (value.length > 2) {
+                value = value.replace(/^(\d{2})(\d{0,5})/, '($1) $2');
+            } else if (value.length > 0) {
+                value = value.replace(/^(\d*)/, '($1');
+            }
+            
+            e.target.value = value;
+        });
+    </script>
+</body>
+</html>
+

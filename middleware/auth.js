@@ -44,6 +44,18 @@ const authenticateToken = async (req, res, next) => {
 
         // Adicionar usuário à requisição
         req.user = user;
+        
+        // Multi-tenancy: adicionar contexto da clínica
+        if (user.clinic) {
+            req.clinicId = user.clinic;
+            req.clinicRole = user.clinicRole || 'viewer';
+        }
+        
+        // Se é admin global (sem clínica vinculada)
+        if (user.role === 'admin' && !user.clinic) {
+            req.isGlobalAdmin = true;
+        }
+        
         next();
 
     } catch (error) {
