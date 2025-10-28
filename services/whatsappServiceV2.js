@@ -87,8 +87,9 @@ const conversationState = new Map();
 
 // ===== CLASSE DE SESSÃO =====
 class ConversationSession {
-    constructor(phoneNumber) {
+    constructor(phoneNumber, clinicId = null) {
         this.phoneNumber = phoneNumber;
+        this.clinicId = clinicId;
         this.state = 'initial';
         this.data = {};
         this.lastActivity = Date.now();
@@ -209,31 +210,61 @@ function verifyWebhook(mode, token, challenge) {
     return null;
 }
 
+// ===== IDENTIFICAR CLINICA PELO NUMERO =====
+async function identifyClinicByNumber(toNumber) {
+    try {
+        const cleanNumber = toNumber.replace(/\D/g, '');
+        
+        const clinic = await Clinic.findOne({
+            'contact.whatsapp': new RegExp(cleanNumber, 'i'),
+            active: true
+        });
+
+        if (clinic) {
+            logger.info(`Clinica identificada: ${clinic.name} (${clinic._id})`);
+            return clinic;
+        }
+
+        logger.warn(`Nenhuma clinica encontrada para o numero: ${cleanNumber}`);
+        return null;
+    } catch (error) {
+        logger.error('Erro ao identificar clinica:', error);
+        return null;
+    }
+}
+
 // ===== PROCESSAR MENSAGEM RECEBIDA =====
-async function handleIncomingMessage(message) {
+async function handleIncomingMessage(message, webhookMetadata = null) {
     try {
         const phoneNumber = message.from;
         const messageText = message.text?.body?.toLowerCase().trim();
         const messageType = message.type;
+        
+        const toNumber = webhookMetadata?.phone_number_id || WHATSAPP_PHONE_ID;
+        const clinic = await identifyClinicByNumber(toNumber);
 
         if (!messageText || messageType !== 'text') {
-            logger.info(`📨 Mensagem ignorada (tipo: ${messageType})`);
+            logger.info(`Mensagem ignorada (tipo: ${messageType})`);
             return;
         }
 
-        logger.info(`📩 Mensagem recebida de ${phoneNumber}: ${messageText.substring(0, 50)}${messageText.length > 50 ? '...' : ''}`);
-
-        // Obter ou criar sessão
-        let session = conversationState.get(phoneNumber);
-        if (!session) {
-            session = new ConversationSession(phoneNumber);
-            conversationState.set(phoneNumber, session);
+        logger.info(`Mensagem recebida de ${phoneNumber}: ${messageText.substring(0, 50)}${messageText.length > 50 ? '...' : ''}`);
+        if (clinic) {
+            logger.info(`Direcionada para: ${clinic.name}`);
         }
 
-        // Processar comandos globais
+        let session = conversationState.get(phoneNumber);
+        if (!session) {
+            session = new ConversationSession(phoneNumber, clinic?._id);
+            conversationState.set(phoneNumber, session);
+        } else if (clinic && !session.clinicId) {
+            session.clinicId = clinic._id;
+        }
+
         if (['menu', 'início', 'iniciar', 'oi', 'olá', 'ola'].includes(messageText)) {
             session.reset();
-            await sendWelcomeMessage(phoneNumber);
+            if (clinic) session.clinicId = clinic._id;
+            await sendWelcomeMessage(phoneNumber, clinic);
             return;
         }
 
@@ -435,7 +466,7 @@ async function handleInitialState(phoneNumber, messageText, session) {
         case '1':
             // Marcar consulta
             session.setState('awaiting_specialty');
-            await listSpecialties(phoneNumber);
+            await listSpecialties(phoneNumber, session.clinicId);
             break;
 
         case '2':
@@ -494,7 +525,16 @@ async function handleInitialState(phoneNumber, messageText, session) {
 async function handleSpecialtySelection(phoneNumber, messageText, session) {
     try {
         const specialtyNumber = parseInt(messageText);
-        const specialties = await Specialty.find({ active: true }).sort('name');
+        
+        let query = { active: true };
+        if (session.clinicId) {
+            const doctors = await Doctor.find({ clinic: session.clinicId, active: true }).distinct('specialties');
+            if (doctors.length > 0) {
+                query._id = { $in: doctors };
+            }
+        }
+        
+        const specialties = await Specialty.find(query).sort('name');
 
         if (!specialtyNumber || specialtyNumber < 1 || specialtyNumber > specialties.length) {
             await sendMessage(phoneNumber, 
@@ -508,7 +548,7 @@ async function handleSpecialtySelection(phoneNumber, messageText, session) {
         const selectedSpecialty = specialties[specialtyNumber - 1];
         session.setState('awaiting_doctor', { specialtyId: selectedSpecialty._id });
 
-        await listDoctors(phoneNumber, selectedSpecialty._id);
+        await listDoctors(phoneNumber, selectedSpecialty._id, session.clinicId);
 
     } catch (error) {
         logger.error('Erro ao processar especialidade:', error);
@@ -523,10 +563,17 @@ async function handleSpecialtySelection(phoneNumber, messageText, session) {
 async function handleDoctorSelection(phoneNumber, messageText, session) {
     try {
         const doctorNumber = parseInt(messageText);
-        const doctors = await Doctor.find({ 
-            specialty: session.getData('specialtyId'),
+        
+        let query = { 
+            specialties: session.getData('specialtyId'),
             active: true 
-        }).populate('specialty');
+        };
+        
+        if (session.clinicId) {
+            query.clinic = session.clinicId;
+        }
+        
+        const doctors = await Doctor.find(query).populate('specialties');
 
         if (!doctorNumber || doctorNumber < 1 || doctorNumber > doctors.length) {
             await sendMessage(phoneNumber, 
@@ -661,8 +708,17 @@ async function handleConfirmation(phoneNumber, messageText, session) {
 
 // ===== FUNÇÕES AUXILIARES =====
 
-async function listSpecialties(phoneNumber) {
-    const specialties = await Specialty.find({ active: true }).sort('name');
+async function listSpecialties(phoneNumber, clinicId = null) {
+    let query = { active: true };
+    
+    if (clinicId) {
+        const doctors = await Doctor.find({ clinic: clinicId, active: true }).distinct('specialties');
+        if (doctors.length > 0) {
+            query._id = { $in: doctors };
+        }
+    }
+    
+    const specialties = await Specialty.find(query).sort('name');
     
     if (specialties.length === 0) {
         await sendMessage(phoneNumber,
@@ -672,7 +728,7 @@ async function listSpecialties(phoneNumber) {
         return;
     }
 
-    let message = `Legal! Vamos agendar sua consulta! 📋\n\nQual especialidade você precisa?\n\n`;
+    let message = `Legal! Vamos agendar sua consulta!\n\nQual especialidade voce precisa?\n\n`;
     
     specialties.forEach((spec, index) => {
         message += `${index + 1}️⃣ ${spec.name}\n`;
@@ -683,9 +739,14 @@ async function listSpecialties(phoneNumber) {
     await sendMessage(phoneNumber, message);
 }
 
-async function listDoctors(phoneNumber, specialtyId) {
-    const doctors = await Doctor.find({ specialty: specialtyId, active: true })
-        .populate('specialty');
+async function listDoctors(phoneNumber, specialtyId, clinicId = null) {
+    let query = { specialties: specialtyId, active: true };
+    
+    if (clinicId) {
+        query.clinic = clinicId;
+    }
+    
+    const doctors = await Doctor.find(query).populate('specialties');
     
     if (doctors.length === 0) {
         await sendMessage(phoneNumber,
@@ -695,11 +756,12 @@ async function listDoctors(phoneNumber, specialtyId) {
         return;
     }
 
-    let message = `Ótimo! Temos ${doctors.length} profissiona${doctors.length > 1 ? 'is' : 'l'} disponíve${doctors.length > 1 ? 'is' : 'l'}: 👨‍⚕️\n\n`;
+    const profissional = doctors.length > 1 ? 'profissionais disponiveis' : 'profissional disponivel';
+    let message = `Otimo! Temos ${doctors.length} ${profissional}:\n\n`;
     
     doctors.forEach((doc, index) => {
-        message += `${index + 1}️⃣ *${doc.name}*\n`;
-        if (doc.crm) message += `   CRM: ${doc.crm}\n`;
+        message += `${index + 1} *${doc.name}*\n`;
+        if (doc.crm && doc.crm.number) message += `   CRM: ${doc.crm.number}${doc.crm.state ? '/' + doc.crm.state : ''}\n`;
         message += `\n`;
     });
     
@@ -755,12 +817,14 @@ async function createAppointment(phoneNumber, session) {
                 email: ''
             },
             doctor: data.doctorId,
-            clinic: null, // Pode ser configurado depois
+            clinic: session.clinicId || null,
             scheduledDate: data.scheduledDate,
             scheduledTime: data.scheduledTime,
             status: 'scheduled',
             source: 'whatsapp',
-            notes: 'Agendamento via WhatsApp automático'
+            notes: session.clinicId ? 
+                `Agendamento via WhatsApp automatico (Clinica: ${session.clinicId})` :
+                'Agendamento via WhatsApp automatico'
         });
 
         await appointment.save();
@@ -974,22 +1038,24 @@ async function handleHumanSupport(phoneNumber, messageText, session) {
 }
 
 // ===== MENSAGEM DE BOAS-VINDAS =====
-async function sendWelcomeMessage(phoneNumber) {
+async function sendWelcomeMessage(phoneNumber, clinic = null) {
     const hour = new Date().getHours();
     let greeting;
-    
+
     if (hour < 12) {
-        greeting = 'Bom dia! ☀️';
+        greeting = 'Bom dia!';
     } else if (hour < 18) {
-        greeting = 'Boa tarde! 😊';
+        greeting = 'Boa tarde!';
     } else {
-        greeting = 'Boa noite! 🌙';
+        greeting = 'Boa noite!';
     }
 
+    const clinicName = clinic ? clinic.name : 'AtenMed';
+    
     const welcomes = [
-        `${greeting} Tudo bem? Aqui é da *AtenMed*!`,
-        `${greeting} Como vai? Sou da equipe *AtenMed*!`,
-        `${greeting} Prazer em falar com você! Aqui é da *AtenMed*!`
+        `${greeting} Tudo bem? Aqui e da *${clinicName}*!`,
+        `${greeting} Como vai? Sou da equipe *${clinicName}*!`,
+        `${greeting} Prazer em falar com voce! Aqui e da *${clinicName}*!`
     ];
     
     const randomWelcome = welcomes[Math.floor(Math.random() * welcomes.length)];
