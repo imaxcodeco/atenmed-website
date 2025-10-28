@@ -372,14 +372,605 @@ async function sendMessageInternal(to, text, retryCount = 0) {
     }
 }
 
-// ===== FLUXO DE CONVERSA (importado do serviço original) =====
+// ===== FLUXO DE CONVERSA =====
 async function processConversationFlow(phoneNumber, messageText, session) {
-    // Importar toda a lógica de conversa do serviço original
-    const originalService = require('./whatsappService');
+    logger.info(`Processando conversa: estado=${session.state}, mensagem=${messageText.substring(0, 30)}`);
+
+    switch (session.state) {
+        case 'initial':
+            await handleInitialState(phoneNumber, messageText, session);
+            break;
+
+        case 'awaiting_specialty':
+            await handleSpecialtySelection(phoneNumber, messageText, session);
+            break;
+
+        case 'awaiting_doctor':
+            await handleDoctorSelection(phoneNumber, messageText, session);
+            break;
+
+        case 'awaiting_date':
+            await handleDateSelection(phoneNumber, messageText, session);
+            break;
+
+        case 'awaiting_time':
+            await handleTimeSelection(phoneNumber, messageText, session);
+            break;
+
+        case 'awaiting_patient_name':
+            await handlePatientName(phoneNumber, messageText, session);
+            break;
+
+        case 'awaiting_confirmation':
+            await handleConfirmation(phoneNumber, messageText, session);
+            break;
+
+        case 'view_appointments':
+            await handleViewAppointments(phoneNumber, messageText, session);
+            break;
+
+        case 'cancel_appointment':
+            await handleCancelAppointment(phoneNumber, messageText, session);
+            break;
+
+        case 'waitlist':
+            await handleWaitlist(phoneNumber, messageText, session);
+            break;
+
+        case 'human_support':
+            await handleHumanSupport(phoneNumber, messageText, session);
+            break;
+
+        default:
+            session.reset();
+            await sendWelcomeMessage(phoneNumber);
+    }
+}
+
+// ===== HANDLER: ESTADO INICIAL =====
+async function handleInitialState(phoneNumber, messageText, session) {
+    const option = messageText.trim();
+
+    switch (option) {
+        case '1':
+            // Marcar consulta
+            session.setState('awaiting_specialty');
+            await listSpecialties(phoneNumber);
+            break;
+
+        case '2':
+            // Ver consultas agendadas
+            session.setState('view_appointments');
+            await viewAppointments(phoneNumber, session);
+            break;
+
+        case '3':
+            // Cancelar consulta
+            session.setState('cancel_appointment');
+            await listAppointmentsToCancel(phoneNumber, session);
+            break;
+
+        case '4':
+            // Lista de espera
+            session.setState('waitlist');
+            await handleWaitlistFlow(phoneNumber, session);
+            break;
+
+        case '5':
+            // Falar com humano
+            session.setState('human_support');
+            await requestHumanSupport(phoneNumber, session);
+            break;
+
+        default:
+            // Usar IA se disponível
+            if (session.useAI) {
+                const aiResponse = await aiService.generateResponse(
+                    messageText,
+                    session.conversationHistory
+                );
+                if (aiResponse) {
+                    await sendMessage(phoneNumber, aiResponse);
+                    session.addToHistory(aiResponse, false);
+                    return;
+                }
+            }
+
+            // Resposta padrão
+            await sendMessage(phoneNumber, 
+                `Ops! Não entendi... 😅\n\n` +
+                `Digite o *número* da opção que você quer:\n` +
+                `1 - Marcar consulta\n` +
+                `2 - Ver consultas\n` +
+                `3 - Cancelar\n` +
+                `4 - Lista de espera\n` +
+                `5 - Falar com alguém\n\n` +
+                `Ou digite *menu* para ver todas as opções!`
+            );
+    }
+}
+
+// ===== HANDLER: SELEÇÃO DE ESPECIALIDADE =====
+async function handleSpecialtySelection(phoneNumber, messageText, session) {
+    try {
+        const specialtyNumber = parseInt(messageText);
+        const specialties = await Specialty.find({ active: true }).sort('name');
+
+        if (!specialtyNumber || specialtyNumber < 1 || specialtyNumber > specialties.length) {
+            await sendMessage(phoneNumber, 
+                `Hmm, número inválido... 🤔\n\n` +
+                `Digite o *número* da especialidade que você quer.\n` +
+                `Ou digite *menu* para voltar ao início.`
+            );
+            return;
+        }
+
+        const selectedSpecialty = specialties[specialtyNumber - 1];
+        session.setState('awaiting_doctor', { specialtyId: selectedSpecialty._id });
+
+        await listDoctors(phoneNumber, selectedSpecialty._id);
+
+    } catch (error) {
+        logger.error('Erro ao processar especialidade:', error);
+        await sendMessage(phoneNumber, 
+            `Ops! Algo deu errado... 😓\n\n` +
+            `Digite *menu* para tentar novamente.`
+        );
+    }
+}
+
+// ===== HANDLER: SELEÇÃO DE MÉDICO =====
+async function handleDoctorSelection(phoneNumber, messageText, session) {
+    try {
+        const doctorNumber = parseInt(messageText);
+        const doctors = await Doctor.find({ 
+            specialty: session.getData('specialtyId'),
+            active: true 
+        }).populate('specialty');
+
+        if (!doctorNumber || doctorNumber < 1 || doctorNumber > doctors.length) {
+            await sendMessage(phoneNumber, 
+                `Número inválido... 🤔\n\n` +
+                `Digite o *número* do médico que você quer.`
+            );
+            return;
+        }
+
+        const selectedDoctor = doctors[doctorNumber - 1];
+        session.setState('awaiting_date', { 
+            doctorId: selectedDoctor._id,
+            doctorName: selectedDoctor.name
+        });
+
+        await listAvailableDates(phoneNumber, selectedDoctor._id);
+
+    } catch (error) {
+        logger.error('Erro ao processar médico:', error);
+        await sendMessage(phoneNumber, 
+            `Ops! Algo deu errado... 😓\n\nDigite *menu* para tentar novamente.`
+        );
+    }
+}
+
+// ===== HANDLER: SELEÇÃO DE DATA =====
+async function handleDateSelection(phoneNumber, messageText, session) {
+    // Validar formato de data (DD/MM ou DD/MM/AAAA)
+    const dateRegex = /^(\d{1,2})\/(\d{1,2})(\/\d{4})?$/;
+    const match = messageText.match(dateRegex);
+
+    if (!match) {
+        await sendMessage(phoneNumber, 
+            `Data inválida! 📅\n\n` +
+            `Use o formato: DD/MM\n` +
+            `Exemplo: 15/12`
+        );
+        return;
+    }
+
+    const day = parseInt(match[1]);
+    const month = parseInt(match[2]);
+    const year = match[3] ? parseInt(match[3].substring(1)) : new Date().getFullYear();
+
+    const selectedDate = new Date(year, month - 1, day);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+        await sendMessage(phoneNumber, 
+            `Essa data já passou! ⏰\n\n` +
+            `Por favor, escolha uma data futura.`
+        );
+        return;
+    }
+
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    session.setState('awaiting_time', { scheduledDate: dateStr });
+
+    await listAvailableTimes(phoneNumber, session.getData('doctorId'), dateStr);
+}
+
+// ===== HANDLER: SELEÇÃO DE HORÁRIO =====
+async function handleTimeSelection(phoneNumber, messageText, session) {
+    const timeRegex = /^(\d{1,2}):(\d{2})$/;
+    const match = messageText.match(timeRegex);
+
+    if (!match) {
+        await sendMessage(phoneNumber, 
+            `Horário inválido! ⏰\n\n` +
+            `Use o formato: HH:MM\n` +
+            `Exemplo: 14:30`
+        );
+        return;
+    }
+
+    const hour = parseInt(match[1]);
+    const minute = parseInt(match[2]);
+
+    if (hour < 8 || hour > 18 || minute < 0 || minute > 59) {
+        await sendMessage(phoneNumber, 
+            `Horário fora do expediente! 🕐\n\n` +
+            `Atendemos de 08:00 às 18:00.`
+        );
+        return;
+    }
+
+    const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+    session.setState('awaiting_patient_name', { scheduledTime: timeStr });
+
+    await sendMessage(phoneNumber, 
+        `Perfeito! 👌\n\n` +
+        `Agora me diz: *qual é o seu nome completo?*`
+    );
+}
+
+// ===== HANDLER: NOME DO PACIENTE =====
+async function handlePatientName(phoneNumber, messageText, session) {
+    if (messageText.length < 3) {
+        await sendMessage(phoneNumber, 
+            `Nome muito curto! 🤔\n\n` +
+            `Por favor, digite seu *nome completo*.`
+        );
+        return;
+    }
+
+    session.setState('awaiting_confirmation', { patientName: messageText });
+
+    await confirmAppointment(phoneNumber, session);
+}
+
+// ===== HANDLER: CONFIRMAÇÃO =====
+async function handleConfirmation(phoneNumber, messageText, session) {
+    const response = messageText.toLowerCase();
+
+    if (response === 'sim' || response === '1' || response === 's') {
+        await createAppointment(phoneNumber, session);
+    } else if (response === 'não' || response === 'nao' || response === '2' || response === 'n') {
+        session.reset();
+        await sendMessage(phoneNumber, 
+            `Tudo bem! ❌\n\n` +
+            `Agendamento cancelado.\n` +
+            `Digite *menu* quando quiser tentar novamente!`
+        );
+    } else {
+        await sendMessage(phoneNumber, 
+            `Não entendi... 🤔\n\n` +
+            `Digite *sim* para confirmar ou *não* para cancelar.`
+        );
+    }
+}
+
+// ===== FUNÇÕES AUXILIARES =====
+
+async function listSpecialties(phoneNumber) {
+    const specialties = await Specialty.find({ active: true }).sort('name');
     
-    // Por enquanto, delegar para o serviço original
-    // Em uma refatoração completa, moveriamos toda a lógica para cá
-    logger.info(`Processando conversa: estado=${session.state}`);
+    if (specialties.length === 0) {
+        await sendMessage(phoneNumber,
+            `Ops! No momento não temos especialidades disponíveis. 😓\n\n` +
+            `Entre em contato conosco pelo telefone para mais informações.`
+        );
+        return;
+    }
+
+    let message = `Legal! Vamos agendar sua consulta! 📋\n\nQual especialidade você precisa?\n\n`;
+    
+    specialties.forEach((spec, index) => {
+        message += `${index + 1}️⃣ ${spec.name}\n`;
+    });
+    
+    message += `\nDigite o *número* da especialidade!`;
+    
+    await sendMessage(phoneNumber, message);
+}
+
+async function listDoctors(phoneNumber, specialtyId) {
+    const doctors = await Doctor.find({ specialty: specialtyId, active: true })
+        .populate('specialty');
+    
+    if (doctors.length === 0) {
+        await sendMessage(phoneNumber,
+            `Ops! No momento não temos médicos disponíveis nessa especialidade. 😓\n\n` +
+            `Digite *menu* para tentar outra opção.`
+        );
+        return;
+    }
+
+    let message = `Ótimo! Temos ${doctors.length} profissiona${doctors.length > 1 ? 'is' : 'l'} disponíve${doctors.length > 1 ? 'is' : 'l'}: 👨‍⚕️\n\n`;
+    
+    doctors.forEach((doc, index) => {
+        message += `${index + 1}️⃣ *${doc.name}*\n`;
+        if (doc.crm) message += `   CRM: ${doc.crm}\n`;
+        message += `\n`;
+    });
+    
+    message += `Digite o *número* do médico que você prefere!`;
+    
+    await sendMessage(phoneNumber, message);
+}
+
+async function listAvailableDates(phoneNumber, doctorId) {
+    const message = `Perfeito! 👌\n\n` +
+        `Agora me diz: *qual data você prefere?*\n\n` +
+        `📅 Use o formato: DD/MM\n` +
+        `Exemplo: 15/12\n\n` +
+        `_Dica: Temos horários disponíveis de segunda a sexta!_`;
+    
+    await sendMessage(phoneNumber, message);
+}
+
+async function listAvailableTimes(phoneNumber, doctorId, date) {
+    const message = `Show! 📅\n\n` +
+        `Agora escolha o *horário*:\n\n` +
+        `⏰ Use o formato: HH:MM\n` +
+        `Exemplo: 14:30\n\n` +
+        `_Atendemos de 08:00 às 18:00_`;
+    
+    await sendMessage(phoneNumber, message);
+}
+
+async function confirmAppointment(phoneNumber, session) {
+    const data = session.data;
+    const date = new Date(data.scheduledDate + 'T' + data.scheduledTime);
+    
+    const message = `Perfeito! Vou confirmar os dados: ✅\n\n` +
+        `👤 *Paciente:* ${data.patientName}\n` +
+        `👨‍⚕️ *Médico:* ${data.doctorName}\n` +
+        `📅 *Data:* ${date.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n` +
+        `⏰ *Horário:* ${data.scheduledTime}\n\n` +
+        `Está tudo certo? 🤔\n\n` +
+        `1️⃣ *Sim, confirmar!* ✅\n` +
+        `2️⃣ *Não, cancelar* ❌`;
+    
+    await sendMessage(phoneNumber, message);
+}
+
+async function createAppointment(phoneNumber, session) {
+    try {
+        const data = session.data;
+        
+        const appointment = new Appointment({
+            patient: {
+                name: data.patientName,
+                phone: phoneNumber,
+                email: ''
+            },
+            doctor: data.doctorId,
+            clinic: null, // Pode ser configurado depois
+            scheduledDate: data.scheduledDate,
+            scheduledTime: data.scheduledTime,
+            status: 'scheduled',
+            source: 'whatsapp',
+            notes: 'Agendamento via WhatsApp automático'
+        });
+
+        await appointment.save();
+        
+        // Tentar criar no Google Calendar
+        try {
+            if (googleCalendarService.isAuthenticated()) {
+                await googleCalendarService.createEvent(appointment);
+                logger.info(`✅ Evento criado no Google Calendar para ${phoneNumber}`);
+            }
+        } catch (calendarError) {
+            logger.warn('Erro ao criar evento no Google Calendar:', calendarError.message);
+        }
+
+        const date = new Date(data.scheduledDate + 'T' + data.scheduledTime);
+        
+        await sendMessage(phoneNumber,
+            `🎉 *Consulta agendada com sucesso!*\n\n` +
+            `👤 ${data.patientName}\n` +
+            `📅 ${date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}\n` +
+            `⏰ ${data.scheduledTime}\n` +
+            `👨‍⚕️ Dr(a). ${data.doctorName}\n\n` +
+            `📱 Você vai receber um lembrete antes da consulta!\n\n` +
+            `Qualquer dúvida, é só mandar mensagem! 😊\n\n` +
+            `_Digite *menu* para mais opções._`,
+            'high'
+        );
+
+        session.reset();
+        
+        logger.info(`✅ Consulta agendada via WhatsApp para ${phoneNumber}`);
+
+    } catch (error) {
+        logger.error('Erro ao criar agendamento:', error);
+        await sendMessage(phoneNumber,
+            `Ops! Algo deu errado ao agendar sua consulta... 😓\n\n` +
+            `Por favor, tente novamente digitando *menu*.\n\n` +
+            `Se o problema persistir, entre em contato conosco!`
+        );
+    }
+}
+
+async function viewAppointments(phoneNumber, session) {
+    try {
+        const appointments = await Appointment.find({
+            'patient.phone': phoneNumber,
+            status: { $in: ['scheduled', 'confirmed'] }
+        }).populate('doctor').sort('scheduledDate scheduledTime');
+
+        if (appointments.length === 0) {
+            await sendMessage(phoneNumber,
+                `Você não tem consultas agendadas no momento. 📅\n\n` +
+                `Digite *1* para marcar uma nova consulta!\n` +
+                `Ou *menu* para ver outras opções.`
+            );
+            session.reset();
+            return;
+        }
+
+        let message = `Suas consultas agendadas: 📋\n\n`;
+        
+        appointments.forEach((apt, index) => {
+            const date = new Date(apt.scheduledDate + 'T' + apt.scheduledTime);
+            message += `${index + 1}️⃣ *${apt.doctor?.name || 'Médico não definido'}*\n`;
+            message += `   📅 ${date.toLocaleDateString('pt-BR')}\n`;
+            message += `   ⏰ ${apt.scheduledTime}\n`;
+            message += `   📍 Status: ${apt.status === 'confirmed' ? 'Confirmada ✅' : 'Agendada 📅'}\n\n`;
+        });
+
+        message += `Digite *menu* para voltar às opções.`;
+        
+        await sendMessage(phoneNumber, message);
+        session.reset();
+
+    } catch (error) {
+        logger.error('Erro ao listar agendamentos:', error);
+        await sendMessage(phoneNumber,
+            `Ops! Algo deu errado... 😓\n\nDigite *menu* para tentar novamente.`
+        );
+    }
+}
+
+async function listAppointmentsToCancel(phoneNumber, session) {
+    try {
+        const appointments = await Appointment.find({
+            'patient.phone': phoneNumber,
+            status: { $in: ['scheduled', 'confirmed'] }
+        }).populate('doctor').sort('scheduledDate scheduledTime');
+
+        if (appointments.length === 0) {
+            await sendMessage(phoneNumber,
+                `Você não tem consultas para cancelar. 📅\n\n` +
+                `Digite *menu* para ver outras opções.`
+            );
+            session.reset();
+            return;
+        }
+
+        let message = `Qual consulta você quer cancelar? 🤔\n\n`;
+        
+        appointments.forEach((apt, index) => {
+            const date = new Date(apt.scheduledDate + 'T' + apt.scheduledTime);
+            message += `${index + 1}️⃣ ${apt.doctor?.name || 'Médico'}\n`;
+            message += `   📅 ${date.toLocaleDateString('pt-BR')} às ${apt.scheduledTime}\n\n`;
+        });
+
+        message += `Digite o *número* da consulta para cancelar.\n`;
+        message += `Ou *menu* para voltar.`;
+        
+        session.setState('cancel_appointment', { appointments: appointments.map(a => a._id.toString()) });
+        
+        await sendMessage(phoneNumber, message);
+
+    } catch (error) {
+        logger.error('Erro ao listar agendamentos:', error);
+        await sendMessage(phoneNumber,
+            `Ops! Algo deu errado... 😓\n\nDigite *menu* para tentar novamente.`
+        );
+    }
+}
+
+async function handleViewAppointments(phoneNumber, messageText, session) {
+    session.reset();
+    await sendWelcomeMessage(phoneNumber);
+}
+
+async function handleCancelAppointment(phoneNumber, messageText, session) {
+    try {
+        const appointmentNumber = parseInt(messageText);
+        const appointmentIds = session.getData('appointments') || [];
+
+        if (!appointmentNumber || appointmentNumber < 1 || appointmentNumber > appointmentIds.length) {
+            await sendMessage(phoneNumber,
+                `Número inválido... 🤔\n\n` +
+                `Digite o *número* da consulta que você quer cancelar.`
+            );
+            return;
+        }
+
+        const appointmentId = appointmentIds[appointmentNumber - 1];
+        const appointment = await Appointment.findById(appointmentId).populate('doctor');
+
+        if (!appointment) {
+            await sendMessage(phoneNumber,
+                `Consulta não encontrada... 😓\n\nDigite *menu* para tentar novamente.`
+            );
+            session.reset();
+            return;
+        }
+
+        appointment.status = 'cancelled';
+        appointment.cancellationReason = 'Cancelado pelo paciente via WhatsApp';
+        appointment.cancelledAt = new Date();
+        await appointment.save();
+
+        const date = new Date(appointment.scheduledDate + 'T' + appointment.scheduledTime);
+
+        await sendMessage(phoneNumber,
+            `✅ *Consulta cancelada com sucesso!*\n\n` +
+            `👨‍⚕️ ${appointment.doctor?.name || 'Médico'}\n` +
+            `📅 ${date.toLocaleDateString('pt-BR')} às ${appointment.scheduledTime}\n\n` +
+            `Se quiser remarcar, é só digitar *1*!\n\n` +
+            `_Digite *menu* para mais opções._`
+        );
+
+        session.reset();
+        logger.info(`✅ Consulta cancelada via WhatsApp: ${appointmentId}`);
+
+    } catch (error) {
+        logger.error('Erro ao cancelar agendamento:', error);
+        await sendMessage(phoneNumber,
+            `Ops! Algo deu errado... 😓\n\nDigite *menu* para tentar novamente.`
+        );
+    }
+}
+
+async function handleWaitlistFlow(phoneNumber, session) {
+    await sendMessage(phoneNumber,
+        `📋 *Lista de Espera*\n\n` +
+        `Essa funcionalidade está em desenvolvimento! 🚧\n\n` +
+        `Em breve você poderá entrar na lista de espera para horários que abrirem.\n\n` +
+        `Por enquanto, entre em contato conosco diretamente.\n\n` +
+        `Digite *menu* para voltar.`
+    );
+    session.reset();
+}
+
+async function handleWaitlist(phoneNumber, messageText, session) {
+    session.reset();
+    await sendWelcomeMessage(phoneNumber);
+}
+
+async function requestHumanSupport(phoneNumber, session) {
+    await sendMessage(phoneNumber,
+        `👨‍💼 *Atendimento Humano*\n\n` +
+        `Entendi! Vou transferir você para nossa equipe.\n\n` +
+        `📞 Você também pode ligar para:\n` +
+        `*${process.env.SUPPORT_PHONE || '(11) 0000-0000'}*\n\n` +
+        `📧 Ou enviar email para:\n` +
+        `*${process.env.SUPPORT_EMAIL || 'contato@atenmed.com.br'}*\n\n` +
+        `Nosso horário de atendimento:\n` +
+        `Segunda a Sexta: 08:00 às 18:00\n\n` +
+        `_Digite *menu* para voltar às opções automáticas._`
+    );
+    session.reset();
+}
+
+async function handleHumanSupport(phoneNumber, messageText, session) {
+    session.reset();
+    await sendWelcomeMessage(phoneNumber);
 }
 
 // ===== MENSAGEM DE BOAS-VINDAS =====
