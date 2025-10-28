@@ -421,3 +421,5 @@ await sendMessage(phone, text);  // Usa fila se disponível
 **Status:** ✅ Pronto para produção  
 **Compatibilidade:** Retrocompatível com V1
 
+
+

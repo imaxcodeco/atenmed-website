@@ -431,3 +431,5 @@ const limiter = new Bottleneck({
 
 **Precisa de mais ajuda?** Consulte `docs/WHATSAPP-V2-SETUP.md` para setup completo.
 
+
+

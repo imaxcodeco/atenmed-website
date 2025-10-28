@@ -403,3 +403,5 @@ Problemas persistem?
 **Desenvolvedor:** Assistente AI  
 **Tecnologia:** Node.js + Express + Bull + Redis
 
+
+
