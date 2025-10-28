@@ -11,6 +11,7 @@ const Specialty = require('../models/Specialty');
 const Appointment = require('../models/Appointment');
 const { authenticateToken, authorize } = require('../middleware/auth');
 const logger = require('../utils/logger');
+const metaWhatsappService = require('../services/metaWhatsappService');
 
 // ===== ROTAS PÚBLICAS =====
 
@@ -346,6 +347,111 @@ router.get('/:id/doctors', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Erro ao listar médicos'
+        });
+    }
+});
+
+// ===== INTEGRAÇÃO META WHATSAPP =====
+
+/**
+ * @route   GET /api/clinics/:id/meta-setup
+ * @desc    Gerar instruções para configurar número no Meta
+ * @access  Private (Admin)
+ */
+router.get('/:id/meta-setup', authenticateToken, authorize('admin'), async (req, res) => {
+    try {
+        const clinic = await Clinic.findById(req.params.id);
+        
+        if (!clinic) {
+            return res.status(404).json({
+                success: false,
+                error: 'Clínica não encontrada'
+            });
+        }
+        
+        if (!clinic.contact?.whatsapp) {
+            return res.status(400).json({
+                success: false,
+                error: 'Clínica não tem número WhatsApp cadastrado'
+            });
+        }
+        
+        // Gerar instruções detalhadas
+        const instructions = metaWhatsappService.generateMetaInstructions(clinic);
+        
+        // Gerar configuração rápida (copiar e colar)
+        const quickConfig = metaWhatsappService.generateQuickConfig(clinic);
+        
+        // Verificar se número já está registrado
+        const registrationStatus = await metaWhatsappService.checkNumberRegistration(clinic.contact.whatsapp);
+        
+        res.json({
+            success: true,
+            data: {
+                clinic: {
+                    id: clinic._id,
+                    name: clinic.name,
+                    whatsapp: clinic.contact.whatsapp
+                },
+                instructions,
+                quickConfig,
+                registrationStatus,
+                automationAvailable: !!process.env.META_ACCESS_TOKEN
+            }
+        });
+        
+    } catch (error) {
+        logger.error('Erro ao gerar instruções Meta:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Erro ao gerar instruções'
+        });
+    }
+});
+
+/**
+ * @route   POST /api/clinics/:id/meta-register
+ * @desc    Tentar registrar número automaticamente no Meta
+ * @access  Private (Admin)
+ */
+router.post('/:id/meta-register', authenticateToken, authorize('admin'), async (req, res) => {
+    try {
+        const clinic = await Clinic.findById(req.params.id);
+        
+        if (!clinic) {
+            return res.status(404).json({
+                success: false,
+                error: 'Clínica não encontrada'
+            });
+        }
+        
+        if (!clinic.contact?.whatsapp) {
+            return res.status(400).json({
+                success: false,
+                error: 'Clínica não tem número WhatsApp cadastrado'
+            });
+        }
+        
+        // Tentar registro automático
+        const result = await metaWhatsappService.registerNumberAutomatic(
+            clinic.contact.whatsapp,
+            clinic.name
+        );
+        
+        if (result.success) {
+            logger.info(`Número registrado no Meta para ${clinic.name}`);
+        }
+        
+        res.json({
+            success: result.success,
+            data: result
+        });
+        
+    } catch (error) {
+        logger.error('Erro ao registrar no Meta:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
         });
     }
 });

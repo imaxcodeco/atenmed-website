@@ -74,7 +74,129 @@ function setupEventListeners() {
                 const clinicName = target.dataset.clinicName;
                 deleteClinic(clinicId, clinicName);
             }
+            
+            // Botão Meta (configurar no WhatsApp)
+            if (target.classList.contains('btn-meta')) {
+                const clinicId = target.dataset.clinicId;
+                showMetaSetup(clinicId);
+            }
         });
+    }
+}
+
+// Mostrar configuração do Meta WhatsApp
+async function showMetaSetup(clinicId) {
+    try {
+        const token = getAuthToken();
+        if (!token) return;
+        
+        const response = await fetch(`${API_BASE}/clinics/${clinicId}/meta-setup`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erro ao carregar configuração');
+        }
+        
+        const data = await response.json();
+        const setup = data.data;
+        
+        // Criar modal de instruções
+        const modalHTML = `
+            <div class="modal show" id="metaModal">
+                <div class="modal-content" style="max-width: 800px;">
+                    <div class="modal-header">
+                        <h2 class="modal-title">⚙️ Configurar no Meta WhatsApp</h2>
+                        <button class="close-modal" onclick="document.getElementById('metaModal').remove()">&times;</button>
+                    </div>
+                    
+                    <div style="padding: 20px 0;">
+                        <h3 style="color: #1877f2; margin-bottom: 10px;">📱 ${setup.clinic.name}</h3>
+                        <p style="color: #666; margin-bottom: 20px;">Número: ${setup.clinic.whatsapp}</p>
+                        
+                        ${setup.registrationStatus.registered ? 
+                            `<div style="background: #d4edda; color: #155724; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+                                ✅ <strong>Número já registrado no Meta!</strong>
+                            </div>` : 
+                            `<div style="background: #fff3cd; color: #856404; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+                                ⚠️ Número precisa ser registrado no Meta
+                            </div>`
+                        }
+                        
+                        <h4 style="margin: 20px 0 10px;">🔗 Links Rápidos:</h4>
+                        <div style="display: grid; gap: 10px; margin-bottom: 20px;">
+                            <a href="${setup.quickConfig.links.metaDeveloper}" target="_blank" 
+                               style="background: #1877f2; color: white; padding: 12px; border-radius: 8px; text-decoration: none; display: block;">
+                                🔗 Abrir Meta Developer Console
+                            </a>
+                        </div>
+                        
+                        <h4 style="margin: 20px 0 10px;">📋 Configurações para Copiar:</h4>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                            <p><strong>Número (formatado):</strong></p>
+                            <div style="background: white; padding: 10px; border-radius: 4px; font-family: monospace; margin: 5px 0;">
+                                ${setup.quickConfig.phoneNumber}
+                            </div>
+                            <button onclick="navigator.clipboard.writeText('${setup.quickConfig.phoneNumber}')" 
+                                    style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 5px;">
+                                📋 Copiar Número
+                            </button>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                            <p><strong>Webhook URL:</strong></p>
+                            <div style="background: white; padding: 10px; border-radius: 4px; font-family: monospace; margin: 5px 0; word-break: break-all;">
+                                ${setup.quickConfig.webhook.callbackUrl}
+                            </div>
+                            <button onclick="navigator.clipboard.writeText('${setup.quickConfig.webhook.callbackUrl}')" 
+                                    style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 5px;">
+                                📋 Copiar URL
+                            </button>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                            <p><strong>Verify Token:</strong></p>
+                            <div style="background: white; padding: 10px; border-radius: 4px; font-family: monospace; margin: 5px 0;">
+                                ${setup.quickConfig.webhook.verifyToken}
+                            </div>
+                            <button onclick="navigator.clipboard.writeText('${setup.quickConfig.webhook.verifyToken}')" 
+                                    style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 5px;">
+                                📋 Copiar Token
+                            </button>
+                        </div>
+                        
+                        <h4 style="margin: 20px 0 10px;">📝 Passo a Passo:</h4>
+                        <ol style="line-height: 1.8; color: #333;">
+                            ${setup.instructions.steps.map(step => `
+                                <li style="margin: 10px 0;">
+                                    <strong>${step.title}</strong><br>
+                                    <span style="color: #666;">${step.description}</span>
+                                    ${step.link ? `<br><a href="${step.link}" target="_blank" style="color: #1877f2;">Abrir link →</a>` : ''}
+                                </li>
+                            `).join('')}
+                        </ol>
+                        
+                        <div style="background: #e7f3ff; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                            <p style="margin: 0;">⏱️ <strong>Tempo estimado:</strong> ${setup.instructions.estimatedTime}</p>
+                            <p style="margin: 10px 0 0;">💡 <strong>Dificuldade:</strong> ${setup.instructions.difficulty}</p>
+                        </div>
+                    </div>
+                    
+                    <button onclick="document.getElementById('metaModal').remove()" 
+                            style="background: #6c757d; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 20px;">
+                        Fechar
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao carregar configuração do Meta: ' + error.message);
     }
 }
 
@@ -188,6 +310,9 @@ function renderClinics() {
             </div>
 
             <div class="clinic-actions">
+                <button class="btn btn-meta" data-clinic-id="${clinic._id}" title="Configurar no Meta WhatsApp">
+                    ⚙️ Meta
+                </button>
                 <button class="btn btn-edit" data-clinic-id="${clinic._id}">
                     Editar
                 </button>
