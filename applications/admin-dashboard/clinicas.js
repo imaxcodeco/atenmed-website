@@ -122,13 +122,13 @@ function renderClinics() {
             </div>
 
             <div class="clinic-actions">
-                <button class="btn-sm btn-edit" onclick="editClinic('${clinic._id}')">
+                <button class="btn btn-edit" onclick="editClinic('${clinic._id}')">
                     Editar
                 </button>
-                <button class="btn-sm btn-toggle" onclick="toggleClinic('${clinic._id}', ${!clinic.active})">
+                <button class="btn btn-toggle" onclick="toggleClinic('${clinic._id}', ${!clinic.active})">
                     ${clinic.active ? 'Desativar' : 'Ativar'}
                 </button>
-                <button class="btn-sm btn-delete" onclick="deleteClinic('${clinic._id}', '${clinic.name}')">
+                <button class="btn btn-delete" onclick="deleteClinic('${clinic._id}', '${clinic.name}')">
                     Excluir
                 </button>
             </div>
@@ -164,9 +164,15 @@ function formatPhone(phone) {
 
 // Abrir modal
 function openModal(clinicId = null) {
+    console.log('Abrindo modal para clínica:', clinicId);
     const modal = document.getElementById('clinicModal');
     const form = document.getElementById('clinicForm');
     const title = document.getElementById('modalTitle');
+
+    if (!modal) {
+        console.error('Modal não encontrado!');
+        return;
+    }
 
     form.reset();
     editingClinicId = clinicId;
@@ -180,6 +186,7 @@ function openModal(clinicId = null) {
     }
 
     modal.classList.add('show');
+    console.log('Modal aberto');
 }
 
 // Fechar modal
@@ -279,6 +286,7 @@ async function saveClinic(event) {
 
 // Editar clínica
 function editClinic(clinicId) {
+    console.log('Editando clínica:', clinicId);
     openModal(clinicId);
 }
 
