@@ -108,23 +108,34 @@ async function checkPlanLimits(req, res, next) {
 
         const planLimits = limits[plan] || limits.free;
         
-        // Verificar limite de agendamentos mensais (exemplo)
+        // Verificar limite de agendamentos mensais
         if (planLimits.appointments !== -1) {
-            const currentMonth = new Date();
-            currentMonth.setDate(1);
-            currentMonth.setHours(0, 0, 0, 0);
+            const Appointment = require('../models/Appointment');
             
-            // TODO: Implementar contagem real de agendamentos
-            const monthlyAppointments = clinic.stats?.totalAppointments || 0;
+            // Início do mês atual
+            const startOfMonth = new Date();
+            startOfMonth.setDate(1);
+            startOfMonth.setHours(0, 0, 0, 0);
+            
+            // Contar agendamentos do mês atual desta clínica
+            const monthlyAppointments = await Appointment.countDocuments({
+                clinic: req.clinicId,
+                createdAt: { $gte: startOfMonth },
+                status: { $in: ['scheduled', 'confirmed', 'completed'] }
+            });
+            
+            logger.info(`Clínica ${clinic.name}: ${monthlyAppointments}/${planLimits.appointments} agendamentos este mês`);
             
             if (monthlyAppointments >= planLimits.appointments) {
                 return res.status(403).json({
                     success: false,
                     error: 'Limite de agendamentos atingido',
-                    message: `Seu plano ${plan.toUpperCase()} permite até ${planLimits.appointments} agendamentos por mês.`,
+                    message: `Seu plano ${plan.toUpperCase()} permite até ${planLimits.appointments} agendamentos por mês. Você já usou ${monthlyAppointments}.`,
                     code: 'PLAN_LIMIT_REACHED',
                     suggestion: 'Faça upgrade do seu plano para continuar',
-                    upgradeUrl: '/planos'
+                    upgradeUrl: '/planos',
+                    currentUsage: monthlyAppointments,
+                    limit: planLimits.appointments
                 });
             }
         }
@@ -174,7 +185,26 @@ async function updateOverdueSubscriptions() {
             
             logger.warn(`Clínica suspensa por inadimplência: ${clinic.name} (Fatura ${invoice.invoiceNumber})`);
             
-            // TODO: Enviar notificação por email/WhatsApp
+            // Enviar notificação por email
+            try {
+                const emailService = require('../services/emailService');
+                await emailService.sendEmail({
+                    to: clinic.contact.email,
+                    subject: '⚠️ Assinatura Suspensa - AtenMed',
+                    text: `Olá ${clinic.name},\n\nSua assinatura foi suspensa devido à inadimplência da fatura ${invoice.invoiceNumber}.\n\nPara reativar, efetue o pagamento em: ${process.env.APP_URL}/faturas\n\nValor: R$ ${invoice.amount.toFixed(2)}\nVencimento: ${invoice.dueDate.toLocaleDateString('pt-BR')}\n\nEm caso de dúvidas, entre em contato conosco.`,
+                    html: `
+                        <h2>⚠️ Assinatura Suspensa</h2>
+                        <p>Olá <strong>${clinic.name}</strong>,</p>
+                        <p>Sua assinatura foi suspensa devido à inadimplência da fatura <strong>${invoice.invoiceNumber}</strong>.</p>
+                        <p><strong>Valor:</strong> R$ ${invoice.amount.toFixed(2)}<br>
+                        <strong>Vencimento:</strong> ${invoice.dueDate.toLocaleDateString('pt-BR')}</p>
+                        <p><a href="${process.env.APP_URL}/faturas" style="background: #dc2626; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Pagar Agora</a></p>
+                    `
+                });
+                logger.info(`Email de suspensão enviado para ${clinic.contact.email}`);
+            } catch (emailError) {
+                logger.error(`Erro ao enviar email de suspensão: ${emailError.message}`);
+            }
         }
 
         logger.info(`Atualização concluída: ${suspended} clínicas suspensas`);

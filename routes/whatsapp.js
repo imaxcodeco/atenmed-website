@@ -31,9 +31,9 @@ router.get('/webhook', (req, res) => {
         // LOG DETALHADO PARA DEBUG
         logger.info('📱 Tentativa de verificação de webhook WhatsApp');
         logger.info(`   Mode: ${mode}`);
-        logger.info(`   Token recebido: ${token}`);
-        logger.info(`   Token esperado: ${process.env.WHATSAPP_VERIFY_TOKEN}`);
-        logger.info(`   Challenge: ${challenge}`);
+        logger.info(`   Token recebido: ${token ? '***' + token.slice(-4) : 'null'}`);
+        logger.info(`   Token match: ${token === process.env.WHATSAPP_VERIFY_TOKEN}`);
+        logger.info(`   Challenge: ${challenge ? challenge.substring(0, 20) + '...' : 'null'}`);
 
         const result = whatsappService.verifyWebhook(mode, token, challenge);
 
@@ -44,7 +44,7 @@ router.get('/webhook', (req, res) => {
         }
 
         logger.warn('❌ Falha na verificação do webhook');
-        logger.warn(`   Mode: ${mode}, Token match: ${token === process.env.WHATSAPP_VERIFY_TOKEN}`);
+        logger.warn(`   Mode: ${mode}`);
         return res.sendStatus(403);
 
     } catch (error) {
@@ -105,7 +105,7 @@ router.post('/webhook', async (req, res) => {
  * @desc    Enviar mensagem manual (para testes ou admin)
  * @access  Admin
  */
-router.post('/send', async (req, res) => {
+router.post('/send', authenticateToken, authorize('admin'), async (req, res) => {
     try {
         const { to, message } = req.body;
 
@@ -140,7 +140,7 @@ router.post('/send', async (req, res) => {
  * @desc    Retorna estatísticas de mensagens WhatsApp
  * @access  Admin
  */
-router.get('/stats', async (req, res) => {
+router.get('/stats', authenticateToken, authorize('admin'), async (req, res) => {
     try {
         const Appointment = require('../models/Appointment');
 

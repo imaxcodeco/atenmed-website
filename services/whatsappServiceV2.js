@@ -167,8 +167,13 @@ function initialize() {
 // ===== VERIFICAÇÃO DE WEBHOOK COM SIGNATURE =====
 function verifyWebhookSignature(rawBody, signature) {
     if (!WHATSAPP_APP_SECRET) {
-        logger.warn('⚠️ WHATSAPP_APP_SECRET não configurado - pulando verificação de signature');
-        return true; // Em produção, deve retornar false
+        logger.warn('⚠️ WHATSAPP_APP_SECRET não configurado');
+        if (process.env.NODE_ENV === 'production') {
+            logger.error('❌ WHATSAPP_APP_SECRET obrigatório em produção');
+            return false;
+        }
+        logger.info('ℹ️ Aceitando webhook sem signature (apenas desenvolvimento)');
+        return true;
     }
 
     try {

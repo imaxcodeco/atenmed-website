@@ -9,6 +9,11 @@ const mongoSanitize = require('express-mongo-sanitize');
 const path = require('path');
 require('dotenv').config();
 
+// Validar variáveis de ambiente usando módulo centralizado
+const { validateEnv, showConfigSummary } = require('./config/validate-env');
+validateEnv(true); // strict mode em produção
+showConfigSummary();
+
 // Importar configurações
 const connectDB = require('./config/database');
 const logger = require('./utils/logger');
@@ -118,9 +123,26 @@ const corsOptions = {
             'http://localhost:8000'
         ];
         
-        // Permitir requests sem origin (webhooks, curl, Postman, server-to-server)
+        // Permitir requests sem origin apenas em desenvolvimento ou para webhooks conhecidos
         if (!origin) {
-            return callback(null, true);
+            // Em desenvolvimento, permitir
+            if (process.env.NODE_ENV !== 'production') {
+                return callback(null, true);
+            }
+            
+            // Em produção, verificar se é um webhook conhecido
+            const userAgent = req.get('user-agent') || '';
+            const isKnownWebhook = userAgent.includes('Meta') || 
+                                   userAgent.includes('WhatsApp') ||
+                                   userAgent.includes('facebookexternalua');
+            
+            if (isKnownWebhook) {
+                return callback(null, true);
+            }
+            
+            // Rejeitar requests sem origin em produção
+            logger.warn(`⚠️ Request sem origin rejeitado em produção. User-Agent: ${userAgent}`);
+            return callback(new Error('Origin required in production'));
         }
         
         // Verificar se a origem está na lista permitida
@@ -129,6 +151,7 @@ const corsOptions = {
         }
         
         // Rejeitar origens não permitidas
+        logger.warn(`⚠️ Origin não permitido: ${origin}`);
         callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
@@ -148,8 +171,12 @@ const limiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
-    // Pular rate limiting para webhooks do WhatsApp
-    skip: (req) => req.path.startsWith('/api/whatsapp/webhook') || req.originalUrl.startsWith('/api/whatsapp/webhook')
+    // Pular rate limiting apenas para webhooks específicos
+    skip: (req) => {
+        // Lista exata de endpoints que devem pular rate limit
+        const skipPaths = ['/api/whatsapp/webhook'];
+        return skipPaths.includes(req.path);
+    }
 });
 app.use('/api/', limiter);
 
@@ -201,17 +228,6 @@ app.get('/health', (req, res) => {
         uptime: process.uptime(),
         environment: process.env.NODE_ENV,
         version: process.env.npm_package_version || '1.0.0'
-    });
-});
-
-// Health check route (para monitoramento)
-app.get('/health', (req, res) => {
-    res.status(200).json({
-        status: 'OK',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        environment: process.env.NODE_ENV,
-        version: '1.0.0'
     });
 });
 

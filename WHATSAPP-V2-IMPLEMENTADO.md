@@ -424,3 +424,4 @@ await sendMessage(phone, text);  // Usa fila se disponível
 
 
 
+

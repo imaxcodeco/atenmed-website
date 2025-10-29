@@ -99,9 +99,10 @@ const userSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
-// Índices (email já tem unique: true, não precisa de índice adicional)
-userSchema.index({ role: 1 });
-userSchema.index({ ativo: 1 });
+// Índices para otimização (email já tem unique: true)
+userSchema.index({ role: 1, ativo: 1 }); // Buscar usuários ativos por role
+userSchema.index({ clinic: 1, role: 1 }); // Multi-tenancy: usuários por clínica
+userSchema.index({ email: 1, ativo: 1 }); // Login de usuários ativos
 
 // Virtual para verificar se usuário está bloqueado
 userSchema.virtual('estaBloqueado').get(function() {

@@ -280,4 +280,11 @@ clinicSchema.methods.updateRating = function(newRating) {
     return this.save();
 };
 
+// Índices para otimização
+clinicSchema.index({ slug: 1 }, { unique: true }); // Busca rápida por slug
+clinicSchema.index({ 'contact.whatsapp': 1 }); // Identificar clínica por WhatsApp
+clinicSchema.index({ active: 1 }); // Filtrar clínicas ativas
+clinicSchema.index({ 'subscription.status': 1 }); // Verificar status de assinatura
+clinicSchema.index({ createdAt: -1 }); // Ordenar por cadastro
+
 module.exports = mongoose.model('Clinic', clinicSchema);

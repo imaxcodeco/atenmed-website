@@ -111,7 +111,7 @@ npm install
 
 3. **Configure as variáveis de ambiente**
 ```bash
-cp env.example .env
+cp .env.example .env
 # Edite o arquivo .env com suas configurações
 ```
 
@@ -407,5 +407,6 @@ APP_URL=http://localhost:3000
 ---
 
 **Desenvolvido com ❤️ pela equipe AtenMed**  
-**Versão 2.0 - Outubro 2024** 🚀#   D e p l o y   a u t o m � t i c o   c o n f i g u r a d o  
+**Versão 2.0 - Outubro 2024** 🚀#   D e p l o y   a u t o m � t i c o   c o n f i g u r a d o 
+ 
  
