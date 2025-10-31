@@ -119,83 +119,90 @@ app.use(helmet({
 }));
 
 // CORS configuration (usar delegate para acessar req)
+// CORREÇÃO COMPLETA: Permitir requisições same-origin e cross-origin do próprio domínio
 const corsOptionsDelegate = (req, callback) => {
     const origin = req.header('Origin');
-    const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || [
+    const host = req.get('host') || '';
+    const referer = req.get('referer') || '';
+    const userAgent = req.get('user-agent') || '';
+    
+    // Lista de domínios permitidos
+    const allowedOrigins = process.env.CORS_ORIGIN?.split(',').map(o => o.trim()) || [
         'https://atenmed.com.br',
         'https://www.atenmed.com.br',
         ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000', 'http://localhost:8000'] : [])
     ];
 
-    // Em desenvolvimento, permitir requests sem Origin
-    if (!origin && process.env.NODE_ENV !== 'production') {
+    // === DESENVOLVIMENTO: Permitir tudo ===
+    if (process.env.NODE_ENV !== 'production') {
         return callback(null, { origin: true, credentials: true, optionsSuccessStatus: 200 });
     }
 
-    // Em produção, permitir sem Origin para:
-    // 1. Health check endpoint (para monitoramento)
-    // 2. Páginas estáticas e recursos (GET requests)
-    // 3. Rotas de API do mesmo domínio (same-origin requests não enviam Origin)
-    // 4. Webhooks conhecidos (Meta/WhatsApp)
-    if (!origin && process.env.NODE_ENV === 'production') {
-        // Permitir health check sem origin
-        if (req.path === '/health' || req.path === '/api/health') {
-            return callback(null, { origin: true, credentials: false, optionsSuccessStatus: 200 });
-        }
-        
-        // Permitir GET requests para páginas estáticas (site principal)
-        // Quando você acessa o site diretamente no navegador, pode não ter Origin
-        if (req.method === 'GET' && (
-            req.path === '/' || 
-            req.path.startsWith('/site/') ||
-            req.path.startsWith('/apps/') ||
-            req.path.startsWith('/assets/') ||
-            req.path.match(/\.(html|css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/i)
-        )) {
-            return callback(null, { origin: true, credentials: false, optionsSuccessStatus: 200 });
-        }
-        
-        // IMPORTANTE: Requisições same-origin (do próprio site) NÃO enviam Origin header
-        // Permitir requisições de API do mesmo domínio sem Origin
-        // Verificar pelo Host header que vem do navegador
-        const host = req.get('host') || '';
-        const isSameOrigin = host.includes('atenmed.com.br') || host === 'localhost:3000';
-        
-        if (isSameOrigin && req.path.startsWith('/api/')) {
-            // Permitir requisições de API do mesmo domínio sem Origin
+    // === PRODUÇÃO: Lógica de permissão ===
+    
+    // 1. REQUISIÇÕES COM ORIGIN HEADER
+    if (origin) {
+        // 1.1. Origin está na lista permitida
+        if (allowedOrigins.includes(origin)) {
             return callback(null, { origin: true, credentials: true, optionsSuccessStatus: 200 });
         }
         
-        const userAgent = req.get('user-agent') || '';
-        const isKnownWebhook = userAgent.includes('Meta') ||
-                               userAgent.includes('WhatsApp') ||
-                               userAgent.includes('facebookexternalua');
-        if (isKnownWebhook) {
+        // 1.2. Origin é do próprio domínio (atenmed.com.br)
+        if (origin.includes('atenmed.com.br')) {
             return callback(null, { origin: true, credentials: true, optionsSuccessStatus: 200 });
         }
         
-        logger.warn(`⚠️ Request sem origin rejeitado em produção. Path: ${req.path}, Method: ${req.method}, Host: ${host}, User-Agent: ${userAgent}`);
-        return callback(new Error('Origin required in production'));
+        // 1.3. Origin não permitido
+        logger.warn(`⚠️ Origin não permitido: ${origin} | Path: ${req.path} | Method: ${req.method}`);
+        return callback(new Error('Not allowed by CORS'));
     }
 
-    // Com Origin: validar lista permitida
-    if (origin && allowedOrigins.includes(origin)) {
-        return callback(null, { origin: true, credentials: true, optionsSuccessStatus: 200 });
+    // 2. REQUISIÇÕES SEM ORIGIN HEADER (same-origin ou diretas)
+    
+    // 2.1. Health check (monitoramento)
+    if (req.path === '/health' || req.path === '/api/health') {
+        return callback(null, { origin: true, credentials: false, optionsSuccessStatus: 200 });
     }
-
-    // Se o Origin for do mesmo domínio (atenmed.com.br ou www.atenmed.com.br)
-    // permitir mesmo que não esteja explicitamente na lista (útil para requisições AJAX do próprio site)
-    if (origin && (
-        origin === 'https://atenmed.com.br' || 
-        origin === 'https://www.atenmed.com.br' ||
-        origin === 'http://atenmed.com.br' ||
-        origin === 'http://www.atenmed.com.br'
+    
+    // 2.2. Páginas estáticas e recursos (GET requests diretos)
+    if (req.method === 'GET' && (
+        req.path === '/' || 
+        req.path.startsWith('/site/') ||
+        req.path.startsWith('/apps/') ||
+        req.path.startsWith('/assets/') ||
+        req.path.startsWith('/crm') ||
+        req.path.startsWith('/portal') ||
+        req.path.match(/\.(html|css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/i)
     )) {
+        return callback(null, { origin: true, credentials: false, optionsSuccessStatus: 200 });
+    }
+    
+    // 2.3. Detectar requisições same-origin (do próprio domínio)
+    // Requisições same-origin NÃO enviam Origin header, então verificamos pelo Host/Referer
+    const isSameOriginRequest = 
+        host.includes('atenmed.com.br') ||  // Host header
+        referer.includes('atenmed.com.br') ||  // Referer header (navegação do site)
+        host === 'localhost:3000';  // Desenvolvimento local
+    
+    if (isSameOriginRequest) {
+        // Permitir TODAS as requisições do próprio domínio (incluindo APIs)
         return callback(null, { origin: true, credentials: true, optionsSuccessStatus: 200 });
     }
-
-    logger.warn(`⚠️ Origin não permitido: ${origin || 'N/A'}`);
-    return callback(new Error('Not allowed by CORS'));
+    
+    // 2.4. Webhooks conhecidos (Meta/WhatsApp)
+    const isKnownWebhook = 
+        userAgent.includes('Meta') ||
+        userAgent.includes('WhatsApp') ||
+        userAgent.includes('facebookexternalua') ||
+        userAgent.includes('facebookexternalhit');
+    
+    if (isKnownWebhook) {
+        return callback(null, { origin: true, credentials: true, optionsSuccessStatus: 200 });
+    }
+    
+    // 2.5. Bloquear requisições sem Origin que não se encaixam nos casos acima
+    logger.warn(`⚠️ Request bloqueado em produção. Path: ${req.path}, Method: ${req.method}, Host: ${host}, Referer: ${referer}, User-Agent: ${userAgent}`);
+    return callback(new Error('Origin required in production'));
 };
 app.use(cors(corsOptionsDelegate));
 
