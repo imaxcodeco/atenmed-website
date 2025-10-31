@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { EMAIL_REGEX, EMAIL_ERROR_MESSAGE, PHONE_REGEX, PHONE_ERROR_MESSAGE } = require('../utils/validators');
 
 const clientSchema = new mongoose.Schema({
     // Dados do cliente
@@ -12,14 +13,14 @@ const clientSchema = new mongoose.Schema({
         type: String,
         lowercase: true,
         trim: true,
-        match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Email inválido']
+        match: [EMAIL_REGEX, EMAIL_ERROR_MESSAGE]
     },
     whatsapp: {
         type: String,
         required: [true, 'Número do WhatsApp é obrigatório'],
         trim: true,
         unique: true,
-        match: [/^\+?[1-9]\d{1,14}$/, 'Número de WhatsApp inválido (formato: +5511999999999)']
+        match: [PHONE_REGEX, PHONE_ERROR_MESSAGE]
     },
     
     // Tipo de negócio

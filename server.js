@@ -32,6 +32,11 @@ const whatsappRoutes = require('./routes/whatsappV2');
 const clientRoutes = require('./routes/clients');
 const clinicRoutes = require('./routes/clinics');
 const invoiceRoutes = require('./routes/invoices');
+const doctorRoutes = require('./routes/doctors');
+const specialtyRoutes = require('./routes/specialties');
+const googleCalendarRoutes = require('./routes/googleCalendar');
+const testRoutes = require('./routes/test');
+const queuesDashboardRoutes = require('./routes/queues-dashboard');
 
 // Importar middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -113,51 +118,42 @@ app.use(helmet({
     }
 }));
 
-// CORS configuration
-const corsOptions = {
-    origin: (origin, callback) => {
-        const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || [
-            'https://atenmed.com.br',
-            'https://www.atenmed.com.br',
-            'http://localhost:3000',
-            'http://localhost:8000'
-        ];
-        
-        // Permitir requests sem origin apenas em desenvolvimento ou para webhooks conhecidos
-        if (!origin) {
-            // Em desenvolvimento, permitir
-            if (process.env.NODE_ENV !== 'production') {
-                return callback(null, true);
-            }
-            
-            // Em produção, verificar se é um webhook conhecido
-            const userAgent = req.get('user-agent') || '';
-            const isKnownWebhook = userAgent.includes('Meta') || 
-                                   userAgent.includes('WhatsApp') ||
-                                   userAgent.includes('facebookexternalua');
-            
-            if (isKnownWebhook) {
-                return callback(null, true);
-            }
-            
-            // Rejeitar requests sem origin em produção
-            logger.warn(`⚠️ Request sem origin rejeitado em produção. User-Agent: ${userAgent}`);
-            return callback(new Error('Origin required in production'));
+// CORS configuration (usar delegate para acessar req)
+const corsOptionsDelegate = (req, callback) => {
+    const origin = req.header('Origin');
+    const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || [
+        'https://atenmed.com.br',
+        'https://www.atenmed.com.br',
+        ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000', 'http://localhost:8000'] : [])
+    ];
+
+    // Em desenvolvimento, permitir requests sem Origin
+    if (!origin && process.env.NODE_ENV !== 'production') {
+        return callback(null, { origin: true, credentials: true, optionsSuccessStatus: 200 });
+    }
+
+    // Em produção, permitir sem Origin apenas para webhooks conhecidos (Meta/WhatsApp)
+    if (!origin && process.env.NODE_ENV === 'production') {
+        const userAgent = req.get('user-agent') || '';
+        const isKnownWebhook = userAgent.includes('Meta') ||
+                               userAgent.includes('WhatsApp') ||
+                               userAgent.includes('facebookexternalua');
+        if (isKnownWebhook) {
+            return callback(null, { origin: true, credentials: true, optionsSuccessStatus: 200 });
         }
-        
-        // Verificar se a origem está na lista permitida
-        if (allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        }
-        
-        // Rejeitar origens não permitidas
-        logger.warn(`⚠️ Origin não permitido: ${origin}`);
-        callback(new Error('Not allowed by CORS'));
-    },
-    credentials: true,
-    optionsSuccessStatus: 200
+        logger.warn(`⚠️ Request sem origin rejeitado em produção. User-Agent: ${userAgent}`);
+        return callback(new Error('Origin required in production'));
+    }
+
+    // Com Origin: validar lista permitida
+    if (origin && allowedOrigins.includes(origin)) {
+        return callback(null, { origin: true, credentials: true, optionsSuccessStatus: 200 });
+    }
+
+    logger.warn(`⚠️ Origin não permitido: ${origin || 'N/A'}`);
+    return callback(new Error('Not allowed by CORS'));
 };
-app.use(cors(corsOptions));
+app.use(cors(corsOptionsDelegate));
 
 // Trust proxy já configurado no topo do arquivo (linha 44)
 
@@ -250,166 +246,15 @@ app.use('/api/whatsapp', whatsappRoutes); // Webhook não deve ter limite, mas s
 app.use('/api/clients', clientRoutes);
 app.use('/api/clinics', clinicRoutes);
 app.use('/api/invoices', invoiceRoutes);
-app.use('/api/test', require('./routes/test'));
+app.use('/api/doctors', doctorRoutes);
+app.use('/api/specialties', specialtyRoutes);
+app.use('/api/test', testRoutes);
 
 // Bull Board - Dashboard de Filas
-app.use('/admin', require('./routes/queues-dashboard'));
+app.use('/admin', queuesDashboardRoutes);
 
-// Rotas de autenticação do Google Calendar
-app.get('/api/auth/google', (req, res) => {
-    try {
-        const authUrl = googleCalendarService.getAuthUrl();
-        res.redirect(authUrl);
-    } catch (error) {
-        logger.error('Erro ao gerar URL de autenticação:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'Erro ao iniciar autenticação com Google' 
-        });
-    }
-});
-
-app.get('/api/auth/google/callback', async (req, res) => {
-    try {
-        const { code } = req.query;
-        
-        if (!code) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Código de autorização não fornecido' 
-            });
-        }
-        
-        const tokens = await googleCalendarService.getTokenFromCode(code);
-        logger.info('✅ Autenticação com Google Calendar bem-sucedida');
-        
-        res.send(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Autenticação Bem-sucedida</title>
-                <style>
-                    body { 
-                        font-family: Arial, sans-serif; 
-                        display: flex; 
-                        justify-content: center; 
-                        align-items: center; 
-                        height: 100vh; 
-                        margin: 0;
-                        background: linear-gradient(135deg, #45a7b1, #184354);
-                    }
-                    .success-box {
-                        background: white;
-                        padding: 3rem;
-                        border-radius: 10px;
-                        text-align: center;
-                        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-                    }
-                    .success-icon {
-                        font-size: 4rem;
-                        margin-bottom: 1rem;
-                    }
-                    h1 { color: #45a7b1; margin-bottom: 1rem; }
-                    p { color: #64748b; margin-bottom: 2rem; }
-                    a { 
-                        display: inline-block;
-                        background: #45a7b1; 
-                        color: white; 
-                        padding: 1rem 2rem; 
-                        text-decoration: none;
-                        border-radius: 5px;
-                        font-weight: bold;
-                    }
-                    a:hover { background: #184354; }
-                </style>
-            </head>
-            <body>
-                <div class="success-box">
-                    <div class="success-icon">✅</div>
-                    <h1>Autenticação Bem-sucedida!</h1>
-                    <p>O AtenMed está agora conectado ao Google Calendar.<br>
-                    Você pode fechar esta janela e voltar ao sistema.</p>
-                    <a href="/agendamento">Voltar ao Sistema</a>
-                </div>
-            </body>
-            </html>
-        `);
-        
-    } catch (error) {
-        logger.error('Erro no callback do Google:', error);
-        res.status(500).send(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Erro de Autenticação</title>
-                <style>
-                    body { 
-                        font-family: Arial, sans-serif; 
-                        display: flex; 
-                        justify-content: center; 
-                        align-items: center; 
-                        height: 100vh; 
-                        margin: 0;
-                        background: #fee2e2;
-                    }
-                    .error-box {
-                        background: white;
-                        padding: 3rem;
-                        border-radius: 10px;
-                        text-align: center;
-                        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-                    }
-                    h1 { color: #dc2626; margin-bottom: 1rem; }
-                    p { color: #64748b; }
-                </style>
-            </head>
-            <body>
-                <div class="error-box">
-                    <h1>❌ Erro na Autenticação</h1>
-                    <p>Ocorreu um erro ao conectar com o Google Calendar.<br>
-                    Por favor, tente novamente.</p>
-                </div>
-            </body>
-            </html>
-        `);
-    }
-});
-
-app.get('/api/auth/google/status', (req, res) => {
-    res.json({
-        success: true,
-        authenticated: googleCalendarService.isAuthenticated()
-    });
-});
-
-// Listar calendários disponíveis
-app.get('/api/google/calendars', async (req, res) => {
-    try {
-        if (!googleCalendarService.isAuthenticated()) {
-            return res.status(401).json({
-                success: false,
-                error: 'Google Calendar não autenticado',
-                needsAuth: true,
-                authUrl: '/api/auth/google'
-            });
-        }
-
-        const calendars = await googleCalendarService.listCalendars();
-        
-        res.json({
-            success: true,
-            data: calendars,
-            total: calendars.length
-        });
-
-    } catch (error) {
-        logger.error('Erro ao listar calendários:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Erro ao listar calendários do Google'
-        });
-    }
-});
+// Rotas do Google Calendar
+app.use('/api', googleCalendarRoutes);
 
 // Rotas específicas para aplicações
 app.get('/whatsapp', (req, res) => {
@@ -444,6 +289,49 @@ app.get(['/portal', '/minha-clinica'], (req, res) => {
     res.sendFile(path.join(__dirname, 'applications/clinic-portal/index.html'));
 });
 
+// Landing de aplicações internas
+app.get('/apps', (req, res) => {
+    res.sendFile(path.join(__dirname, 'applications/index.html'));
+});
+
+// Confirmação/cancelamento públicos por link
+app.get('/confirmar/:id', async (req, res) => {
+    try {
+        const Appointment = require('./models/Appointment');
+        const appt = await Appointment.findById(req.params.id);
+        if (!appt) return res.status(404).send('Agendamento não encontrado');
+        // Se houver token salvo, exigir match quando query.token presente
+        const token = req.query.token;
+        const hasToken = appt.confirmations?.patient?.confirmationToken;
+        if (hasToken && token && token !== hasToken) {
+            return res.status(403).send('Token inválido');
+        }
+        await appt.confirm('link');
+        res.send('<html><body style="font-family:Arial; text-align:center; padding:40px;">✅ Presença confirmada com sucesso.</body></html>');
+    } catch (e) {
+        logger.error('Erro ao confirmar por link:', e);
+        res.status(500).send('Erro ao confirmar');
+    }
+});
+
+app.get('/cancelar/:id', async (req, res) => {
+    try {
+        const Appointment = require('./models/Appointment');
+        const appt = await Appointment.findById(req.params.id);
+        if (!appt) return res.status(404).send('Agendamento não encontrado');
+        const token = req.query.token;
+        const hasToken = appt.confirmations?.patient?.confirmationToken;
+        if (hasToken && token && token !== hasToken) {
+            return res.status(403).send('Token inválido');
+        }
+        await appt.cancel('patient', 'Cancelado via link');
+        res.send('<html><body style="font-family:Arial; text-align:center; padding:40px;">❌ Consulta cancelada com sucesso.</body></html>');
+    } catch (e) {
+        logger.error('Erro ao cancelar por link:', e);
+        res.status(500).send('Erro ao cancelar');
+    }
+});
+
 // Rotas para páginas do site principal (com e sem .html)
 app.get(['/sobre', '/sobre.html'], (req, res) => {
     res.sendFile(path.join(__dirname, 'site/sobre.html'));
@@ -463,6 +351,19 @@ app.get(['/login', '/login.html'], (req, res) => {
 
 app.get(['/index', '/index.html'], (req, res) => {
     res.sendFile(path.join(__dirname, 'site/index.html'));
+});
+
+// Páginas legais
+app.get(['/termos-de-uso', '/termos', '/termos.html'], (req, res) => {
+    res.sendFile(path.join(__dirname, 'site/termos-de-uso.html'));
+});
+
+app.get(['/politica-de-privacidade', '/privacidade', '/politica-de-privacidade.html'], (req, res) => {
+    res.sendFile(path.join(__dirname, 'site/politica-de-privacidade.html'));
+});
+
+app.get(['/politica-de-cookies', '/cookies', '/politica-de-cookies.html'], (req, res) => {
+    res.sendFile(path.join(__dirname, 'site/politica-de-cookies.html'));
 });
 
 // Página pública de clínica
@@ -497,7 +398,9 @@ app.use(errorHandler);
 
 // Iniciar servidor
 const server = app.listen(PORT, () => {
-    const BASE_URL = process.env.APP_URL || `http://localhost:${PORT}`;
+    const BASE_URL = process.env.APP_URL || (process.env.NODE_ENV === 'production' 
+        ? 'https://atenmed.com.br' 
+        : `http://localhost:${PORT}`);
     logger.info(`🚀 Servidor AtenMed rodando na porta ${PORT}`);
     logger.info(`📊 Ambiente: ${process.env.NODE_ENV}`);
     logger.info(`🌐 Health check: ${BASE_URL}/health`);

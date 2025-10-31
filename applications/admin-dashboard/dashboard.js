@@ -711,6 +711,9 @@ document.addEventListener('DOMContentLoaded', function() {
     loadLeads();
     loadContacts();
     loadClients();
+    
+    // Event listeners para clínicas
+    setupClinicsListeners();
 });
 
 // === MODAL FUNCTIONS ===

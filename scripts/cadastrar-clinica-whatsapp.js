@@ -106,17 +106,13 @@ async function cadastrarClinica() {
             process.exit(0);
         }
 
-        // Criar clínica
+        // Criar clínica usando serviço centralizado
         console.log('\n💾 Salvando clínica...');
 
-        const clinic = new Clinic({
+        const clinicService = require('../services/clinicService');
+        
+        const clinicData = {
             name: name,
-            slug: name
-                .toLowerCase()
-                .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '')
-                .replace(/[^\w\s-]/g, '')
-                .replace(/\s+/g, '-'),
             contact: {
                 phone: phone,
                 email: email,
@@ -133,25 +129,26 @@ async function cadastrarClinica() {
             },
             workingHours: {
                 start: parseInt(startHour),
-                end: parseInt(endHour)
+                end: parseInt(endHour),
+                formatted: `Seg-Sex: ${startHour}h às ${endHour}h`
             },
             features: {
                 onlineBooking: true,
                 whatsappBot: true,
                 telemedicine: false,
                 electronicRecords: false
-            },
-            active: true
-        });
-
-        await clinic.save();
+            }
+        };
+        
+        const { clinic, publicUrl, fullPublicUrl } = await clinicService.createClinic(clinicData);
 
         console.log('\n✅ CLÍNICA CADASTRADA COM SUCESSO!\n');
         console.log(`ID: ${clinic._id}`);
         console.log(`Nome: ${clinic.name}`);
         console.log(`WhatsApp: ${clinic.contact.whatsapp}`);
         console.log(`Slug: ${clinic.slug}`);
-        console.log(`URL Pública: /clinica/${clinic.slug}\n`);
+        console.log(`URL Pública: ${publicUrl}`);
+        console.log(`URL Completa: ${fullPublicUrl}\n`);
 
         console.log('🎉 Próximos passos:');
         console.log('1. Cadastre médicos vinculados a esta clínica');

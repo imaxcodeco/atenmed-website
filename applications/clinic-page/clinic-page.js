@@ -4,8 +4,10 @@
  */
 
 // ===== CONFIGURAÇÃO =====
-const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000/api' 
+const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:3000/api'
+    : window.location.hostname === 'atenmed.com.br' || window.location.hostname === 'www.atenmed.com.br'
+    ? 'https://atenmed.com.br/api' 
     : '/api';
 
 // ===== ESTADO DA APLICAÇÃO =====

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { EMAIL_REGEX, EMAIL_ERROR_MESSAGE, TIME_REGEX, TIME_ERROR_MESSAGE } = require('../utils/validators');
 
 const appointmentSchema = new mongoose.Schema({
     // Dados do paciente
@@ -13,7 +14,7 @@ const appointmentSchema = new mongoose.Schema({
             type: String,
             lowercase: true,
             trim: true,
-            match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Email inválido']
+            match: [EMAIL_REGEX, EMAIL_ERROR_MESSAGE]
         },
         phone: {
             type: String,
@@ -64,7 +65,7 @@ const appointmentSchema = new mongoose.Schema({
     scheduledTime: {
         type: String,
         required: [true, 'Horário é obrigatório'],
-        match: [/^([01]\d|2[0-3]):([0-5]\d)$/, 'Formato de horário inválido (HH:MM)']
+        match: [TIME_REGEX, TIME_ERROR_MESSAGE]
     },
     duration: {
         type: Number,

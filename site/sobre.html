@@ -51,6 +51,18 @@
                             <a href="index.html#contato" class="nav-link">Contato</a>
                         </li>
                         <li class="nav-item">
+                            <a href="/dashboard" class="nav-link">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/agendamento" class="nav-link">Agendamento</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/analytics" class="nav-link">Analytics</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/apps/whatsapp" class="nav-link">WhatsApp</a>
+                        </li>
+                        <li class="nav-item">
                             <a href="login.html" class="nav-link nav-login">Login</a>
                         </li>
                     </ul>
@@ -256,7 +268,7 @@
                 <div class="footer-contact">
                     <h4 class="footer-title">Contato</h4>
                     <p class="footer-text">📧 contato@atenmed.com.br</p>
-                    <p class="footer-text">📱 (11) 99999-9999</p>
+                    <p class="footer-text">📱 (22) 99284-2996</p>
                     <p class="footer-text">📍 São Paulo, SP</p>
                 </div>
                 <div class="footer-services">
@@ -269,10 +281,14 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p class="footer-copyright">&copy; 2024 AtenMed. Todos os direitos reservados.</p>
+                <p class="footer-copyright">&copy; <span id="copyright-year"></span> AtenMed. Todos os direitos reservados.</p>
             </div>
         </div>
     </footer>
+    <script>
+        // Atualizar ano do copyright dinamicamente
+        document.getElementById('copyright-year').textContent = new Date().getFullYear();
+    </script>
 
     <script src="assets/js/script.js"></script>
 </body>

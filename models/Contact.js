@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { EMAIL_REGEX, EMAIL_ERROR_MESSAGE } = require('../utils/validators');
 
 const contactSchema = new mongoose.Schema({
     // Informações de contato
@@ -13,7 +14,7 @@ const contactSchema = new mongoose.Schema({
         required: [true, 'Email é obrigatório'],
         lowercase: true,
         trim: true,
-        match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Email inválido']
+        match: [EMAIL_REGEX, EMAIL_ERROR_MESSAGE]
     },
     telefone: {
         type: String,
@@ -239,6 +240,9 @@ contactSchema.statics.obterEstatisticas = function() {
 };
 
 module.exports = mongoose.model('Contact', contactSchema);
+
+
+
 
 
 

@@ -25,12 +25,12 @@ const options = {
         servers: [
             {
                 url: 'https://atenmed.com.br/api',
-                description: 'Servidor de Produção'
+                description: 'Servidor de Produção (atenmed.com.br)'
             },
-            {
+            ...(process.env.NODE_ENV === 'development' ? [{
                 url: 'http://localhost:3000/api',
                 description: 'Servidor de Desenvolvimento'
-            }
+            }] : [])
         ],
         components: {
             securitySchemes: {

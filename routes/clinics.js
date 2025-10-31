@@ -12,6 +12,7 @@ const Appointment = require('../models/Appointment');
 const { authenticateToken, authorize } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const metaWhatsappService = require('../services/metaWhatsappService');
+const clinicService = require('../services/clinicService');
 
 // ===== ROTAS PÚBLICAS =====
 
@@ -167,25 +168,27 @@ router.post('/', authenticateToken, authorize('admin'), async (req, res) => {
     try {
         const clinicData = req.body;
         
-        // Gerar slug se não fornecido
-        if (!clinicData.slug) {
-            clinicData.slug = clinicData.name
-                .toLowerCase()
-                .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '')
-                .replace(/[^\w\s-]/g, '')
-                .replace(/\s+/g, '-');
+        // Validar dados
+        const validation = clinicService.validateClinicData(clinicData);
+        if (!validation.valid) {
+            return res.status(400).json({
+                success: false,
+                error: 'Dados inválidos',
+                errors: validation.errors
+            });
         }
         
-        const clinic = new Clinic(clinicData);
-        await clinic.save();
-        
-        logger.info(`Clínica criada: ${clinic.name} (${clinic._id})`);
+        // Criar clínica usando serviço centralizado
+        const { clinic, publicUrl, fullPublicUrl } = await clinicService.createClinic(clinicData);
         
         res.status(201).json({
             success: true,
             message: 'Clínica criada com sucesso',
-            data: clinic
+            data: {
+                ...clinic.toObject(),
+                publicUrl,
+                fullPublicUrl
+            }
         });
         
     } catch (error) {

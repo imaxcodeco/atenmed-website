@@ -129,10 +129,12 @@ async function ativarCliente() {
         const plans = { '1': 'free', '2': 'basic', '3': 'pro', '4': 'enterprise' };
         const plan = plans[planChoice] || 'basic';
 
-        // Criar clínica
+        // Criar clínica usando serviço centralizado
         log('\n⏳ Criando clínica no sistema...', 'yellow');
         
-        const clinic = new Clinic({
+        const clinicService = require('../services/clinicService');
+        
+        const clinicData = {
             name: clinicName,
             slug: slug,
             contact: {
@@ -148,35 +150,20 @@ async function ativarCliente() {
                 state: state,
                 zipCode: zipCode
             },
-            workingHours: {
-                start: 8,
-                end: 18,
-                formatted: 'Seg-Sex: 8h às 18h'
-            },
             subscription: {
                 plan: plan,
                 status: 'active',
                 startDate: new Date(),
                 autoRenew: true
-            },
-            branding: {
-                primaryColor: '#45a7b1',
-                secondaryColor: '#184354',
-                accentColor: '#6dd5ed'
-            },
-            features: {
-                onlineBooking: true,
-                whatsappBot: plan !== 'free',
-                telemedicine: plan === 'pro' || plan === 'enterprise',
-                electronicRecords: false
-            },
-            active: true
-        });
-
-        await clinic.save();
+            }
+        };
+        
+        const { clinic, fullPublicUrl } = await clinicService.createClinic(clinicData);
         log('✅ Clínica criada com sucesso!', 'green');
         log(`   ID: ${clinic._id}`, 'yellow');
-        log(`   URL: https://atenmed.com.br/clinica/${clinic.slug}`, 'yellow');
+        log(`   Slug: ${clinic.slug}`, 'yellow');
+        log(`   🌐 Página pública: ${fullPublicUrl}`, 'green');
+        log(`   💡 A página foi criada automaticamente e já está disponível!`, 'cyan');
 
         // ==== CRIAR USUÁRIO OWNER ====
         log('\n📋 PASSO 3: Criar Usuário Owner', 'blue');

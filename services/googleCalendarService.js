@@ -55,7 +55,9 @@ class GoogleCalendarService {
                 return false;
             }
 
-            const appBaseUrl = process.env.APP_URL || 'http://localhost:3000';
+            const appBaseUrl = process.env.APP_URL || (process.env.NODE_ENV === 'production' 
+                ? 'https://atenmed.com.br' 
+                : 'http://localhost:3000');
             this.oauth2Client = new google.auth.OAuth2(
                 process.env.GOOGLE_CLIENT_ID,
                 process.env.GOOGLE_CLIENT_SECRET,

@@ -10,18 +10,7 @@ const { authenticateToken, authorize } = require('../middleware/auth');
 const { checkSubscriptionStatus, checkPlanLimits } = require('../middleware/subscriptionStatus');
 const logger = require('../utils/logger');
 
-// Middleware para capturar raw body (necessário para signature verification)
-const captureRawBody = (req, res, next) => {
-    let data = '';
-    req.setEncoding('utf8');
-    req.on('data', chunk => {
-        data += chunk;
-    });
-    req.on('end', () => {
-        req.rawBody = data;
-        next();
-    });
-};
+// Observação: o raw body é capturado via express.json({ verify }) abaixo
 
 // ===== WEBHOOK VERIFICATION =====
 
@@ -384,19 +373,7 @@ router.get('/config', authenticateToken, authorize('admin'), (req, res) => {
         
         const configured = !!(phoneId && token && verifyToken);
         
-        res.json({
-            success: true,
-            configured,
-            phoneId: phoneId ? `${phoneId.substring(0, 8)}***` : null,
-            apiUrl: apiUrl,
-            hasToken: !!token,
-            hasVerifyToken: !!verifyToken,
-            hasAppSecret: !!appSecret,
-            appSecretRequired: process.env.NODE_ENV === 'production',
-            recommendations: []
-        });
-
-        // Adicionar recomendações
+        // Recomendações de configuração
         const recommendations = [];
         if (!appSecret) {
             recommendations.push('Configure WHATSAPP_APP_SECRET para validação de signature (segurança)');
@@ -413,7 +390,8 @@ router.get('/config', authenticateToken, authorize('admin'), (req, res) => {
             hasToken: !!token,
             hasVerifyToken: !!verifyToken,
             hasAppSecret: !!appSecret,
-            recommendations: recommendations.length > 0 ? recommendations : null
+            appSecretRequired: process.env.NODE_ENV === 'production',
+            recommendations: recommendations.length > 0 ? recommendations : []
         });
         
     } catch (error) {
@@ -503,6 +481,1368 @@ router.post('/test-webhook', authenticateToken, authorize('admin'), async (req, 
 });
 
 module.exports = router;
+
+
+
+
+            message: 'Mensagem enviada com sucesso',
+
+            data: result,
+
+            phone: cleanPhone
+
+        });
+
+        
+
+    } catch (error) {
+
+        logger.error('Erro ao enviar mensagem de teste:', error);
+
+        res.status(500).json({
+
+            success: false,
+
+            error: error.message || 'Erro ao enviar mensagem'
+
+        });
+
+    }
+
+});
+
+
+
+// ===== ESTATÍSTICAS =====
+
+
+
+/**
+
+ * @route   GET /api/whatsapp/stats
+
+ * @desc    Retorna estatísticas de mensagens WhatsApp
+
+ * @access  Admin
+
+ */
+
+router.get('/stats', authenticateToken, authorize('admin'), async (req, res) => {
+
+    try {
+
+        const Appointment = require('../models/Appointment');
+
+
+
+        const whatsappAppointments = await Appointment.countDocuments({
+
+            source: 'whatsapp'
+
+        });
+
+
+
+        const whatsappConfirmed = await Appointment.countDocuments({
+
+            source: 'whatsapp',
+
+            'confirmations.patient.method': 'whatsapp'
+
+        });
+
+
+
+        const serviceStats = whatsappService.getStats();
+
+
+
+        res.json({
+
+            success: true,
+
+            data: {
+
+                appointments: {
+
+                    total: whatsappAppointments,
+
+                    confirmedViaWhatsApp: whatsappConfirmed,
+
+                    confirmationRate: whatsappAppointments > 0 
+
+                        ? ((whatsappConfirmed / whatsappAppointments) * 100).toFixed(1) + '%'
+
+                        : '0%'
+
+                },
+
+                service: serviceStats
+
+            }
+
+        });
+
+
+
+    } catch (error) {
+
+        logger.error('Erro ao buscar estatísticas:', error);
+
+        res.status(500).json({
+
+            success: false,
+
+            message: 'Erro ao buscar estatísticas',
+
+            error: error.message
+
+        });
+
+    }
+
+});
+
+
+
+// ===== HEALTH CHECK =====
+
+
+
+/**
+
+ * @route   GET /api/whatsapp/health
+
+ * @desc    Verificar status da integração WhatsApp
+
+ * @access  Public
+
+ */
+
+router.get('/health', (req, res) => {
+
+    try {
+
+        const health = whatsappService.healthCheck();
+
+        
+
+        res.status(health.healthy ? 200 : 503).json({
+
+            success: health.healthy,
+
+            status: health.healthy ? 'healthy' : 'unhealthy',
+
+            ...health
+
+        });
+
+    } catch (error) {
+
+        logger.error('Erro ao verificar health:', error);
+
+        res.status(500).json({
+
+            success: false,
+
+            error: 'Erro ao verificar status'
+
+        });
+
+    }
+
+});
+
+
+
+// ===== STATUS DA CONEXÃO =====
+
+
+
+/**
+
+ * @route   GET /api/whatsapp/status
+
+ * @desc    Verificar status da conexão WhatsApp
+
+ * @access  Private (Admin only)
+
+ */
+
+router.get('/status', authenticateToken, authorize('admin'), (req, res) => {
+
+    try {
+
+        const configured = !!(process.env.WHATSAPP_PHONE_ID && process.env.WHATSAPP_TOKEN);
+
+        const stats = whatsappService.getStats();
+
+        
+
+        res.json({
+
+            success: true,
+
+            configured,
+
+            message: configured ? 
+
+                'WhatsApp configurado e pronto' : 
+
+                'WhatsApp não configurado. Adicione WHATSAPP_PHONE_ID e WHATSAPP_TOKEN',
+
+            stats
+
+        });
+
+    } catch (error) {
+
+        logger.error('Erro ao verificar status:', error);
+
+        res.status(500).json({
+
+            success: false,
+
+            error: 'Erro ao verificar status'
+
+        });
+
+    }
+
+});
+
+
+
+// ===== CONFIGURAÇÃO =====
+
+
+
+/**
+
+ * @route   GET /api/whatsapp/config
+
+ * @desc    Verificar configuração atual
+
+ * @access  Private (Admin only)
+
+ */
+
+router.get('/config', authenticateToken, authorize('admin'), (req, res) => {
+
+    try {
+
+        const phoneId = process.env.WHATSAPP_PHONE_ID;
+
+        const token = process.env.WHATSAPP_TOKEN;
+
+        const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN;
+
+        const appSecret = process.env.WHATSAPP_APP_SECRET;
+
+        const apiUrl = process.env.WHATSAPP_API_URL || 'https://graph.facebook.com/v18.0';
+
+        
+
+        const configured = !!(phoneId && token && verifyToken);
+
+        
+
+        res.json({
+
+            success: true,
+
+            configured,
+
+            phoneId: phoneId ? `${phoneId.substring(0, 8)}***` : null,
+
+            apiUrl: apiUrl,
+
+            hasToken: !!token,
+
+            hasVerifyToken: !!verifyToken,
+
+            hasAppSecret: !!appSecret,
+
+            appSecretRequired: process.env.NODE_ENV === 'production',
+
+            recommendations: []
+
+        });
+
+
+
+        // Adicionar recomendações
+
+        const recommendations = [];
+
+        if (!appSecret) {
+
+            recommendations.push('Configure WHATSAPP_APP_SECRET para validação de signature (segurança)');
+
+        }
+
+        if (!process.env.REDIS_URL && !process.env.REDIS_HOST) {
+
+            recommendations.push('Configure Redis para habilitar fila de mensagens (melhor performance)');
+
+        }
+
+
+
+        res.json({
+
+            success: true,
+
+            configured,
+
+            phoneId: phoneId ? `${phoneId.substring(0, 8)}***` : null,
+
+            apiUrl: apiUrl,
+
+            hasToken: !!token,
+
+            hasVerifyToken: !!verifyToken,
+
+            hasAppSecret: !!appSecret,
+
+            recommendations: recommendations.length > 0 ? recommendations : null
+
+        });
+
+        
+
+    } catch (error) {
+
+        logger.error('Erro ao verificar configuração:', error);
+
+        res.status(500).json({
+
+            success: false,
+
+            error: 'Erro ao verificar configuração'
+
+        });
+
+    }
+
+});
+
+// ===== WEBHOOK TEST ENDPOINT =====
+
+
+
+/**
+
+ * @route   POST /api/whatsapp/test-webhook
+
+ * @desc    Endpoint para testar processamento de webhook localmente
+
+ * @access  Private (Admin only) - Apenas para desenvolvimento/testes
+
+ */
+
+router.post('/test-webhook', authenticateToken, authorize('admin'), async (req, res) => {
+
+    try {
+
+        if (process.env.NODE_ENV === 'production') {
+
+            return res.status(403).json({
+
+                success: false,
+
+                error: 'Endpoint de teste não disponível em produção'
+
+            });
+
+        }
+
+
+
+        const { from, message } = req.body;
+
+
+
+        if (!from || !message) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                error: 'Parâmetros "from" e "message" são obrigatórios'
+
+            });
+
+        }
+
+
+
+        const mockMessage = {
+
+            from: from,
+
+            type: 'text',
+
+            text: {
+
+                body: message
+
+            },
+
+            timestamp: Date.now()
+
+        };
+
+
+
+        await whatsappService.handleIncomingMessage(mockMessage);
+
+
+
+        res.json({
+
+            success: true,
+
+            message: 'Mensagem de teste processada',
+
+            data: mockMessage
+
+        });
+
+
+
+    } catch (error) {
+
+        logger.error('Erro ao processar teste de webhook:', error);
+
+        res.status(500).json({
+
+            success: false,
+
+            error: error.message
+
+        });
+
+    }
+
+});
+
+
+
+module.exports = router;
+
+
+
+
+
+
+
+
+
+            message: 'Mensagem enviada com sucesso',
+
+            data: result,
+
+            phone: cleanPhone
+
+        });
+
+        
+
+    } catch (error) {
+
+        logger.error('Erro ao enviar mensagem de teste:', error);
+
+        res.status(500).json({
+
+            success: false,
+
+            error: error.message || 'Erro ao enviar mensagem'
+
+        });
+
+    }
+
+});
+
+
+
+// ===== ESTATÍSTICAS =====
+
+
+
+/**
+
+ * @route   GET /api/whatsapp/stats
+
+ * @desc    Retorna estatísticas de mensagens WhatsApp
+
+ * @access  Admin
+
+ */
+
+router.get('/stats', authenticateToken, authorize('admin'), async (req, res) => {
+
+    try {
+
+        const Appointment = require('../models/Appointment');
+
+
+
+        const whatsappAppointments = await Appointment.countDocuments({
+
+            source: 'whatsapp'
+
+        });
+
+
+
+        const whatsappConfirmed = await Appointment.countDocuments({
+
+            source: 'whatsapp',
+
+            'confirmations.patient.method': 'whatsapp'
+
+        });
+
+
+
+        const serviceStats = whatsappService.getStats();
+
+
+
+        res.json({
+
+            success: true,
+
+            data: {
+
+                appointments: {
+
+                    total: whatsappAppointments,
+
+                    confirmedViaWhatsApp: whatsappConfirmed,
+
+                    confirmationRate: whatsappAppointments > 0 
+
+                        ? ((whatsappConfirmed / whatsappAppointments) * 100).toFixed(1) + '%'
+
+                        : '0%'
+
+                },
+
+                service: serviceStats
+
+            }
+
+        });
+
+
+
+    } catch (error) {
+
+        logger.error('Erro ao buscar estatísticas:', error);
+
+        res.status(500).json({
+
+            success: false,
+
+            message: 'Erro ao buscar estatísticas',
+
+            error: error.message
+
+        });
+
+    }
+
+});
+
+
+
+// ===== HEALTH CHECK =====
+
+
+
+/**
+
+ * @route   GET /api/whatsapp/health
+
+ * @desc    Verificar status da integração WhatsApp
+
+ * @access  Public
+
+ */
+
+router.get('/health', (req, res) => {
+
+    try {
+
+        const health = whatsappService.healthCheck();
+
+        
+
+        res.status(health.healthy ? 200 : 503).json({
+
+            success: health.healthy,
+
+            status: health.healthy ? 'healthy' : 'unhealthy',
+
+            ...health
+
+        });
+
+    } catch (error) {
+
+        logger.error('Erro ao verificar health:', error);
+
+        res.status(500).json({
+
+            success: false,
+
+            error: 'Erro ao verificar status'
+
+        });
+
+    }
+
+});
+
+
+
+// ===== STATUS DA CONEXÃO =====
+
+
+
+/**
+
+ * @route   GET /api/whatsapp/status
+
+ * @desc    Verificar status da conexão WhatsApp
+
+ * @access  Private (Admin only)
+
+ */
+
+router.get('/status', authenticateToken, authorize('admin'), (req, res) => {
+
+    try {
+
+        const configured = !!(process.env.WHATSAPP_PHONE_ID && process.env.WHATSAPP_TOKEN);
+
+        const stats = whatsappService.getStats();
+
+        
+
+        res.json({
+
+            success: true,
+
+            configured,
+
+            message: configured ? 
+
+                'WhatsApp configurado e pronto' : 
+
+                'WhatsApp não configurado. Adicione WHATSAPP_PHONE_ID e WHATSAPP_TOKEN',
+
+            stats
+
+        });
+
+    } catch (error) {
+
+        logger.error('Erro ao verificar status:', error);
+
+        res.status(500).json({
+
+            success: false,
+
+            error: 'Erro ao verificar status'
+
+        });
+
+    }
+
+});
+
+
+
+// ===== CONFIGURAÇÃO =====
+
+
+
+/**
+
+ * @route   GET /api/whatsapp/config
+
+ * @desc    Verificar configuração atual
+
+ * @access  Private (Admin only)
+
+ */
+
+router.get('/config', authenticateToken, authorize('admin'), (req, res) => {
+
+    try {
+
+        const phoneId = process.env.WHATSAPP_PHONE_ID;
+
+        const token = process.env.WHATSAPP_TOKEN;
+
+        const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN;
+
+        const appSecret = process.env.WHATSAPP_APP_SECRET;
+
+        const apiUrl = process.env.WHATSAPP_API_URL || 'https://graph.facebook.com/v18.0';
+
+        
+
+        const configured = !!(phoneId && token && verifyToken);
+
+        
+
+        res.json({
+
+            success: true,
+
+            configured,
+
+            phoneId: phoneId ? `${phoneId.substring(0, 8)}***` : null,
+
+            apiUrl: apiUrl,
+
+            hasToken: !!token,
+
+            hasVerifyToken: !!verifyToken,
+
+            hasAppSecret: !!appSecret,
+
+            appSecretRequired: process.env.NODE_ENV === 'production',
+
+            recommendations: []
+
+        });
+
+
+
+        // Adicionar recomendações
+
+        const recommendations = [];
+
+        if (!appSecret) {
+
+            recommendations.push('Configure WHATSAPP_APP_SECRET para validação de signature (segurança)');
+
+        }
+
+        if (!process.env.REDIS_URL && !process.env.REDIS_HOST) {
+
+            recommendations.push('Configure Redis para habilitar fila de mensagens (melhor performance)');
+
+        }
+
+
+
+        res.json({
+
+            success: true,
+
+            configured,
+
+            phoneId: phoneId ? `${phoneId.substring(0, 8)}***` : null,
+
+            apiUrl: apiUrl,
+
+            hasToken: !!token,
+
+            hasVerifyToken: !!verifyToken,
+
+            hasAppSecret: !!appSecret,
+
+            recommendations: recommendations.length > 0 ? recommendations : null
+
+        });
+
+        
+
+    } catch (error) {
+
+        logger.error('Erro ao verificar configuração:', error);
+
+        res.status(500).json({
+
+            success: false,
+
+            error: 'Erro ao verificar configuração'
+
+        });
+
+    }
+
+});
+
+// ===== WEBHOOK TEST ENDPOINT =====
+
+
+
+/**
+
+ * @route   POST /api/whatsapp/test-webhook
+
+ * @desc    Endpoint para testar processamento de webhook localmente
+
+ * @access  Private (Admin only) - Apenas para desenvolvimento/testes
+
+ */
+
+router.post('/test-webhook', authenticateToken, authorize('admin'), async (req, res) => {
+
+    try {
+
+        if (process.env.NODE_ENV === 'production') {
+
+            return res.status(403).json({
+
+                success: false,
+
+                error: 'Endpoint de teste não disponível em produção'
+
+            });
+
+        }
+
+
+
+        const { from, message } = req.body;
+
+
+
+        if (!from || !message) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                error: 'Parâmetros "from" e "message" são obrigatórios'
+
+            });
+
+        }
+
+
+
+        const mockMessage = {
+
+            from: from,
+
+            type: 'text',
+
+            text: {
+
+                body: message
+
+            },
+
+            timestamp: Date.now()
+
+        };
+
+
+
+        await whatsappService.handleIncomingMessage(mockMessage);
+
+
+
+        res.json({
+
+            success: true,
+
+            message: 'Mensagem de teste processada',
+
+            data: mockMessage
+
+        });
+
+
+
+    } catch (error) {
+
+        logger.error('Erro ao processar teste de webhook:', error);
+
+        res.status(500).json({
+
+            success: false,
+
+            error: error.message
+
+        });
+
+    }
+
+});
+
+
+
+module.exports = router;
+
+
+
+
+
+
+
+
+
+            message: 'Mensagem enviada com sucesso',
+
+            data: result,
+
+            phone: cleanPhone
+
+        });
+
+        
+
+    } catch (error) {
+
+        logger.error('Erro ao enviar mensagem de teste:', error);
+
+        res.status(500).json({
+
+            success: false,
+
+            error: error.message || 'Erro ao enviar mensagem'
+
+        });
+
+    }
+
+});
+
+
+
+// ===== ESTATÍSTICAS =====
+
+
+
+/**
+
+ * @route   GET /api/whatsapp/stats
+
+ * @desc    Retorna estatísticas de mensagens WhatsApp
+
+ * @access  Admin
+
+ */
+
+router.get('/stats', authenticateToken, authorize('admin'), async (req, res) => {
+
+    try {
+
+        const Appointment = require('../models/Appointment');
+
+
+
+        const whatsappAppointments = await Appointment.countDocuments({
+
+            source: 'whatsapp'
+
+        });
+
+
+
+        const whatsappConfirmed = await Appointment.countDocuments({
+
+            source: 'whatsapp',
+
+            'confirmations.patient.method': 'whatsapp'
+
+        });
+
+
+
+        const serviceStats = whatsappService.getStats();
+
+
+
+        res.json({
+
+            success: true,
+
+            data: {
+
+                appointments: {
+
+                    total: whatsappAppointments,
+
+                    confirmedViaWhatsApp: whatsappConfirmed,
+
+                    confirmationRate: whatsappAppointments > 0 
+
+                        ? ((whatsappConfirmed / whatsappAppointments) * 100).toFixed(1) + '%'
+
+                        : '0%'
+
+                },
+
+                service: serviceStats
+
+            }
+
+        });
+
+
+
+    } catch (error) {
+
+        logger.error('Erro ao buscar estatísticas:', error);
+
+        res.status(500).json({
+
+            success: false,
+
+            message: 'Erro ao buscar estatísticas',
+
+            error: error.message
+
+        });
+
+    }
+
+});
+
+
+
+// ===== HEALTH CHECK =====
+
+
+
+/**
+
+ * @route   GET /api/whatsapp/health
+
+ * @desc    Verificar status da integração WhatsApp
+
+ * @access  Public
+
+ */
+
+router.get('/health', (req, res) => {
+
+    try {
+
+        const health = whatsappService.healthCheck();
+
+        
+
+        res.status(health.healthy ? 200 : 503).json({
+
+            success: health.healthy,
+
+            status: health.healthy ? 'healthy' : 'unhealthy',
+
+            ...health
+
+        });
+
+    } catch (error) {
+
+        logger.error('Erro ao verificar health:', error);
+
+        res.status(500).json({
+
+            success: false,
+
+            error: 'Erro ao verificar status'
+
+        });
+
+    }
+
+});
+
+
+
+// ===== STATUS DA CONEXÃO =====
+
+
+
+/**
+
+ * @route   GET /api/whatsapp/status
+
+ * @desc    Verificar status da conexão WhatsApp
+
+ * @access  Private (Admin only)
+
+ */
+
+router.get('/status', authenticateToken, authorize('admin'), (req, res) => {
+
+    try {
+
+        const configured = !!(process.env.WHATSAPP_PHONE_ID && process.env.WHATSAPP_TOKEN);
+
+        const stats = whatsappService.getStats();
+
+        
+
+        res.json({
+
+            success: true,
+
+            configured,
+
+            message: configured ? 
+
+                'WhatsApp configurado e pronto' : 
+
+                'WhatsApp não configurado. Adicione WHATSAPP_PHONE_ID e WHATSAPP_TOKEN',
+
+            stats
+
+        });
+
+    } catch (error) {
+
+        logger.error('Erro ao verificar status:', error);
+
+        res.status(500).json({
+
+            success: false,
+
+            error: 'Erro ao verificar status'
+
+        });
+
+    }
+
+});
+
+
+
+// ===== CONFIGURAÇÃO =====
+
+
+
+/**
+
+ * @route   GET /api/whatsapp/config
+
+ * @desc    Verificar configuração atual
+
+ * @access  Private (Admin only)
+
+ */
+
+router.get('/config', authenticateToken, authorize('admin'), (req, res) => {
+
+    try {
+
+        const phoneId = process.env.WHATSAPP_PHONE_ID;
+
+        const token = process.env.WHATSAPP_TOKEN;
+
+        const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN;
+
+        const appSecret = process.env.WHATSAPP_APP_SECRET;
+
+        const apiUrl = process.env.WHATSAPP_API_URL || 'https://graph.facebook.com/v18.0';
+
+        
+
+        const configured = !!(phoneId && token && verifyToken);
+
+        
+
+        res.json({
+
+            success: true,
+
+            configured,
+
+            phoneId: phoneId ? `${phoneId.substring(0, 8)}***` : null,
+
+            apiUrl: apiUrl,
+
+            hasToken: !!token,
+
+            hasVerifyToken: !!verifyToken,
+
+            hasAppSecret: !!appSecret,
+
+            appSecretRequired: process.env.NODE_ENV === 'production',
+
+            recommendations: []
+
+        });
+
+
+
+        // Adicionar recomendações
+
+        const recommendations = [];
+
+        if (!appSecret) {
+
+            recommendations.push('Configure WHATSAPP_APP_SECRET para validação de signature (segurança)');
+
+        }
+
+        if (!process.env.REDIS_URL && !process.env.REDIS_HOST) {
+
+            recommendations.push('Configure Redis para habilitar fila de mensagens (melhor performance)');
+
+        }
+
+
+
+        res.json({
+
+            success: true,
+
+            configured,
+
+            phoneId: phoneId ? `${phoneId.substring(0, 8)}***` : null,
+
+            apiUrl: apiUrl,
+
+            hasToken: !!token,
+
+            hasVerifyToken: !!verifyToken,
+
+            hasAppSecret: !!appSecret,
+
+            recommendations: recommendations.length > 0 ? recommendations : null
+
+        });
+
+        
+
+    } catch (error) {
+
+        logger.error('Erro ao verificar configuração:', error);
+
+        res.status(500).json({
+
+            success: false,
+
+            error: 'Erro ao verificar configuração'
+
+        });
+
+    }
+
+});
+
+// ===== WEBHOOK TEST ENDPOINT =====
+
+
+
+/**
+
+ * @route   POST /api/whatsapp/test-webhook
+
+ * @desc    Endpoint para testar processamento de webhook localmente
+
+ * @access  Private (Admin only) - Apenas para desenvolvimento/testes
+
+ */
+
+router.post('/test-webhook', authenticateToken, authorize('admin'), async (req, res) => {
+
+    try {
+
+        if (process.env.NODE_ENV === 'production') {
+
+            return res.status(403).json({
+
+                success: false,
+
+                error: 'Endpoint de teste não disponível em produção'
+
+            });
+
+        }
+
+
+
+        const { from, message } = req.body;
+
+
+
+        if (!from || !message) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                error: 'Parâmetros "from" e "message" são obrigatórios'
+
+            });
+
+        }
+
+
+
+        const mockMessage = {
+
+            from: from,
+
+            type: 'text',
+
+            text: {
+
+                body: message
+
+            },
+
+            timestamp: Date.now()
+
+        };
+
+
+
+        await whatsappService.handleIncomingMessage(mockMessage);
+
+
+
+        res.json({
+
+            success: true,
+
+            message: 'Mensagem de teste processada',
+
+            data: mockMessage
+
+        });
+
+
+
+    } catch (error) {
+
+        logger.error('Erro ao processar teste de webhook:', error);
+
+        res.status(500).json({
+
+            success: false,
+
+            error: error.message
+
+        });
+
+    }
+
+});
+
+
+
+module.exports = router;
+
+
+
+
+
 
 
 

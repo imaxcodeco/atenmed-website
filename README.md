@@ -285,6 +285,7 @@ Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalh
 ## 📞 Contato
 
 - **Email**: contato@atenmed.com.br
+- **Telefone**: (22) 99284-2996
 - **Website**: https://atenmed.com.br
 - **GitHub**: https://github.com/seu-usuario/atenmed-website
 

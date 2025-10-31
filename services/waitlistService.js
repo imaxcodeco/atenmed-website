@@ -206,7 +206,7 @@ AtenMed - Fila de Espera
                         </div>
                         
                         <p style="text-align: center; margin: 30px 0;">
-                            <a href="${process.env.APP_URL || 'http://localhost:3000'}/agendar-vaga/${waitlistEntry._id}" 
+                            <a href="${process.env.APP_URL || 'https://atenmed.com.br'}/agendar-vaga/${waitlistEntry._id}" 
                                style="background: #10b981; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                                 ✅ Quero Esta Vaga
                             </a>

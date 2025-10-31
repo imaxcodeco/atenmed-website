@@ -37,7 +37,9 @@ async function seedDatabase() {
         // ===== CRIAR CLÍNICAS =====
         logger.info('Criando clínicas...');
         
-        const clinicCoracaoSaudavel = await Clinic.create({
+        const clinicService = require('../services/clinicService');
+        
+        const { clinic: clinicCoracaoSaudavel } = await clinicService.createClinic({
             name: 'Clínica Coração Saudável',
             description: 'Clínica especializada em cardiologia e clínica geral',
             address: {
@@ -54,9 +56,8 @@ async function seedDatabase() {
                 email: 'contato@coracaosaudavel.com.br',
                 whatsapp: '(11) 99999-9999'
             },
-            workingHours: { start: 8, end: 18 },
+            workingHours: { start: 8, end: 18, formatted: 'Seg-Sex: 8h às 18h' },
             slotDuration: 60,
-            active: true,
             settings: {
                 allowWeekends: false,
                 autoConfirmAppointments: true,
@@ -65,7 +66,7 @@ async function seedDatabase() {
             }
         });
         
-        const clinicaSorrisoPerfeito = await Clinic.create({
+        const { clinic: clinicaSorrisoPerfeito } = await clinicService.createClinic({
             name: 'Clínica Sorriso Perfeito',
             description: 'Clínica odontológica completa',
             address: {
@@ -81,9 +82,8 @@ async function seedDatabase() {
                 email: 'contato@sorrisoperfeito.com.br',
                 whatsapp: '(11) 98888-8888'
             },
-            workingHours: { start: 9, end: 19 },
-            slotDuration: 60,
-            active: true
+            workingHours: { start: 9, end: 19, formatted: 'Seg-Sex: 9h às 19h' },
+            slotDuration: 60
         });
         
         logger.success(`Clínicas criadas: ${clinicCoracaoSaudavel.name}, ${clinicaSorrisoPerfeito.name}`);

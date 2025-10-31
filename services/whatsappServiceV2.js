@@ -6,6 +6,7 @@
 const logger = require('../utils/logger');
 const crypto = require('crypto');
 const Bottleneck = require('bottleneck');
+const { v4: uuidv4 } = require('uuid');
 
 // Carregar axios e Bull de forma segura
 let axios, Queue;
@@ -839,6 +840,9 @@ async function createAppointment(phoneNumber, session) {
     try {
         const data = session.data;
         
+        // Buscar médico para obter clínica e calendarId
+        const doctor = await Doctor.findById(data.doctorId).populate('clinic');
+
         const appointment = new Appointment({
             patient: {
                 name: data.patientName,
@@ -846,10 +850,12 @@ async function createAppointment(phoneNumber, session) {
                 email: ''
             },
             doctor: data.doctorId,
-            clinic: session.clinicId || null,
-            scheduledDate: data.scheduledDate,
+            specialty: session.getData('specialtyId'),
+            clinic: session.clinicId || doctor?.clinic?._id || null,
+            scheduledDate: new Date(data.scheduledDate),
             scheduledTime: data.scheduledTime,
-            status: 'scheduled',
+            duration: 60,
+            status: 'confirmado',
             source: 'whatsapp',
             notes: session.clinicId ? 
                 `Agendamento via WhatsApp automatico (Clinica: ${session.clinicId})` :
@@ -857,11 +863,25 @@ async function createAppointment(phoneNumber, session) {
         });
 
         await appointment.save();
-        
-        // Tentar criar no Google Calendar
+
+        // Tentar criar no Google Calendar com calendarId do médico
         try {
-            if (googleCalendarService.isAuthenticated()) {
-                await googleCalendarService.createEvent(appointment);
+            if (googleCalendarService.isAuthenticated() && doctor?.googleCalendarId) {
+                const eventPayload = {
+                    date: data.scheduledDate,
+                    time: data.scheduledTime,
+                    duration: appointment.duration,
+                    patientName: data.patientName,
+                    patientEmail: '',
+                    patientPhone: phoneNumber,
+                    doctorName: data.doctorName,
+                    specialty: '',
+                    notes: appointment.notes
+                };
+                const created = await googleCalendarService.createEvent(doctor.googleCalendarId, eventPayload);
+                appointment.googleEventId = created.eventId;
+                appointment.googleCalendarId = doctor.googleCalendarId;
+                await appointment.save();
                 logger.info(`✅ Evento criado no Google Calendar para ${phoneNumber}`);
             }
         } catch (calendarError) {
@@ -877,6 +897,8 @@ async function createAppointment(phoneNumber, session) {
             `${data.scheduledTime}\n` +
             `Dr(a). ${data.doctorName}\n\n` +
             `Voce vai receber um lembrete antes da consulta!\n\n` +
+            `Para confirmar agora: ${process.env.APP_URL || 'https://atenmed.com.br'}/confirmar/${appointment._id}\n` +
+            `Para cancelar: ${process.env.APP_URL || 'https://atenmed.com.br'}/cancelar/${appointment._id}\n\n` +
             `Qualquer duvida, e so mandar mensagem!\n\n` +
             `_Digite *menu* para mais opcoes._`,
             'high'
@@ -900,7 +922,7 @@ async function viewAppointments(phoneNumber, session) {
     try {
         const appointments = await Appointment.find({
             'patient.phone': phoneNumber,
-            status: { $in: ['scheduled', 'confirmed'] }
+            status: { $in: ['pendente', 'confirmado'] }
         }).populate('doctor').sort('scheduledDate scheduledTime');
 
         if (appointments.length === 0) {
@@ -920,7 +942,7 @@ async function viewAppointments(phoneNumber, session) {
             message += `${index + 1}️⃣ *${apt.doctor?.name || 'Médico não definido'}*\n`;
             message += `   📅 ${date.toLocaleDateString('pt-BR')}\n`;
             message += `   ⏰ ${apt.scheduledTime}\n`;
-            message += `   📍 Status: ${apt.status === 'confirmed' ? 'Confirmada ✅' : 'Agendada 📅'}\n\n`;
+            message += `   📍 Status: ${apt.status === 'confirmado' ? 'Confirmada ✅' : 'Agendada 📅'}\n\n`;
         });
 
         message += `Digite *menu* para voltar às opções.`;
@@ -940,7 +962,7 @@ async function listAppointmentsToCancel(phoneNumber, session) {
     try {
         const appointments = await Appointment.find({
             'patient.phone': phoneNumber,
-            status: { $in: ['scheduled', 'confirmed'] }
+            status: { $in: ['pendente', 'confirmado'] }
         }).populate('doctor').sort('scheduledDate scheduledTime');
 
         if (appointments.length === 0) {
@@ -1004,9 +1026,9 @@ async function handleCancelAppointment(phoneNumber, messageText, session) {
             return;
         }
 
-        appointment.status = 'cancelled';
-        appointment.cancellationReason = 'Cancelado pelo paciente via WhatsApp';
-        appointment.cancelledAt = new Date();
+        appointment.status = 'cancelado';
+        appointment.cancelReason = 'Cancelado pelo paciente via WhatsApp';
+        appointment.canceledAt = new Date();
         await appointment.save();
 
         const date = new Date(appointment.scheduledDate + 'T' + appointment.scheduledTime);
@@ -1051,7 +1073,7 @@ async function requestHumanSupport(phoneNumber, session) {
         `👨‍💼 *Atendimento Humano*\n\n` +
         `Entendi! Vou transferir você para nossa equipe.\n\n` +
         `📞 Você também pode ligar para:\n` +
-        `*${process.env.SUPPORT_PHONE || '(11) 0000-0000'}*\n\n` +
+        `*${process.env.SUPPORT_PHONE || '(22) 99284-2996'}*\n\n` +
         `📧 Ou enviar email para:\n` +
         `*${process.env.SUPPORT_EMAIL || 'contato@atenmed.com.br'}*\n\n` +
         `Nosso horário de atendimento:\n` +

@@ -94,9 +94,29 @@
                     <i class="fas fa-chart-line"></i>
                     Visão Geral
                 </a>
+                <a href="#clinics" class="nav-item" data-section="clinics">
+                    <i class="fas fa-hospital"></i>
+                    Clínicas
+                </a>
+                <a href="/agendamento" class="nav-item">
+                    <i class="fas fa-calendar-check"></i>
+                    Agendamentos
+                </a>
+                <a href="/apps/whatsapp" class="nav-item">
+                    <i class="fab fa-whatsapp"></i>
+                    WhatsApp Admin
+                </a>
                 <a href="#clients" class="nav-item" data-section="clients">
                     <i class="fas fa-users"></i>
                     Clientes
+                </a>
+                <a href="#doctors" class="nav-item" data-section="doctors">
+                    <i class="fas fa-user-md"></i>
+                    Médicos
+                </a>
+                <a href="#specialties" class="nav-item" data-section="specialties">
+                    <i class="fas fa-stethoscope"></i>
+                    Especialidades
                 </a>
                 <a href="#leads" class="nav-item" data-section="leads">
                     <i class="fas fa-bullseye"></i>
@@ -198,10 +218,22 @@
                         </h2>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                        <button class="btn btn-primary" id="btnNovoCliente">
+                        <a class="btn btn-primary" id="btnNovoCliente" href="#clients" data-section="clients">
                             <i class="fas fa-user-plus"></i>
                             Novo Cliente
+                        </a>
+                        <button class="btn btn-secondary" id="btnNovaClinica" onclick="openClinicModal()">
+                            <i class="fas fa-hospital"></i>
+                            Cadastrar Clínica
                         </button>
+                        <a class="btn btn-secondary" id="btnAbrirAgendamento" href="/agendamento">
+                            <i class="fas fa-calendar-check"></i>
+                            Agenda (Google)
+                        </a>
+                        <a class="btn btn-secondary" id="btnAbrirWhatsapp" href="/apps/whatsapp">
+                            <i class="fab fa-whatsapp"></i>
+                            WhatsApp Admin
+                        </a>
                         <button class="btn btn-secondary" id="btnAtualizarDados">
                             <i class="fas fa-sync-alt"></i>
                             Atualizar Dados
@@ -422,6 +454,161 @@
                 </div>
             </section>
 
+            <!-- Doctors Section -->
+            <section id="doctors" class="content-section" style="display: none;">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-user-plus"></i>
+                            Adicionar/Editar Médico
+                        </h2>
+                    </div>
+                    <form id="doctorForm" class="form-grid">
+                        <input type="hidden" id="doctorId">
+                        <div class="form-group">
+                            <label class="form-label">Nome *</label>
+                            <input class="form-input" id="doctorName" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email *</label>
+                            <input class="form-input" id="doctorEmail" type="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Telefone</label>
+                            <input class="form-input" id="doctorPhone">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">CRM Número</label>
+                            <input class="form-input" id="doctorCrmNumber" placeholder="Número">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">CRM Estado</label>
+                            <input class="form-input" id="doctorCrmState" maxlength="2" placeholder="Ex: SP">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Clínica *</label>
+                            <select class="form-select" id="doctorClinic" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Especialidades *</label>
+                            <select class="form-select" id="doctorSpecialties" multiple required></select>
+                            <small>Segure Ctrl/Cmd para selecionar múltiplas</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Google Calendar ID *</label>
+                            <input class="form-input" id="doctorGoogleCalendarId" required placeholder="Ex: seu-calendario@gmail.com">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Duração do Slot (min)</label>
+                            <input class="form-input" id="doctorSlotDuration" type="number" min="15" max="180" value="60">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Dias de Trabalho</label>
+                            <input class="form-input" id="doctorWorkingDays" placeholder="Ex: 1,2,3,4,5 (1=Seg, 7=Dom)">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label class="form-label">Horário Início</label>
+                                <input class="form-input" id="doctorStartHour" type="number" min="0" max="23" value="9">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Horário Fim</label>
+                                <input class="form-input" id="doctorEndHour" type="number" min="0" max="23" value="18">
+                            </div>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Salvar Médico
+                            </button>
+                            <button type="button" id="doctorResetBtn" class="btn btn-secondary">
+                                <i class="fas fa-undo"></i> Limpar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="content-card" style="margin-top: 1.5rem;">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-users"></i>
+                            Médicos Cadastrados
+                        </h2>
+                        <button id="doctorReloadBtn" class="btn btn-secondary">
+                            <i class="fas fa-sync"></i> Atualizar
+                        </button>
+                    </div>
+                    <div id="doctorsList" class="table-responsive">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            Carregando médicos...
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Specialties Section -->
+            <section id="specialties" class="content-section" style="display: none;">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-plus"></i>
+                            Adicionar/Editar Especialidade
+                        </h2>
+                    </div>
+                    <form id="specialtyForm" class="form-grid">
+                        <input type="hidden" id="specialtyId">
+                        <div class="form-group">
+                            <label class="form-label">Clínica *</label>
+                            <select id="specialtyClinic" class="form-select" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nome *</label>
+                            <input id="specialtyName" class="form-input" required placeholder="Ex: Cardiologia">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Descrição</label>
+                            <input id="specialtyDescription" class="form-input" placeholder="Descrição da especialidade">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label class="form-label">Cor</label>
+                                <input id="specialtyColor" class="form-input" type="color" value="#45a7b1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Ícone</label>
+                                <input id="specialtyIcon" class="form-input" value="🏥" placeholder="🏥">
+                            </div>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Salvar Especialidade
+                            </button>
+                            <button type="button" id="specialtyResetBtn" class="btn btn-secondary">
+                                <i class="fas fa-undo"></i> Limpar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="content-card" style="margin-top: 1.5rem;">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-list"></i>
+                            Especialidades Cadastradas
+                        </h2>
+                        <button id="specialtyReloadBtn" class="btn btn-secondary">
+                            <i class="fas fa-sync"></i> Atualizar
+                        </button>
+                    </div>
+                    <div id="specialtiesList" class="table-responsive">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            Carregando especialidades...
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Settings Section -->
             <section id="settings" class="content-section" style="display: none;">
                 <div class="content-card">
@@ -488,6 +675,96 @@
         </div>
     </div>
 
+    <!-- Modal: Cadastrar/Editar Clínica -->
+    <div id="clinicModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-hospital"></i> <span id="clinicModalTitle">Nova Clínica</span></h2>
+                <button class="modal-close" id="closeClinicModal">&times;</button>
+            </div>
+            <form id="clinicForm">
+                <input type="hidden" id="clinicId">
+                
+                <div class="form-group">
+                    <label for="clinicName">Nome da Clínica *</label>
+                    <input type="text" id="clinicName" required placeholder="Ex: Clínica Saúde Total">
+                </div>
+                
+                <div class="form-group">
+                    <label for="clinicWhatsApp">Número WhatsApp *</label>
+                    <input type="text" id="clinicWhatsApp" required placeholder="Ex: (11) 98765-4321">
+                    <small>Formato aceito: (11) 98765-4321 ou 5511987654321</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="clinicPhone">Telefone Fixo</label>
+                    <input type="text" id="clinicPhone" placeholder="Ex: (11) 3333-4444">
+                </div>
+                
+                <div class="form-group">
+                    <label for="clinicEmail">Email</label>
+                    <input type="email" id="clinicEmail" placeholder="Ex: contato@clinica.com.br">
+                </div>
+                
+                <div class="form-group">
+                    <label for="clinicDescription">Descrição</label>
+                    <textarea id="clinicDescription" rows="3" placeholder="Descreva a clínica..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="clinicAddress">Endereço Completo</label>
+                    <input type="text" id="clinicAddress" placeholder="Rua, número, bairro">
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="clinicCity">Cidade</label>
+                        <input type="text" id="clinicCity" placeholder="Ex: São Paulo">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="clinicState">Estado</label>
+                        <input type="text" id="clinicState" maxlength="2" placeholder="Ex: SP">
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="clinicStartHour">Horário de Abertura</label>
+                        <input type="number" id="clinicStartHour" min="0" max="23" value="8">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="clinicEndHour">Horário de Fechamento</label>
+                        <input type="number" id="clinicEndHour" min="0" max="23" value="18">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="clinicWhatsAppBot" checked>
+                        Habilitar Bot WhatsApp
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="clinicActive" checked>
+                        Clínica Ativa
+                    </label>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancelClinicBtn">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Salvar Clínica
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal: Cadastrar Admin -->
     <div id="registerAdminModal" class="modal">
         <div class="modal-content">
@@ -539,5 +816,14 @@
     
     <!-- Dashboard Script -->
     <script src="dashboard.js?v=2024-10-24-009"></script>
+    
+    <!-- Clinics Manager Script -->
+    <script src="clinics-manager.js?v=2024-10-24-001"></script>
+    
+    <!-- Doctors Manager Script -->
+    <script src="doctors-manager.js?v=2024-10-24-001"></script>
+    
+    <!-- Specialties Manager Script -->
+    <script src="specialties-manager.js?v=2024-10-24-001"></script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { TIME_REGEX, TIME_ERROR_MESSAGE } = require('../utils/validators');
 
 const waitlistSchema = new mongoose.Schema({
     // Dados do paciente
@@ -42,7 +43,7 @@ const waitlistSchema = new mongoose.Schema({
     }],
     preferredTimes: [{
         type: String,
-        match: [/^([01]\d|2[0-3]):([0-5]\d)$/, 'Formato de horário inválido']
+        match: [TIME_REGEX, TIME_ERROR_MESSAGE]
     }],
     preferredPeriod: {
         type: String,

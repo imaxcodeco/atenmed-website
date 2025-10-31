@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { EMAIL_REGEX, EMAIL_ERROR_MESSAGE } = require('../utils/validators');
 
 const leadSchema = new mongoose.Schema({
     // Informações pessoais
@@ -13,7 +14,7 @@ const leadSchema = new mongoose.Schema({
         required: [true, 'Email é obrigatório'],
         lowercase: true,
         trim: true,
-        match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Email inválido']
+        match: [EMAIL_REGEX, EMAIL_ERROR_MESSAGE]
     },
     telefone: {
         type: String,

@@ -4,8 +4,10 @@
  */
 
 // Configuração da API
-const API_BASE_URL = window.location.hostname === 'localhost' 
+const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
     ? 'http://localhost:3000/api'
+    : window.location.hostname === 'atenmed.com.br' || window.location.hostname === 'www.atenmed.com.br'
+    ? 'https://atenmed.com.br/api'
     : '/api';
 
 let authToken = localStorage.getItem('atenmed_token');

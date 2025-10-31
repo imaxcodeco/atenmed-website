@@ -40,7 +40,7 @@ async function checkSubscriptionStatus(req, res, next) {
                 message: 'Entre em contato com o financeiro para regularizar sua situação',
                 code: 'SUBSCRIPTION_SUSPENDED',
                 contact: {
-                    whatsapp: '(11) 99999-9999',
+                    whatsapp: '(22) 99284-2996',
                     email: 'financeiro@atenmed.com.br'
                 }
             });

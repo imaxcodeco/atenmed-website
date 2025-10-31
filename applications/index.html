@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AtenMed - Aplicações</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: Inter, Arial, sans-serif; background: #f8fafc; color: #0f172a; margin: 0; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+        h1 { margin: 1rem 0 0.25rem; }
+        p { color: #64748b; margin-top: 0; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-top: 1.5rem; }
+        a.card { display: block; background: white; padding: 18px; border-radius: 12px; text-decoration: none; color: inherit; border: 1px solid #e2e8f0; }
+        a.card:hover { border-color: #45a7b1; box-shadow: 0 8px 24px rgba(69,167,177,0.15); transform: translateY(-2px); transition: all .2s; }
+        .title { font-weight: 700; margin-bottom: 4px; }
+        .desc { color: #64748b; font-size: 0.95rem; }
+        .section { margin-top: 2rem; }
+    </style>
+    </head>
+<body>
+    <div class="container">
+        <h1>Aplicações AtenMed</h1>
+        <p>Atalhos para as principais áreas do sistema.</p>
+
+        <div class="grid">
+            <a class="card" href="/dashboard">
+                <div class="title">Dashboard Admin</div>
+                <div class="desc">Visão geral, cadastros e configurações</div>
+            </a>
+            <a class="card" href="/apps/admin/clinicas.html">
+                <div class="title">Clínicas</div>
+                <div class="desc">Cadastro e gerenciamento de clínicas</div>
+            </a>
+            <a class="card" href="/agendamento">
+                <div class="title">Agendamento</div>
+                <div class="desc">Interface de agendamentos (Google)</div>
+            </a>
+            <a class="card" href="/analytics">
+                <div class="title">Analytics</div>
+                <div class="desc">Métricas e relatórios</div>
+            </a>
+            <a class="card" href="/apps/whatsapp">
+                <div class="title">WhatsApp Admin</div>
+                <div class="desc">Automação e testes de mensagens</div>
+            </a>
+            <a class="card" href="/apps/clinic-page/">
+                <div class="title">Página da Clínica</div>
+                <div class="desc">Landing pública da clínica</div>
+            </a>
+            <a class="card" href="/apps/crm/">
+                <div class="title">CRM/Pipeline</div>
+                <div class="desc">Vendas e funil</div>
+            </a>
+            <a class="card" href="/apps/portal/">
+                <div class="title">Portal da Clínica</div>
+                <div class="desc">Área pública/portal</div>
+            </a>
+            <a class="card" href="/apps/cost-monitoring/">
+                <div class="title">Cost Monitoring</div>
+                <div class="desc">Monitoramento de custos</div>
+            </a>
+        </div>
+
+        <div class="section">
+            <h2>Links Rápidos</h2>
+            <div class="grid">
+                <a class="card" href="/site/index.html"><div class="title">Site Público</div><div class="desc">Página inicial</div></a>
+                <a class="card" href="/api/docs"><div class="title">API Docs</div><div class="desc">Swagger (se habilitado)</div></a>
+                <a class="card" href="/admin"><div class="title">Filas (Bull Board)</div><div class="desc">Dashboard de filas</div></a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+
+

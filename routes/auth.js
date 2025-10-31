@@ -182,13 +182,34 @@ router.post('/login', [
         // Preparar resposta
         const publicUserData = user.obterDadosPublicos();
 
-        // Enviar resposta
+        // Determinar tipo de login e redirecionamento
+        const isGlobalAdmin = user.role === 'admin' && !user.clinic;
+        const isClinicOwner = user.clinic && (user.clinicRole === 'owner' || user.clinicRole === 'admin');
+        
+        // Definir rotas de redirecionamento baseado no tipo de usuário
+        let redirectRoute = '/portal'; // padrão: cliente
+        let userType = 'cliente';
+        
+        if (isGlobalAdmin) {
+            redirectRoute = '/crm'; // Admin global vai para CRM
+            userType = 'admin_global';
+        } else if (isClinicOwner) {
+            redirectRoute = '/portal'; // Dono de clínica vai para portal
+            userType = 'clinic_owner';
+        }
+
+        // Enviar resposta com informações de redirecionamento
         res.json({
             success: true,
             message: 'Login realizado com sucesso',
             data: {
                 token,
-                user: publicUserData
+                user: publicUserData,
+                userType: userType,
+                redirectRoute: redirectRoute,
+                isGlobalAdmin: isGlobalAdmin,
+                hasClinic: !!user.clinic,
+                clinicId: user.clinic || null
             }
         });
 

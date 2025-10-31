@@ -311,15 +311,30 @@
                         token: result.data.token,
                         user: result.data.user,
                         email: result.data.user.email,
+                        userType: result.data.userType,
+                        redirectRoute: result.data.redirectRoute,
+                        isGlobalAdmin: result.data.isGlobalAdmin,
                         loginTime: new Date().toISOString()
                     }));
                     
-                    // Mostrar sucesso
-                    showMessage('Login realizado com sucesso! Redirecionando...', 'success');
+                    // Determinar mensagem e rota baseado no tipo de usuário
+                    let redirectPath = result.data.redirectRoute || '/portal';
+                    let welcomeMessage = 'Login realizado com sucesso! Redirecionando...';
                     
-                    // Redirecionar para dashboard
+                    if (result.data.isGlobalAdmin) {
+                        welcomeMessage = 'Bem-vindo, Administrador! Redirecionando para o CRM...';
+                        redirectPath = '/crm';
+                    } else if (result.data.hasClinic) {
+                        welcomeMessage = 'Bem-vindo de volta! Redirecionando para o seu portal...';
+                        redirectPath = '/portal';
+                    }
+                    
+                    // Mostrar sucesso
+                    showMessage(welcomeMessage, 'success');
+                    
+                    // Redirecionar baseado no tipo de usuário
                     setTimeout(() => {
-                        window.location.href = '/apps/admin/dashboard.html';
+                        window.location.href = redirectPath;
                     }, 1000);
                 } else {
                     throw new Error(result.error || 'Credenciais inválidas');
@@ -354,9 +369,11 @@
                     const now = new Date();
                     const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
                     
-                    // Se login foi há menos de 24 horas, redirecionar
+                    // Se login foi há menos de 24 horas, redirecionar baseado no tipo de usuário
                     if (hoursDiff < 24) {
-                        window.location.href = '/apps/admin/dashboard.html';
+                        const redirectPath = authData.redirectRoute || 
+                                           (authData.isGlobalAdmin ? '/crm' : '/portal');
+                        window.location.href = redirectPath;
                     }
                 } catch (error) {
                     localStorage.removeItem('atenmed_auth');

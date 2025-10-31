@@ -230,7 +230,7 @@ AtenMed - Organização Inteligente para Consultórios
                     </div>
                     
                     <p style="text-align: center; margin: 30px 0;">
-                        <a href="${process.env.APP_URL || 'http://localhost:3000'}/confirmar/${appointment._id}" 
+                        <a href="${process.env.APP_URL || 'https://atenmed.com.br'}/confirmar/${appointment._id}" 
                            style="background: #45a7b1; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                             ✅ Confirmar Presença
                         </a>

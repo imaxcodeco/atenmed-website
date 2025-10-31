@@ -226,8 +226,10 @@ async function seedClinics() {
         // await Clinic.deleteMany({});
         // logger.info('🗑️  Clínicas antigas removidas');
         
-        // Inserir clínicas
+        // Inserir clínicas usando serviço centralizado
+        const clinicService = require('../services/clinicService');
         const createdClinics = [];
+        
         for (const clinicData of clinicsData) {
             // Verificar se já existe
             const existing = await Clinic.findOne({ slug: clinicData.slug });
@@ -238,9 +240,10 @@ async function seedClinics() {
                 continue;
             }
             
-            const clinic = await Clinic.create(clinicData);
+            // Usar serviço centralizado para criar
+            const { clinic, fullPublicUrl } = await clinicService.createClinic(clinicData);
             logger.info(`✅ Clínica criada: ${clinic.name} (${clinic.slug})`);
-            logger.info(`   URL: http://localhost:3000/clinica/${clinic.slug}`);
+            logger.info(`   URL: ${fullPublicUrl}`);
             createdClinics.push(clinic);
         }
         
