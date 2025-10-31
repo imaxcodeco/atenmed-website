@@ -134,10 +134,23 @@ const corsOptionsDelegate = (req, callback) => {
 
     // Em produção, permitir sem Origin para:
     // 1. Health check endpoint (para monitoramento)
-    // 2. Webhooks conhecidos (Meta/WhatsApp)
+    // 2. Páginas estáticas e recursos (GET requests)
+    // 3. Webhooks conhecidos (Meta/WhatsApp)
     if (!origin && process.env.NODE_ENV === 'production') {
         // Permitir health check sem origin
         if (req.path === '/health' || req.path === '/api/health') {
+            return callback(null, { origin: true, credentials: false, optionsSuccessStatus: 200 });
+        }
+        
+        // Permitir GET requests para páginas estáticas (site principal)
+        // Quando você acessa o site diretamente no navegador, pode não ter Origin
+        if (req.method === 'GET' && (
+            req.path === '/' || 
+            req.path.startsWith('/site/') ||
+            req.path.startsWith('/apps/') ||
+            req.path.startsWith('/assets/') ||
+            req.path.match(/\.(html|css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/i)
+        )) {
             return callback(null, { origin: true, credentials: false, optionsSuccessStatus: 200 });
         }
         
@@ -148,7 +161,7 @@ const corsOptionsDelegate = (req, callback) => {
         if (isKnownWebhook) {
             return callback(null, { origin: true, credentials: true, optionsSuccessStatus: 200 });
         }
-        logger.warn(`⚠️ Request sem origin rejeitado em produção. User-Agent: ${userAgent}`);
+        logger.warn(`⚠️ Request sem origin rejeitado em produção. Path: ${req.path}, Method: ${req.method}, User-Agent: ${userAgent}`);
         return callback(new Error('Origin required in production'));
     }
 
