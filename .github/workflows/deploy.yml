@@ -85,8 +85,8 @@ jobs:
           script: |
             cd /var/www/atenmed || cd ~/atenmed
             
-            # Pull latest code
-            git pull origin main || git pull origin master
+            # Pull latest code (tentar main, depois reorganizacao-estrutura)
+            git pull origin main 2>/dev/null || git pull origin reorganizacao-estrutura || git pull origin master
             
             # Backup
             mkdir -p backups
