@@ -906,34 +906,6 @@ module.exports = router;
 
 
 
-            message: 'Mensagem enviada com sucesso',
-
-            data: result,
-
-            phone: cleanPhone
-
-        });
-
-        
-
-    } catch (error) {
-
-        logger.error('Erro ao enviar mensagem de teste:', error);
-
-        res.status(500).json({
-
-            success: false,
-
-            error: error.message || 'Erro ao enviar mensagem'
-
-        });
-
-    }
-
-});
-
-
-
 // ===== ESTATÍSTICAS =====
 
 
@@ -1357,34 +1329,6 @@ module.exports = router;
 
 
 
-
-
-
-            message: 'Mensagem enviada com sucesso',
-
-            data: result,
-
-            phone: cleanPhone
-
-        });
-
-        
-
-    } catch (error) {
-
-        logger.error('Erro ao enviar mensagem de teste:', error);
-
-        res.status(500).json({
-
-            success: false,
-
-            error: error.message || 'Erro ao enviar mensagem'
-
-        });
-
-    }
-
-});
 
 
 
