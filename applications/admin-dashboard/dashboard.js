@@ -179,10 +179,13 @@ async function loadDashboardData() {
         
         const totalLeads = leads.data?.pagination?.total || leads.data?.leads?.length || 0;
         
-        // Buscar clientes (rota protegida - ignorar erro de autenticação)
+        // Buscar clientes (rota protegida)
         let totalClients = 0;
         try {
-            const clientsRes = await fetch('/api/clients');
+            const clientsRes = await fetch('/api/clients', {
+                method: 'GET',
+                headers: getAuthHeaders()
+            });
             if (clientsRes.ok) {
                 const clients = await clientsRes.json();
                 console.log('Clients response:', clients);
@@ -356,7 +359,10 @@ function displayContacts(contacts) {
 // Carregar clientes
 async function loadClients() {
     try {
-        const response = await fetch('/api/clients');
+        const response = await fetch('/api/clients', {
+            method: 'GET',
+            headers: getAuthHeaders()
+        });
         const result = await response.json();
         
         if (response.ok && result.success) {
@@ -574,7 +580,8 @@ async function deleteClient(clientId) {
     
     try {
         const response = await fetch(`/api/clients/${clientId}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: getAuthHeaders()
         });
         
         const result = await response.json();
