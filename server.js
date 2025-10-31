@@ -170,6 +170,17 @@ const corsOptionsDelegate = (req, callback) => {
         return callback(null, { origin: true, credentials: true, optionsSuccessStatus: 200 });
     }
 
+    // Se o Origin for do mesmo domínio (atenmed.com.br ou www.atenmed.com.br)
+    // permitir mesmo que não esteja explicitamente na lista (útil para requisições AJAX do próprio site)
+    if (origin && (
+        origin === 'https://atenmed.com.br' || 
+        origin === 'https://www.atenmed.com.br' ||
+        origin === 'http://atenmed.com.br' ||
+        origin === 'http://www.atenmed.com.br'
+    )) {
+        return callback(null, { origin: true, credentials: true, optionsSuccessStatus: 200 });
+    }
+
     logger.warn(`⚠️ Origin não permitido: ${origin || 'N/A'}`);
     return callback(new Error('Not allowed by CORS'));
 };
