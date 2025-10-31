@@ -734,7 +734,7 @@
 
     <!-- Modal: Cadastrar/Editar Clínica -->
     <div id="clinicModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content modal-large">
             <div class="modal-header">
                 <h2><i class="fas fa-hospital"></i> <span id="clinicModalTitle">Nova Clínica</span></h2>
                 <button class="modal-close" id="closeClinicModal">&times;</button>
@@ -742,77 +742,150 @@
             <form id="clinicForm">
                 <input type="hidden" id="clinicId">
                 
-                <div class="form-group">
-                    <label for="clinicName">Nome da Clínica *</label>
-                    <input type="text" id="clinicName" required placeholder="Ex: Clínica Saúde Total">
+                <!-- Seção: Informações Básicas -->
+                <div class="form-section">
+                    <h3 class="form-section-title">
+                        <i class="fas fa-info-circle"></i>
+                        Informações Básicas
+                    </h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="clinicName" class="form-label">
+                                <i class="fas fa-building"></i>
+                                Nome da Clínica *
+                            </label>
+                            <input type="text" id="clinicName" class="form-input" required placeholder="Ex: Clínica Saúde Total">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="clinicEmail" class="form-label">
+                                <i class="fas fa-envelope"></i>
+                                Email
+                            </label>
+                            <input type="email" id="clinicEmail" class="form-input" placeholder="Ex: contato@clinica.com.br">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="clinicDescription" class="form-label">
+                                <i class="fas fa-align-left"></i>
+                                Descrição
+                            </label>
+                            <textarea id="clinicDescription" class="form-textarea" rows="3" placeholder="Descreva os serviços oferecidos pela clínica..."></textarea>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="clinicWhatsApp">Número WhatsApp *</label>
-                    <input type="text" id="clinicWhatsApp" required placeholder="Ex: (11) 98765-4321">
-                    <small>Formato aceito: (11) 98765-4321 ou 5511987654321</small>
+                <!-- Seção: Contato -->
+                <div class="form-section">
+                    <h3 class="form-section-title">
+                        <i class="fas fa-phone"></i>
+                        Contato
+                    </h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="clinicWhatsApp" class="form-label">
+                                <i class="fab fa-whatsapp"></i>
+                                Número WhatsApp *
+                            </label>
+                            <input type="text" id="clinicWhatsApp" class="form-input" required placeholder="Ex: (11) 98765-4321">
+                            <small>Formato aceito: (11) 98765-4321 ou 5511987654321</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="clinicPhone" class="form-label">
+                                <i class="fas fa-phone-alt"></i>
+                                Telefone Fixo
+                            </label>
+                            <input type="text" id="clinicPhone" class="form-input" placeholder="Ex: (11) 3333-4444">
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="clinicPhone">Telefone Fixo</label>
-                    <input type="text" id="clinicPhone" placeholder="Ex: (11) 3333-4444">
+                <!-- Seção: Localização -->
+                <div class="form-section">
+                    <h3 class="form-section-title">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Localização
+                    </h3>
+                    <div class="form-grid">
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="clinicAddress" class="form-label">
+                                <i class="fas fa-map"></i>
+                                Endereço Completo
+                            </label>
+                            <input type="text" id="clinicAddress" class="form-input" placeholder="Rua, número, bairro">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="clinicCity" class="form-label">
+                                <i class="fas fa-city"></i>
+                                Cidade
+                            </label>
+                            <input type="text" id="clinicCity" class="form-input" placeholder="Ex: São Paulo">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="clinicState" class="form-label">
+                                <i class="fas fa-map-pin"></i>
+                                Estado
+                            </label>
+                            <input type="text" id="clinicState" class="form-input" maxlength="2" placeholder="Ex: SP" style="text-transform: uppercase;">
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="clinicEmail">Email</label>
-                    <input type="email" id="clinicEmail" placeholder="Ex: contato@clinica.com.br">
-                </div>
-                
-                <div class="form-group">
-                    <label for="clinicDescription">Descrição</label>
-                    <textarea id="clinicDescription" rows="3" placeholder="Descreva a clínica..."></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label for="clinicAddress">Endereço Completo</label>
-                    <input type="text" id="clinicAddress" placeholder="Rua, número, bairro">
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
-                    <div class="form-group">
-                        <label for="clinicCity">Cidade</label>
-                        <input type="text" id="clinicCity" placeholder="Ex: São Paulo">
+                <!-- Seção: Horários e Configurações -->
+                <div class="form-section">
+                    <h3 class="form-section-title">
+                        <i class="fas fa-clock"></i>
+                        Horários e Configurações
+                    </h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="clinicStartHour" class="form-label">
+                                <i class="fas fa-sun"></i>
+                                Horário de Abertura
+                            </label>
+                            <input type="number" id="clinicStartHour" class="form-input" min="0" max="23" value="8">
+                            <small>Horário em formato 24h (0-23)</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="clinicEndHour" class="form-label">
+                                <i class="fas fa-moon"></i>
+                                Horário de Fechamento
+                            </label>
+                            <input type="number" id="clinicEndHour" class="form-input" min="0" max="23" value="18">
+                            <small>Horário em formato 24h (0-23)</small>
+                        </div>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="clinicState">Estado</label>
-                        <input type="text" id="clinicState" maxlength="2" placeholder="Ex: SP">
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="clinicWhatsAppBot" class="checkbox-input" checked>
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-text">
+                                <i class="fab fa-whatsapp"></i>
+                                Habilitar Bot WhatsApp
+                            </span>
+                        </label>
+                        
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="clinicActive" class="checkbox-input" checked>
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-text">
+                                <i class="fas fa-check-circle"></i>
+                                Clínica Ativa
+                            </span>
+                        </label>
                     </div>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="form-group">
-                        <label for="clinicStartHour">Horário de Abertura</label>
-                        <input type="number" id="clinicStartHour" min="0" max="23" value="8">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="clinicEndHour">Horário de Fechamento</label>
-                        <input type="number" id="clinicEndHour" min="0" max="23" value="18">
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="clinicWhatsAppBot" checked>
-                        Habilitar Bot WhatsApp
-                    </label>
-                </div>
-                
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="clinicActive" checked>
-                        Clínica Ativa
-                    </label>
                 </div>
                 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" id="cancelClinicBtn">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" id="cancelClinicBtn">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </button>
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save"></i>
                         Salvar Clínica
