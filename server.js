@@ -135,7 +135,8 @@ const corsOptionsDelegate = (req, callback) => {
     // Em produção, permitir sem Origin para:
     // 1. Health check endpoint (para monitoramento)
     // 2. Páginas estáticas e recursos (GET requests)
-    // 3. Webhooks conhecidos (Meta/WhatsApp)
+    // 3. Rotas de API do mesmo domínio (same-origin requests não enviam Origin)
+    // 4. Webhooks conhecidos (Meta/WhatsApp)
     if (!origin && process.env.NODE_ENV === 'production') {
         // Permitir health check sem origin
         if (req.path === '/health' || req.path === '/api/health') {
@@ -154,6 +155,17 @@ const corsOptionsDelegate = (req, callback) => {
             return callback(null, { origin: true, credentials: false, optionsSuccessStatus: 200 });
         }
         
+        // IMPORTANTE: Requisições same-origin (do próprio site) NÃO enviam Origin header
+        // Permitir requisições de API do mesmo domínio sem Origin
+        // Verificar pelo Host header que vem do navegador
+        const host = req.get('host') || '';
+        const isSameOrigin = host.includes('atenmed.com.br') || host === 'localhost:3000';
+        
+        if (isSameOrigin && req.path.startsWith('/api/')) {
+            // Permitir requisições de API do mesmo domínio sem Origin
+            return callback(null, { origin: true, credentials: true, optionsSuccessStatus: 200 });
+        }
+        
         const userAgent = req.get('user-agent') || '';
         const isKnownWebhook = userAgent.includes('Meta') ||
                                userAgent.includes('WhatsApp') ||
@@ -161,7 +173,8 @@ const corsOptionsDelegate = (req, callback) => {
         if (isKnownWebhook) {
             return callback(null, { origin: true, credentials: true, optionsSuccessStatus: 200 });
         }
-        logger.warn(`⚠️ Request sem origin rejeitado em produção. Path: ${req.path}, Method: ${req.method}, User-Agent: ${userAgent}`);
+        
+        logger.warn(`⚠️ Request sem origin rejeitado em produção. Path: ${req.path}, Method: ${req.method}, Host: ${host}, User-Agent: ${userAgent}`);
         return callback(new Error('Origin required in production'));
     }
 
