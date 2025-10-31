@@ -218,13 +218,22 @@ app.use('/assets', express.static(path.join(__dirname, 'site/assets')));
 
 // Health check
 app.get('/health', (req, res) => {
-    res.status(200).json({
-        status: 'OK',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        environment: process.env.NODE_ENV,
-        version: process.env.npm_package_version || '1.0.0'
-    });
+    try {
+        res.status(200).json({
+            status: 'OK',
+            timestamp: new Date().toISOString(),
+            uptime: process.uptime(),
+            environment: process.env.NODE_ENV,
+            version: process.env.npm_package_version || '1.0.0'
+        });
+    } catch (error) {
+        logger.error('Erro no health check:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            status: 'error'
+        });
+    }
 });
 
 // API Routes
