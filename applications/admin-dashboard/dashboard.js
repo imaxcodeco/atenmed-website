@@ -663,9 +663,7 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const response = await fetch('/api/clients', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(formData)
                 });
                 
