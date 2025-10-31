@@ -120,11 +120,31 @@ function showSection(sectionId) {
         item.classList.remove('active');
     });
     
-    // Show selected section
-    document.getElementById(sectionId).style.display = 'block';
+    // Show selected section (verificar se existe antes de mostrar)
+    const section = document.getElementById(sectionId);
+    if (!section) {
+        console.error(`Seção "${sectionId}" não encontrada no HTML`);
+        return;
+    }
+    
+    section.style.display = 'block';
     
     // Add active class to selected nav item
-    document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
+    const navItem = document.querySelector(`[data-section="${sectionId}"]`);
+    if (navItem) {
+        navItem.classList.add('active');
+    }
+    
+    // Carregar dados quando a seção for ativada
+    if (sectionId === 'clinics' && typeof loadClinics === 'function') {
+        setTimeout(() => loadClinics(), 100);
+    }
+    if (sectionId === 'doctors' && typeof loadDoctors === 'function') {
+        setTimeout(() => loadDoctors(), 100);
+    }
+    if (sectionId === 'specialties' && typeof loadSpecialties === 'function') {
+        setTimeout(() => loadSpecialties(), 100);
+    }
 }
 
 // Dados mockados para demonstração

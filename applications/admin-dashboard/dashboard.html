@@ -351,6 +351,63 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Clinics Section -->
+            <section id="clinics" class="content-section" style="display: none;">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-hospital"></i>
+                            Gerenciamento de Clínicas
+                        </h2>
+                        <button class="btn btn-primary" id="btnAddClinica">
+                            <i class="fas fa-plus"></i>
+                            Nova Clínica
+                        </button>
+                    </div>
+                    
+                    <!-- Estatísticas -->
+                    <div class="stats-grid" style="margin-bottom: 1.5rem;">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span class="stat-title">Total de Clínicas</span>
+                                <div class="stat-icon primary">
+                                    <i class="fas fa-hospital"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="totalClinics">-</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span class="stat-title">Clínicas Ativas</span>
+                                <div class="stat-icon success">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="activeClinics">-</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span class="stat-title">WhatsApp Ativo</span>
+                                <div class="stat-icon info">
+                                    <i class="fab fa-whatsapp"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="whatsappEnabledClinics">-</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Lista de Clínicas -->
+                    <div id="clinicsList" class="clinics-grid">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            Carregando clínicas...
+                        </div>
+                    </div>
+                </div>
+            </section>
             
             <!-- Leads Section -->
             <section id="leads" class="content-section" style="display: none;">
