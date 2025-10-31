@@ -132,8 +132,15 @@ const corsOptionsDelegate = (req, callback) => {
         return callback(null, { origin: true, credentials: true, optionsSuccessStatus: 200 });
     }
 
-    // Em produção, permitir sem Origin apenas para webhooks conhecidos (Meta/WhatsApp)
+    // Em produção, permitir sem Origin para:
+    // 1. Health check endpoint (para monitoramento)
+    // 2. Webhooks conhecidos (Meta/WhatsApp)
     if (!origin && process.env.NODE_ENV === 'production') {
+        // Permitir health check sem origin
+        if (req.path === '/health' || req.path === '/api/health') {
+            return callback(null, { origin: true, credentials: false, optionsSuccessStatus: 200 });
+        }
+        
         const userAgent = req.get('user-agent') || '';
         const isKnownWebhook = userAgent.includes('Meta') ||
                                userAgent.includes('WhatsApp') ||
