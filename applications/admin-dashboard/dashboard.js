@@ -101,7 +101,7 @@ window.getAuthToken = function() {
 
 // Criar headers com autenticação
 function getAuthHeaders() {
-    const token = getAuthToken();
+    const token = window.getAuthToken();
     const headers = {
         'Content-Type': 'application/json'
     };
