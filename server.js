@@ -113,7 +113,7 @@ app.use(helmet({
             ],
             imgSrc: ["'self'", "data:", "https:"],
             scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-            connectSrc: ["'self'"]
+            connectSrc: ["'self'", "https://cdn.jsdelivr.net"]
         }
     }
 }));
@@ -263,6 +263,11 @@ app.use('/apps/analytics', express.static(path.join(__dirname, 'applications/ana
 app.use('/apps/clinic-page', express.static(path.join(__dirname, 'applications/clinic-page')));
 app.use('/apps/crm', express.static(path.join(__dirname, 'applications/crm-pipeline')));
 app.use('/apps/portal', express.static(path.join(__dirname, 'applications/clinic-portal')));
+
+// IMPORTANTE: Servir arquivos estáticos do admin-dashboard para /crm e /dashboard
+// Isso permite que dashboard.css, dashboard.js, clinics-manager.js, etc sejam acessíveis
+app.use('/crm', express.static(path.join(__dirname, 'applications/admin-dashboard')));
+app.use('/dashboard', express.static(path.join(__dirname, 'applications/admin-dashboard')));
 
 // Assets do site principal (compatibilidade)
 app.use('/assets', express.static(path.join(__dirname, 'site/assets')));
