@@ -46,11 +46,13 @@ if (typeof window.getAuthToken === 'function') {
     };
 }
 
-// Usar função showAlert do dashboard.js se disponível
+// Usar função showAlert do dashboard.js se disponível (evitar recursão)
 function showAlert(message, type = 'success') {
-    if (typeof window.showAlert === 'function') {
+    // Verificar se existe função global E não é a própria função local
+    if (typeof window.showAlert === 'function' && window.showAlert !== showAlert) {
         return window.showAlert(message, type);
     }
+    // Fallback para alert simples
     alert(message);
 }
 
