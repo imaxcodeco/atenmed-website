@@ -3,12 +3,17 @@
  * Gerenciamento de especialidades integrado ao dashboard
  */
 
-// API Base URL (usar global se disponível)
-const API_BASE = window.API_BASE || ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://localhost:3000/api'
-    : (window.location.hostname === 'atenmed.com.br' || window.location.hostname === 'www.atenmed.com.br')
-    ? 'https://atenmed.com.br/api'
-    : '/api');
+// API Base URL (usar global se disponível, sem redeclarar)
+let API_BASE;
+if (typeof window.API_BASE !== 'undefined') {
+    API_BASE = window.API_BASE;
+} else {
+    API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:3000/api'
+        : (window.location.hostname === 'atenmed.com.br' || window.location.hostname === 'www.atenmed.com.br')
+        ? 'https://atenmed.com.br/api'
+        : '/api';
+}
 
 // Estado
 let specialties = [];
@@ -40,11 +45,13 @@ if (typeof window.getAuthToken === 'function') {
     };
 }
 
-// Usar função showAlert do dashboard.js se disponível
+// Usar função showAlert do dashboard.js se disponível (evitar recursão)
 function showAlert(message, type = 'success') {
-    if (typeof window.showAlert === 'function') {
+    // Verificar se existe função global E não é a própria função local
+    if (typeof window.showAlert === 'function' && window.showAlert !== showAlert) {
         return window.showAlert(message, type);
     }
+    // Fallback para alert simples
     alert(message);
 }
 

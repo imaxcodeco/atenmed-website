@@ -3,12 +3,17 @@
  * Gerenciamento de médicos integrado ao dashboard
  */
 
-// API Base URL (usar global se disponível)
-const API_BASE = window.API_BASE || ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://localhost:3000/api'
-    : (window.location.hostname === 'atenmed.com.br' || window.location.hostname === 'www.atenmed.com.br')
-    ? 'https://atenmed.com.br/api'
-    : '/api');
+// API Base URL (usar global se disponível, sem redeclarar)
+let API_BASE;
+if (typeof window.API_BASE !== 'undefined') {
+    API_BASE = window.API_BASE;
+} else {
+    API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:3000/api'
+        : (window.location.hostname === 'atenmed.com.br' || window.location.hostname === 'www.atenmed.com.br')
+        ? 'https://atenmed.com.br/api'
+        : '/api';
+}
 
 // Estado
 let doctors = [];

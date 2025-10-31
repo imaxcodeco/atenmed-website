@@ -3,12 +3,17 @@
  * Gerenciamento de clínicas integrado ao dashboard
  */
 
-// API Base URL (usar global se disponível)
-const API_BASE = window.API_BASE || ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://localhost:3000/api'
-    : (window.location.hostname === 'atenmed.com.br' || window.location.hostname === 'www.atenmed.com.br')
-    ? 'https://atenmed.com.br/api'
-    : '/api');
+// API Base URL (usar global se disponível, sem redeclarar)
+let API_BASE;
+if (typeof window.API_BASE !== 'undefined') {
+    API_BASE = window.API_BASE;
+} else {
+    API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:3000/api'
+        : (window.location.hostname === 'atenmed.com.br' || window.location.hostname === 'www.atenmed.com.br')
+        ? 'https://atenmed.com.br/api'
+        : '/api';
+}
 
 // Estado
 let clinics = [];
@@ -65,7 +70,16 @@ function setupClinicsListeners() {
 }
 
 // Função global para abrir modal (chamada pelo onclick)
-window.openClinicModal = function(clinicId = null) {
+window.openClinicModal = function(clinicIdOrEvent = null) {
+    // Tratar caso receba evento em vez de ID
+    let clinicId = null;
+    if (clinicIdOrEvent && typeof clinicIdOrEvent === 'string') {
+        clinicId = clinicIdOrEvent;
+    } else if (clinicIdOrEvent && clinicIdOrEvent.target) {
+        // Se recebeu um evento, ignorar
+        clinicId = null;
+    }
+    
     editingClinicId = clinicId;
     const modal = document.getElementById('clinicModal');
     const modalTitle = document.getElementById('clinicModalTitle');
@@ -86,10 +100,15 @@ window.openClinicModal = function(clinicId = null) {
     } else {
         if (modalTitle) modalTitle.textContent = 'Nova Clínica';
         // Valores padrão
-        document.getElementById('clinicStartHour').value = 8;
-        document.getElementById('clinicEndHour').value = 18;
-        document.getElementById('clinicWhatsAppBot').checked = true;
-        document.getElementById('clinicActive').checked = true;
+        const startHour = document.getElementById('clinicStartHour');
+        const endHour = document.getElementById('clinicEndHour');
+        const whatsappBot = document.getElementById('clinicWhatsAppBot');
+        const active = document.getElementById('clinicActive');
+        
+        if (startHour) startHour.value = 8;
+        if (endHour) endHour.value = 18;
+        if (whatsappBot) whatsappBot.checked = true;
+        if (active) active.checked = true;
     }
     
     modal.classList.add('show');
@@ -109,6 +128,12 @@ function closeClinicModalFunc() {
 
 // Carregar dados de uma clínica para edição
 async function loadClinicData(clinicId) {
+    // Validar que clinicId é uma string válida
+    if (!clinicId || typeof clinicId !== 'string' || clinicId === '[object PointerEvent]') {
+        console.error('ID de clínica inválido:', clinicId);
+        return;
+    }
+    
     try {
         const token = getAuthToken();
         if (!token) return;
@@ -260,9 +285,10 @@ if (typeof window.getAuthToken === 'function') {
     };
 }
 
-// Usar função showAlert do dashboard.js se disponível
+// Usar função showAlert do dashboard.js se disponível (evitar recursão)
 function showAlert(message, type = 'success') {
-    if (typeof window.showAlert === 'function') {
+    // Verificar se existe função global E não é a própria função local
+    if (typeof window.showAlert === 'function' && window.showAlert !== showAlert) {
         return window.showAlert(message, type);
     }
     // Fallback para alert simples
