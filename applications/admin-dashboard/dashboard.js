@@ -76,8 +76,17 @@ function checkAuth() {
     }
 }
 
-// Obter token JWT
-function getAuthToken() {
+// API Base URL (definir globalmente antes dos outros scripts)
+if (typeof window.API_BASE === 'undefined') {
+    window.API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:3000/api'
+        : (window.location.hostname === 'atenmed.com.br' || window.location.hostname === 'www.atenmed.com.br')
+        ? 'https://atenmed.com.br/api'
+        : '/api';
+}
+
+// Obter token JWT (definir globalmente antes dos outros scripts)
+window.getAuthToken = function() {
     try {
         const auth = localStorage.getItem('atenmed_auth');
         if (auth) {
@@ -88,7 +97,7 @@ function getAuthToken() {
         console.error('Erro ao obter token:', error);
     }
     return null;
-}
+};
 
 // Criar headers com autenticação
 function getAuthHeaders() {

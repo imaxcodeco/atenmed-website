@@ -3,35 +3,42 @@
  * Gerenciamento de médicos integrado ao dashboard
  */
 
-// API Base URL
-const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+// API Base URL (usar global se disponível)
+const API_BASE = window.API_BASE || ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
     ? 'http://localhost:3000/api'
     : (window.location.hostname === 'atenmed.com.br' || window.location.hostname === 'www.atenmed.com.br')
     ? 'https://atenmed.com.br/api'
-    : '/api';
+    : '/api');
 
 // Estado
 let doctors = [];
 let clinics = [];
 let specialties = [];
 
-// Verificar autenticação (usa função do dashboard.js se disponível)
-function getAuthToken() {
-    if (typeof window.getAuthToken === 'function') {
+// Verificar autenticação (usa função global do dashboard.js)
+// Não redefinir se já existe para evitar recursão
+let getAuthToken;
+if (typeof window.getAuthToken === 'function') {
+    // Usar a função global diretamente
+    getAuthToken = function() {
         return window.getAuthToken();
-    }
-    try {
-        const auth = localStorage.getItem('atenmed_auth');
-        if (!auth) {
+    };
+} else {
+    // Fallback se não existir
+    getAuthToken = function() {
+        try {
+            const auth = localStorage.getItem('atenmed_auth');
+            if (!auth) {
+                window.location.href = '/site/login.html';
+                return null;
+            }
+            const authData = JSON.parse(auth);
+            return authData.token;
+        } catch (error) {
             window.location.href = '/site/login.html';
             return null;
         }
-        const authData = JSON.parse(auth);
-        return authData.token;
-    } catch (error) {
-        window.location.href = '/site/login.html';
-        return null;
-    }
+    };
 }
 
 // Usar função showAlert do dashboard.js se disponível
