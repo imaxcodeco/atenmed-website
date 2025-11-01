@@ -1,18 +1,21 @@
-=== COMANDOS PARA EXECUTAR NO SERVIDOR (copiar e colar) ===
+=== COMANDOS PARA EXECUTAR NO SERVIDOR ===
 
+1. Conectar ao servidor:
 ssh -i C:\Users\Ian_1\Documents\AtenMed\site-atenmed.pem ubuntu@3.129.206.231
 
-=== Depois de conectar, execute: ===
+2. Ir para diretório do projeto:
+cd /var/www/atenmed
 
-mkdir -p ~/.ssh
-chmod 700 ~/.ssh
-echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFwNOxL9PDlSY4oY4+cszpQdJDzJrqty5pDp9T87gG2X github-deploy-atenmed" >> ~/.ssh/authorized_keys
-chmod 600 ~/.ssh/authorized_keys
-chmod 700 ~/.ssh
-cat ~/.ssh/authorized_keys
-exit
+3. Testar emails:
+node scripts/test-email-ses.js
 
-=== Depois de sair do servidor, teste nova chave: ===
+4. Verificar logs PM2:
+pm2 logs atenmed --lines 50
 
-ssh -i C:\Users\Ian_1\.ssh\atenmed_deploy ubuntu@3.129.206.231
+5. Verificar status:
+pm2 status
+pm2 info atenmed
+
+6. Restart se necessário:
+pm2 restart atenmed
 
