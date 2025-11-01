@@ -134,7 +134,7 @@ async function loadClinicData(clinicId) {
     }
     
     try {
-        const token = getAuthToken();
+        const token = window.getAuthToken ? window.getAuthToken() : null;
         if (!token) return;
         
         const response = await fetch(`${window.API_BASE}/clinics/${clinicId}`, {
@@ -181,7 +181,7 @@ async function saveClinic(event) {
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
     
     try {
-        const token = getAuthToken();
+        const token = window.getAuthToken ? window.getAuthToken() : null;
         if (!token) return;
         
         const clinicId = document.getElementById('clinicId').value;
@@ -258,26 +258,8 @@ async function saveClinic(event) {
     }
 }
 
-// Verificar autenticação (usa função global do dashboard.js)
-// Helper que usa window.getAuthToken se disponível, senão fallback
-function getAuthToken() {
-    if (typeof window.getAuthToken === 'function') {
-        return window.getAuthToken();
-    }
-    // Fallback se não existir
-    try {
-        const auth = localStorage.getItem('atenmed_auth');
-        if (!auth) {
-            window.location.href = '/site/login.html';
-            return null;
-        }
-        const authData = JSON.parse(auth);
-        return authData.token;
-    } catch (error) {
-        window.location.href = '/site/login.html';
-        return null;
-    }
-}
+// Usar diretamente window.getAuthToken para evitar recursão
+// Não criar função local com mesmo nome para não sobrescrever a global
 
 // Usar função showAlert do dashboard.js se disponível (evitar recursão)
 function showAlert(message, type = 'success') {
@@ -297,7 +279,7 @@ async function loadClinics() {
     content.innerHTML = '<div class="loading"><div class="spinner"></div>Carregando clínicas...</div>';
     
     try {
-        const token = getAuthToken();
+        const token = window.getAuthToken ? window.getAuthToken() : null;
         if (!token) {
             content.innerHTML = '<div class="loading" style="color: var(--danger);">Erro de autenticação</div>';
             return;
@@ -433,7 +415,7 @@ window.toggleClinicStatus = async function(clinicId, newStatus) {
     }
     
     try {
-        const token = getAuthToken();
+        const token = window.getAuthToken ? window.getAuthToken() : null;
         if (!token) return;
         
         const response = await fetch(`${window.API_BASE}/clinics/${clinicId}`, {

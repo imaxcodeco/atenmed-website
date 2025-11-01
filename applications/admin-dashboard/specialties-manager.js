@@ -18,26 +18,8 @@
 let specialtiesList = [];
 let clinicsForSpecialties = [];
 
-// Verificar autenticação (usa função global do dashboard.js)
-// Helper que usa window.getAuthToken se disponível, senão fallback
-function getAuthToken() {
-    if (typeof window.getAuthToken === 'function') {
-        return window.getAuthToken();
-    }
-    // Fallback se não existir
-    try {
-        const auth = localStorage.getItem('atenmed_auth');
-        if (!auth) {
-            window.location.href = '/site/login.html';
-            return null;
-        }
-        const authData = JSON.parse(auth);
-        return authData.token;
-    } catch (error) {
-        window.location.href = '/site/login.html';
-        return null;
-    }
-}
+// Usar diretamente window.getAuthToken para evitar recursão
+// Não criar função local com mesmo nome para não sobrescrever a global
 
 // Usar função showAlert do dashboard.js se disponível (evitar recursão)
 function showAlert(message, type = 'success') {
@@ -51,7 +33,7 @@ function showAlert(message, type = 'success') {
 
 // Fetch JSON helper
 async function fetchJSON(url, opts = {}) {
-    const token = getAuthToken();
+    const token = window.getAuthToken ? window.getAuthToken() : null;
     const headers = {
         'Content-Type': 'application/json',
         ...(opts.headers || {})
