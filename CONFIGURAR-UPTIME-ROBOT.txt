@@ -1,0 +1,45 @@
+=== COMO CONFIGURAR MONITORAMENTO DE UPTIME ===
+
+OPÇÃO RECOMENDADA: UPTIME ROBOT (GRATUITO)
+https://uptimerobot.com
+
+1. Criar conta gratuita no Uptime Robot
+
+2. Adicionar novo monitor:
+   - Type: HTTP(s)
+   - Friendly Name: AtenMed - Produção
+   - URL: https://atenmed.com.br/api/health
+   - Monitoring Interval: 5 minutes
+   - Alert Contacts: Seu email
+
+3. Configurar alertas:
+   - Email: Seu email principal
+   - SMS: (opcional, pago)
+   - Push: Baixar app no celular
+
+4. URLs importantes para monitorar:
+   ✅ https://atenmed.com.br/api/health - Health check básico
+   ✅ https://atenmed.com.br - Site principal
+   ✅ https://atenmed.com.br/dashboard - Dashboard admin
+   ✅ https://atenmed.com.br/api/health/detailed - Health check detalhado
+
+5. O que o Uptime Robot vai verificar:
+   - Se o site está online
+   - Tempo de resposta
+   - Status code (200 = OK, 500 = Erro)
+
+6. Alertas automáticos:
+   - Quando o site cair
+   - Quando o tempo de resposta aumentar muito
+   - Quando retornar erro HTTP
+
+LIMITE GRATUITO:
+- 50 monitors
+- Verificação a cada 5 minutos
+- Sem limite de alertas
+
+ALTERNATIVAS GRATUITAS:
+- Pingdom (100 checks/mês gratuito)
+- StatusCake (10 monitors gratuito)
+- Freshping (50 monitors gratuito)
+
