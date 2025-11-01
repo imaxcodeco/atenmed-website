@@ -404,8 +404,8 @@ function displayClients(clients) {
                 <tbody>
                     ${clients.map(client => {
                         const apps = [];
-                        if (client.applications.automacaoAtendimento) apps.push('💬 Automação');
-                        if (client.applications.agendamentoInteligente) apps.push('📅 Agendamento');
+                        if (client.applications?.automacaoAtendimento) apps.push('💬 Automação');
+                        if (client.applications?.agendamentoInteligente) apps.push('📅 Agendamento');
                         const appsText = apps.join('<br>') || 'Nenhuma';
                         
                         const businessTypeMap = {
@@ -649,7 +649,12 @@ document.addEventListener('DOMContentLoaded', function() {
         clientForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const selectedApp = document.querySelector('input[name="applications"]:checked').value;
+            const selectedAppRadio = document.querySelector('input[name="applications"]:checked');
+            if (!selectedAppRadio) {
+                showAlert('Por favor, selecione pelo menos uma aplicação', 'error');
+                return;
+            }
+            const selectedApp = selectedAppRadio.value;
             
             const formData = {
                 name: document.getElementById('clientName').value,
@@ -657,7 +662,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 whatsapp: document.getElementById('clientWhatsapp').value,
                 businessType: document.getElementById('clientBusinessType').value,
                 applications: {
-                    automacaoAtendimento: selectedApp === 'whatsapp' || selectedApp === 'both',
+                    automacaoAtendimento: selectedApp === 'automacao' || selectedApp === 'both',
                     agendamentoInteligente: selectedApp === 'agendamento' || selectedApp === 'both'
                 },
                 notes: document.getElementById('clientNotes').value
@@ -749,8 +754,10 @@ document.addEventListener('DOMContentLoaded', function() {
     loadContacts();
     loadClients();
     
-    // Event listeners para clínicas
-    setupClinicsListeners();
+    // Event listeners para clínicas (se a função existir)
+    if (typeof setupClinicsListeners === 'function') {
+        setupClinicsListeners();
+    }
 });
 
 // === MODAL FUNCTIONS ===
