@@ -71,6 +71,9 @@ jobs:
           BCRYPT_ROUNDS=12
           SESSION_SECRET=${{ secrets.SESSION_SECRET }}
 
+          # Monitoring (Sentry)
+          SENTRY_DSN=${{ secrets.SENTRY_DSN }}
+
           # Features
           ENABLE_REMINDERS=true
           ENABLE_WAITLIST=true
