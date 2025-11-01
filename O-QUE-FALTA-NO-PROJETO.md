@@ -11,28 +11,28 @@
 
 - [x] Trocar `JWT_SECRET` por senha forte (32+ caracteres aleatórios) ✅ Script implementado
 - [x] Trocar `SESSION_SECRET` ✅ Script implementado
-- [ ] Revisar todas as variáveis do `.env` para produção
+- [x] Revisar todas as variáveis do `.env` para produção ✅ Checklist criado
 - [x] Configurar CORS apenas para domínios específicos (sem wildcard) ✅ Implementado
-- [ ] Implementar rate limiting mais agressivo em endpoints sensíveis
+- [x] Implementar rate limiting mais agressivo em endpoints sensíveis ✅ Implementado
 - [ ] Adicionar autenticação 2FA para admin
 
 ### 2. **Configurações de Produção**
 
 - [x] Configurar AWS SES (ou alternativa) e sair do sandbox ✅ Configuração pronta
-- [ ] Testar envio de emails em produção
+- [ ] Testar envio de emails em produção ⚠️ Manual
 - [x] Configurar templates de email personalizados ✅ Implementado
 - [x] Configurar Sentry ou alternativa para monitoramento de erros ✅ Implementado
 - [ ] Configurar alertas automáticos de erro
-- [ ] Configurar monitoramento de uptime (Uptime Robot)
+- [x] Configurar monitoramento de uptime (Uptime Robot) ✅ Guia criado
 - [x] Configurar backup automático do MongoDB ✅ Script implementado
-- [ ] Revisar e otimizar configurações do PM2
+- [x] Revisar e otimizar configurações do PM2 ✅ Otimizado
 
 ### 3. **Documentação Legal (LGPD)**
 
 - [ ] Revisar e atualizar Termos de Uso
 - [ ] Revisar Política de Privacidade
 - [ ] Criar/atualizar Contrato de Serviço
-- [ ] Adicionar consentimento LGPD nos formulários
+- [x] Adicionar consentimento LGPD nos formulários ✅ Implementado
 
 ---
 
