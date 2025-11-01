@@ -380,6 +380,80 @@ router.post('/', [
 
 // ===== ROTAS ADMINISTRATIVAS (requerem autenticação) =====
 
+/**
+ * @swagger
+ * /api/appointments:
+ *   get:
+ *     summary: Lista agendamentos com filtros e paginação
+ *     description: Retorna lista de agendamentos filtrados por clínica (multi-tenancy automático)
+ *     tags: [Appointments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Número da página
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *           maximum: 100
+ *         description: Itens por página
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [pendente, confirmado, em-atendimento, concluido, cancelado, nao-compareceu]
+ *         description: Filtrar por status
+ *       - in: query
+ *         name: doctorId
+ *         schema:
+ *           type: string
+ *           format: objectId
+ *         description: Filtrar por médico
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filtrar por data (YYYY-MM-DD)
+ *     responses:
+ *       200:
+ *         description: Lista de agendamentos retornada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     appointments:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Appointment'
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         page:
+ *                           type: integer
+ *                         limit:
+ *                           type: integer
+ *                         total:
+ *                           type: integer
+ *                         pages:
+ *                           type: integer
+ *       401:
+ *         description: Não autenticado
+ *       403:
+ *         description: Sem permissão
+ */
 // @route   GET /api/appointments
 // @desc    Listar agendamentos com filtros
 // @access  Private (Admin, Recepcionista)

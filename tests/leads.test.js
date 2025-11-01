@@ -3,8 +3,23 @@
  */
 
 const request = require('supertest');
+const { createTestClinic, cleanupTestData } = require('./helpers/testHelpers');
+const Lead = require('../models/Lead');
 
 describe('Leads API', () => {
+    let testClinic;
+    
+    beforeAll(async () => {
+        testClinic = await createTestClinic();
+    });
+    
+    afterAll(async () => {
+        await cleanupTestData();
+    });
+    
+    beforeEach(async () => {
+        await Lead.deleteMany({});
+    });
     describe('POST /api/leads', () => {
         it('deve criar um novo lead com dados válidos', async () => {
             const leadData = {
@@ -22,6 +37,29 @@ describe('Leads API', () => {
             expect(response.status).toBe(201);
             expect(response.body.success).toBe(true);
             expect(response.body.data.nome).toBe(leadData.nome);
+            
+            // Verificar se foi salvo no banco
+            const savedLead = await Lead.findOne({ email: leadData.email });
+            expect(savedLead).toBeTruthy();
+            expect(savedLead.nome).toBe(leadData.nome);
+        });
+        
+        it('deve criar lead vinculado a uma clínica', async () => {
+            const leadData = {
+                nome: 'Dr. Teste Clinic',
+                email: 'teste-clinic@example.com',
+                telefone: '(11) 98888-8888',
+                clinic: testClinic._id.toString()
+            };
+
+            const response = await request(require('../server'))
+                .post('/api/leads')
+                .send(leadData);
+
+            expect(response.status).toBe(201);
+            
+            const savedLead = await Lead.findOne({ email: leadData.email });
+            expect(savedLead.clinic.toString()).toBe(testClinic._id.toString());
         });
 
         it('deve rejeitar lead sem nome', async () => {

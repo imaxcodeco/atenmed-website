@@ -112,6 +112,43 @@ const options = {
                         message: { type: 'string', example: 'Erro ao processar requisição' },
                         error: { type: 'string', example: 'Detalhes do erro' }
                     }
+                },
+                Appointment: {
+                    type: 'object',
+                    required: ['patient', 'doctor', 'specialty', 'clinic', 'scheduledDate', 'scheduledTime'],
+                    properties: {
+                        _id: { type: 'string', format: 'objectId' },
+                        patient: {
+                            type: 'object',
+                            properties: {
+                                name: { type: 'string', example: 'João Silva' },
+                                email: { type: 'string', format: 'email', example: 'joao@email.com' },
+                                phone: { type: 'string', example: '(11) 98765-4321' },
+                                cpf: { type: 'string', example: '123.456.789-00' }
+                            }
+                        },
+                        doctor: { type: 'string', format: 'objectId', description: 'ID do médico' },
+                        specialty: { type: 'string', format: 'objectId', description: 'ID da especialidade' },
+                        clinic: { type: 'string', format: 'objectId', description: 'ID da clínica' },
+                        scheduledDate: { type: 'string', format: 'date', example: '2024-12-25' },
+                        scheduledTime: { type: 'string', pattern: '^\\d{2}:\\d{2}$', example: '10:00' },
+                        status: {
+                            type: 'string',
+                            enum: ['pendente', 'confirmado', 'em-atendimento', 'concluido', 'cancelado', 'nao-compareceu'],
+                            example: 'confirmado'
+                        },
+                        duration: { type: 'integer', description: 'Duração em minutos', example: 60 },
+                        notes: { type: 'string', example: 'Primeira consulta' }
+                    }
+                },
+                Pagination: {
+                    type: 'object',
+                    properties: {
+                        page: { type: 'integer', example: 1 },
+                        limit: { type: 'integer', example: 20 },
+                        total: { type: 'integer', example: 150 },
+                        pages: { type: 'integer', example: 8 }
+                    }
                 }
             }
         },
