@@ -37,6 +37,7 @@ const specialtyRoutes = require('./routes/specialties');
 const googleCalendarRoutes = require('./routes/googleCalendar');
 const testRoutes = require('./routes/test');
 const queuesDashboardRoutes = require('./routes/queues-dashboard');
+const healthRoutes = require('./routes/health');
 
 // Importar middleware
 const errorHandler = require('./middleware/errorHandler');

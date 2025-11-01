@@ -117,7 +117,7 @@ async function backupMongoDB() {
         console.log(`💾 Banco: ${dbName}`);
         console.log(`📦 Coleções: ${Object.keys(backupData.collections).length}`);
         console.log(`📁 Arquivo: ${backupFileName}`);
-        console.log(`💿 Tamanho: ${sizeMB} MB');
+        console.log(`💿 Tamanho: ${sizeMB} MB`);
         console.log('════════════════════════════════════════\n');
 
         logger.info('Backup do MongoDB concluído', {
