@@ -1,5 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 const { body } = require('express-validator');
 const User = require('../models/User');
 const { authenticateToken, authorize, logActivity } = require('../middleware/auth');
@@ -8,6 +9,24 @@ const logger = require('../utils/logger');
 const { clearUser } = require('../utils/sentry');
 
 const router = express.Router();
+
+// Rate limiting agressivo para login
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 5, // apenas 5 tentativas por IP
+  message: 'Muitas tentativas de login. Tente novamente em 15 minutos.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiting para mudança de senha
+const changePasswordLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hora
+  max: 10, // 10 tentativas por hora
+  message: 'Muitas tentativas de alteração de senha. Tente novamente em 1 hora.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Middleware de validação
 const validateRequest = (req, res, next) => {
@@ -109,6 +128,7 @@ router.post(
 // @access  Public
 router.post(
   '/login',
+  loginLimiter,
   [
     body('email').isEmail().normalizeEmail().withMessage('Email inválido'),
     body('senha').notEmpty().withMessage('Senha é obrigatória'),
@@ -308,6 +328,7 @@ router.put(
 // @access  Private
 router.post(
   '/change-password',
+  changePasswordLimiter,
   [
     authenticateToken,
     body('senhaAtual').notEmpty().withMessage('Senha atual é obrigatória'),
