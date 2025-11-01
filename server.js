@@ -278,7 +278,7 @@ app.use('/clinica', express.static(path.join(__dirname, 'applications/clinic-pag
 // Assets do site principal (compatibilidade)
 app.use('/assets', express.static(path.join(__dirname, 'site/assets')));
 
-// Health check
+// Health check routes (manter compatibilidade com /health)
 app.get('/health', (req, res) => {
     try {
         res.status(200).json({
@@ -297,6 +297,9 @@ app.get('/health', (req, res) => {
         });
     }
 });
+
+// Rotas de health check detalhadas
+app.use('/api/health', healthRoutes);
 
 // API Routes
 app.use('/api/auth', authRoutes);
