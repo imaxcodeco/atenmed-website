@@ -460,7 +460,8 @@ function getStatusClass(status) {
     return statusMap[status] || 'info';
 }
 
-function showAlert(message, type = 'success') {
+// Função showAlert global para uso por outros scripts
+window.showAlert = function(message, type = 'success') {
     const alert = document.createElement('div');
     alert.className = `alert alert-${type}`;
     alert.innerHTML = `
@@ -468,10 +469,12 @@ function showAlert(message, type = 'success') {
         ${message}
     `;
     
-    document.querySelector('.main-content').insertBefore(alert, document.querySelector('.main-content').firstChild);
-    
-    setTimeout(() => alert.remove(), 5000);
-}
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) {
+        mainContent.insertBefore(alert, mainContent.firstChild);
+        setTimeout(() => alert.remove(), 5000);
+    }
+};
 
 // Funções de ação
 function refreshData() {
@@ -818,18 +821,15 @@ async function handleChangePassword(e) {
     }
     
     try {
-        const auth = getAuth();
-        if (!auth) {
+        const token = window.getAuthToken();
+        if (!token) {
             window.location.href = '/site/login.html';
             return;
         }
         
         const response = await fetch('/api/auth/change-password', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${auth.token}`
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({
                 senhaAtual: currentPassword,
                 novaSenha: newPassword
@@ -863,18 +863,15 @@ async function handleRegisterAdmin(e) {
     };
     
     try {
-        const auth = getAuth();
-        if (!auth) {
+        const token = window.getAuthToken();
+        if (!token) {
             window.location.href = '/site/login.html';
             return;
         }
         
         const response = await fetch('/api/auth/register-admin', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${auth.token}`
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify(formData)
         });
         
