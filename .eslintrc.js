@@ -11,9 +11,12 @@ module.exports = {
     ecmaVersion: 'latest',
     sourceType: 'module',
   },
+  globals: {
+    google: 'readonly',
+  },
   rules: {
     'prettier/prettier': 'error',
-    'no-console': 'warn',
+    'no-console': 'off', // Desabilitar warnings de console
     'no-unused-vars': [
       'warn',
       {

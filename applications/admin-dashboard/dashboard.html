@@ -10,6 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="dashboard.css?v=2024-10-24-009" rel="stylesheet">
+    <!-- Google Places Autocomplete -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbKbxlN4JA&libraries=places&language=pt-BR&region=BR"></script>
     <style>
         /* Cores principais */
         body, .main-content, .dashboard-container { background: #f8fafc !important; }
@@ -741,6 +743,7 @@
             </div>
             <form id="clinicForm">
                 <input type="hidden" id="clinicId">
+                <input type="hidden" id="clinicCoordinates">
                 
                 <!-- Seção: Informações Básicas -->
                 <div class="form-section">
@@ -810,10 +813,29 @@
                     <div class="form-grid">
                         <div class="form-group" style="grid-column: 1 / -1;">
                             <label for="clinicAddress" class="form-label">
-                                <i class="fas fa-map"></i>
-                                Endereço Completo
+                                <i class="fas fa-search"></i>
+                                Digite o Endereço *
                             </label>
-                            <input type="text" id="clinicAddress" class="form-input" placeholder="Rua, número, bairro">
+                            <input type="text" id="clinicAddress" class="form-input" required placeholder="Comece digitando o endereço completo...">
+                            <small style="display: block; margin-top: 0.5rem; color: #64748b;">
+                                <i class="fas fa-map-marker-alt"></i> O endereço será preenchido automaticamente com sugestões do Google Maps
+                            </small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="clinicNeighborhood" class="form-label">
+                                <i class="fas fa-home"></i>
+                                Bairro
+                            </label>
+                            <input type="text" id="clinicNeighborhood" class="form-input" placeholder="Automático">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="clinicZipCode" class="form-label">
+                                <i class="fas fa-mail-bulk"></i>
+                                CEP
+                            </label>
+                            <input type="text" id="clinicZipCode" class="form-input" placeholder="Automático">
                         </div>
                         
                         <div class="form-group">
@@ -821,7 +843,7 @@
                                 <i class="fas fa-city"></i>
                                 Cidade
                             </label>
-                            <input type="text" id="clinicCity" class="form-input" placeholder="Ex: São Paulo">
+                            <input type="text" id="clinicCity" class="form-input" placeholder="Automático" readonly>
                         </div>
                         
                         <div class="form-group">
@@ -829,7 +851,18 @@
                                 <i class="fas fa-map-pin"></i>
                                 Estado
                             </label>
-                            <input type="text" id="clinicState" class="form-input" maxlength="2" placeholder="Ex: SP" style="text-transform: uppercase;">
+                            <input type="text" id="clinicState" class="form-input" maxlength="2" placeholder="Automático" readonly style="text-transform: uppercase;">
+                        </div>
+                    </div>
+                    
+                    <!-- Preview do Mapa -->
+                    <div id="mapPreview" style="margin-top: 1rem; display: none;">
+                        <div style="background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 8px; padding: 1rem; text-align: center;">
+                            <i class="fas fa-map-marked-alt" style="font-size: 2rem; color: #4ca5b2; margin-bottom: 0.5rem;"></i>
+                            <p style="margin: 0; color: #64748b;">
+                                <strong id="mapAddressPreview">Endereço completo aparecerá aqui</strong>
+                            </p>
+                            <div id="mapContainer" style="margin-top: 1rem; height: 200px; border-radius: 8px; overflow: hidden; border: 2px solid #e2e8f0;"></div>
                         </div>
                     </div>
                 </div>
