@@ -489,7 +489,8 @@ function exportData() {
     showAlert('Funcionalidade de exportação em desenvolvimento...', 'warning');
 }
 
-async function viewLead(leadId) {
+// Funções globais para uso via onclick
+window.viewLead = async function(leadId) {
     try {
         const response = await fetch(`/api/leads/${leadId}`, {
             headers: getAuthHeaders()
@@ -517,7 +518,7 @@ async function viewLead(leadId) {
     }
 }
 
-async function viewContact(contactId) {
+window.viewContact = async function(contactId) {
     try {
         const response = await fetch(`/api/contact/${contactId}`, {
             headers: getAuthHeaders()
@@ -544,7 +545,7 @@ async function viewContact(contactId) {
     }
 }
 
-async function viewClient(clientId) {
+window.viewClient = async function(clientId) {
     try {
         const response = await fetch(`/api/clients/${clientId}`, {
             headers: getAuthHeaders()
@@ -576,7 +577,7 @@ async function viewClient(clientId) {
     }
 }
 
-async function deleteClient(clientId) {
+window.deleteClient = async function(clientId) {
     if (!confirm('Tem certeza que deseja desativar este cliente?')) {
         return;
     }
