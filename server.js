@@ -270,6 +270,10 @@ app.use('/apps/portal', express.static(path.join(__dirname, 'applications/clinic
 app.use('/crm', express.static(path.join(__dirname, 'applications/admin-dashboard')));
 app.use('/dashboard', express.static(path.join(__dirname, 'applications/admin-dashboard')));
 
+// Servir arquivos estáticos da página pública de clínica
+// IMPORTANTE: Deve vir ANTES da rota dinâmica /clinica/:slug
+app.use('/clinica', express.static(path.join(__dirname, 'applications/clinic-page')));
+
 // Assets do site principal (compatibilidade)
 app.use('/assets', express.static(path.join(__dirname, 'site/assets')));
 
