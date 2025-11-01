@@ -3,17 +3,16 @@
  * Gerenciamento de especialidades integrado ao dashboard
  */
 
-// API Base URL (usar global se disponível, sem redeclarar)
-let API_BASE;
-if (typeof window.API_BASE !== 'undefined') {
-    API_BASE = window.API_BASE;
-} else {
-    API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-        ? 'http://localhost:3000/api'
-        : (window.location.hostname === 'atenmed.com.br' || window.location.hostname === 'www.atenmed.com.br')
-        ? 'https://atenmed.com.br/api'
-        : '/api';
-}
+// API Base URL (usar sempre window.window.API_BASE para evitar conflitos)
+(function() {
+    if (typeof window.window.API_BASE === 'undefined') {
+        window.window.API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? 'http://localhost:3000/api'
+            : (window.location.hostname === 'atenmed.com.br' || window.location.hostname === 'www.atenmed.com.br')
+            ? 'https://atenmed.com.br/api'
+            : '/api';
+    }
+})();
 
 // Estado
 let specialties = [];
@@ -82,7 +81,7 @@ async function fetchJSON(url, opts = {}) {
 // Carregar clínicas
 async function loadClinicsForSpecialties() {
     try {
-        const data = await fetchJSON(`${API_BASE}/clinics`);
+        const data = await fetchJSON(`${window.API_BASE}/clinics`);
         clinics = data.data || data || [];
         
         const select = document.getElementById('specialtyClinic');
@@ -111,7 +110,7 @@ async function loadSpecialties() {
     list.innerHTML = '<div class="loading"><div class="spinner"></div>Carregando especialidades...</div>';
     
     try {
-        const data = await fetchJSON(`${API_BASE}/specialties?clinicId=${clinicId}`);
+        const data = await fetchJSON(`${window.API_BASE}/specialties?clinicId=${clinicId}`);
         specialties = data.data || data || [];
         
         if (specialties.length === 0) {
@@ -177,7 +176,7 @@ window.editSpecialty = async function(id) {
             return;
         }
         
-        const data = await fetchJSON(`${API_BASE}/specialties?clinicId=${clinicId}`);
+        const data = await fetchJSON(`${window.API_BASE}/specialties?clinicId=${clinicId}`);
         const spec = data.data?.find(x => x._id === id) || specialties.find(x => x._id === id);
         
         if (!spec) {
@@ -208,7 +207,7 @@ window.toggleSpecialty = async function(id, active) {
     }
     
     try {
-        await fetchJSON(`${API_BASE}/specialties/${id}`, {
+        await fetchJSON(`${window.API_BASE}/specialties/${id}`, {
             method: 'PUT',
             body: JSON.stringify({ active: !active })
         });
@@ -268,7 +267,7 @@ function setupSpecialtiesListeners() {
                 };
                 
                 const method = id ? 'PUT' : 'POST';
-                const url = id ? `${API_BASE}/specialties/${id}` : `${API_BASE}/specialties`;
+                const url = id ? `${window.API_BASE}/specialties/${id}` : `${window.API_BASE}/specialties`;
                 
                 await fetchJSON(url, {
                     method,

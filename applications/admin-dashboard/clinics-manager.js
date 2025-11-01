@@ -3,17 +3,16 @@
  * Gerenciamento de clínicas integrado ao dashboard
  */
 
-// API Base URL (usar global se disponível, sem redeclarar)
-let API_BASE;
-if (typeof window.API_BASE !== 'undefined') {
-    API_BASE = window.API_BASE;
-} else {
-    API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-        ? 'http://localhost:3000/api'
-        : (window.location.hostname === 'atenmed.com.br' || window.location.hostname === 'www.atenmed.com.br')
-        ? 'https://atenmed.com.br/api'
-        : '/api';
-}
+// API Base URL (usar sempre window.window.API_BASE para evitar conflitos)
+(function() {
+    if (typeof window.window.API_BASE === 'undefined') {
+        window.window.API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? 'http://localhost:3000/api'
+            : (window.location.hostname === 'atenmed.com.br' || window.location.hostname === 'www.atenmed.com.br')
+            ? 'https://atenmed.com.br/api'
+            : '/api';
+    }
+})();
 
 // Estado
 let clinics = [];
@@ -138,7 +137,7 @@ async function loadClinicData(clinicId) {
         const token = getAuthToken();
         if (!token) return;
         
-        const response = await fetch(`${API_BASE}/clinics/${clinicId}`, {
+        const response = await fetch(`${window.API_BASE}/clinics/${clinicId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -218,8 +217,8 @@ async function saveClinic(event) {
         };
         
         const url = clinicId ? 
-            `${API_BASE}/clinics/${clinicId}` : 
-            `${API_BASE}/clinics`;
+            `${window.API_BASE}/clinics/${clinicId}` : 
+            `${window.API_BASE}/clinics`;
         
         const method = clinicId ? 'PUT' : 'POST';
         
@@ -309,7 +308,7 @@ async function loadClinics() {
             return;
         }
 
-        const response = await fetch(`${API_BASE}/clinics`, {
+        const response = await fetch(`${window.API_BASE}/clinics`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -442,7 +441,7 @@ window.toggleClinicStatus = async function(clinicId, newStatus) {
         const token = getAuthToken();
         if (!token) return;
         
-        const response = await fetch(`${API_BASE}/clinics/${clinicId}`, {
+        const response = await fetch(`${window.API_BASE}/clinics/${clinicId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',

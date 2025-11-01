@@ -3,17 +3,16 @@
  * Gerenciamento de médicos integrado ao dashboard
  */
 
-// API Base URL (usar global se disponível, sem redeclarar)
-let API_BASE;
-if (typeof window.API_BASE !== 'undefined') {
-    API_BASE = window.API_BASE;
-} else {
-    API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-        ? 'http://localhost:3000/api'
-        : (window.location.hostname === 'atenmed.com.br' || window.location.hostname === 'www.atenmed.com.br')
-        ? 'https://atenmed.com.br/api'
-        : '/api';
-}
+// API Base URL (usar sempre window.API_BASE para evitar conflitos)
+(function() {
+    if (typeof window.API_BASE === 'undefined') {
+        window.API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? 'http://localhost:3000/api'
+            : (window.location.hostname === 'atenmed.com.br' || window.location.hostname === 'www.atenmed.com.br')
+            ? 'https://atenmed.com.br/api'
+            : '/api';
+    }
+})();
 
 // Estado
 let doctors = [];
@@ -83,7 +82,7 @@ async function fetchJSON(url, opts = {}) {
 // Carregar clínicas
 async function loadClinicsForDoctors() {
     try {
-        const data = await fetchJSON(`${API_BASE}/clinics`);
+        const data = await fetchJSON(`${window.API_BASE}/clinics`);
         clinics = data.data || data || [];
         
         const select = document.getElementById('doctorClinic');
@@ -110,7 +109,7 @@ async function loadSpecialtiesForDoctor() {
     }
     
     try {
-        const data = await fetchJSON(`${API_BASE}/specialties?clinicId=${clinicId}`);
+        const data = await fetchJSON(`${window.API_BASE}/specialties?clinicId=${clinicId}`);
         specialties = data.data || data || [];
         
         select.innerHTML = specialties.map(s => 
@@ -130,7 +129,7 @@ async function loadDoctors() {
     list.innerHTML = '<div class="loading"><div class="spinner"></div>Carregando médicos...</div>';
     
     try {
-        const data = await fetchJSON(`${API_BASE}/doctors`);
+        const data = await fetchJSON(`${window.API_BASE}/doctors`);
         doctors = data.data || data || [];
         
         if (doctors.length === 0) {
@@ -189,7 +188,7 @@ async function loadDoctors() {
 // Editar médico
 window.editDoctor = async function(id) {
     try {
-        const data = await fetchJSON(`${API_BASE}/doctors?active=true`);
+        const data = await fetchJSON(`${window.API_BASE}/doctors?active=true`);
         const doc = data.data?.find(x => x._id === id) || doctors.find(x => x._id === id);
         
         if (!doc) {
@@ -238,7 +237,7 @@ window.toggleDoctor = async function(id, active) {
     }
     
     try {
-        await fetchJSON(`${API_BASE}/doctors/${id}`, {
+        await fetchJSON(`${window.API_BASE}/doctors/${id}`, {
             method: 'PUT',
             body: JSON.stringify({ active: !active })
         });
@@ -311,7 +310,7 @@ function setupDoctorsListeners() {
                 };
                 
                 const method = id ? 'PUT' : 'POST';
-                const url = id ? `${API_BASE}/doctors/${id}` : `${API_BASE}/doctors`;
+                const url = id ? `${window.API_BASE}/doctors/${id}` : `${window.API_BASE}/doctors`;
                 
                 await fetchJSON(url, {
                     method,
