@@ -191,7 +191,7 @@ router.post('/login', [
         let userType = 'cliente';
         
         if (isGlobalAdmin) {
-            redirectRoute = '/crm'; // Admin global vai para CRM
+            redirectRoute = '/dashboard'; // Admin global vai para Dashboard
             userType = 'admin_global';
         } else if (isClinicOwner) {
             redirectRoute = '/portal'; // Dono de clínica vai para portal

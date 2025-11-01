@@ -322,8 +322,8 @@
                     let welcomeMessage = 'Login realizado com sucesso! Redirecionando...';
                     
                     if (result.data.isGlobalAdmin) {
-                        welcomeMessage = 'Bem-vindo, Administrador! Redirecionando para o CRM...';
-                        redirectPath = '/crm';
+                        welcomeMessage = 'Bem-vindo, Administrador! Redirecionando para o Dashboard...';
+                        redirectPath = '/dashboard';
                     } else if (result.data.hasClinic) {
                         welcomeMessage = 'Bem-vindo de volta! Redirecionando para o seu portal...';
                         redirectPath = '/portal';
@@ -372,7 +372,7 @@
                     // Se login foi há menos de 24 horas, redirecionar baseado no tipo de usuário
                     if (hoursDiff < 24) {
                         const redirectPath = authData.redirectRoute || 
-                                           (authData.isGlobalAdmin ? '/crm' : '/portal');
+                                           (authData.isGlobalAdmin ? '/dashboard' : '/portal');
                         window.location.href = redirectPath;
                     }
                 } catch (error) {
