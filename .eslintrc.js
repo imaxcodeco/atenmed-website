@@ -3,25 +3,25 @@ module.exports = {
     node: true,
     es2021: true,
     browser: true,
-    jest: true
+    jest: true,
   },
-  extends: [
-    'eslint:recommended',
-    'plugin:prettier/recommended' // Integra Prettier com ESLint
-  ],
+  extends: ['eslint:recommended', 'plugin:prettier/recommended'],
   plugins: ['prettier'],
   parserOptions: {
     ecmaVersion: 'latest',
-    sourceType: 'module'
+    sourceType: 'module',
   },
   rules: {
     'prettier/prettier': 'error',
     'no-console': 'warn',
-    'no-unused-vars': ['warn', { 
-      argsIgnorePattern: '^_',
-      varsIgnorePattern: '^_'
-    }],
-    'no-undef': 'error'
+    'no-unused-vars': [
+      'warn',
+      {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+      },
+    ],
+    'no-undef': 'error',
   },
   ignorePatterns: [
     'node_modules/',
@@ -30,7 +30,6 @@ module.exports = {
     '*.min.js',
     'tailwind.css',
     'logs/',
-    'backups/'
-  ]
+    'backups/',
+  ],
 };
-
