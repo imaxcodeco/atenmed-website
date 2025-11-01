@@ -16,6 +16,7 @@
     "pm2:monit": "pm2 monit",
     "test": "cross-env NODE_ENV=test jest --coverage",
     "test:watch": "cross-env NODE_ENV=test jest --watch",
+    "test:sentry": "node scripts/test-sentry.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
