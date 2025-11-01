@@ -1,0 +1,11 @@
+=== EXECUTE ISSO NO SERVIDOR AGORA ===
+
+cd /var/www/atenmed
+rm -rf node_modules
+npm ci --production --legacy-peer-deps --ignore-scripts
+pm2 stop atenmed
+pm2 delete atenmed
+pm2 start ecosystem.config.js --env production
+pm2 save
+pm2 status
+

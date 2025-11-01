@@ -1,0 +1,31 @@
+=== DIAGNOSTICAR ERRO DA APLICAÇÃO ===
+
+# 1. Ver logs de erro completos:
+pm2 logs atenmed --lines 100 --err
+
+# 2. Ver todos os logs recentes:
+pm2 logs atenmed --lines 100
+
+# 3. Verificar se é problema de código:
+cd /var/www/atenmed
+git log --oneline -5
+git status
+
+# 4. Verificar se .env existe e está correto:
+ls -la .env
+cat .env | grep -v "SECRET\|PASSWORD\|TOKEN"
+
+# 5. Verificar node_modules:
+ls -la node_modules | head -20
+
+# 6. Verificar Node.js version:
+node --version
+which node
+
+# 7. Tentar rodar manualmente para ver erro:
+node server.js
+
+# 8. Verificar portas:
+netstat -tlnp | grep :3000
+sudo lsof -i :3000
+

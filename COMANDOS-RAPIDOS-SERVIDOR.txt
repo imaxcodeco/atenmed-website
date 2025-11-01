@@ -1,0 +1,28 @@
+=== COMANDOS RÁPIDOS PARA EXECUTAR NO SERVIDOR ===
+
+# 1. Verificar PM2
+pm2 status
+
+# 2. Se não estiver rodando, iniciar:
+cd /var/www/atenmed || cd ~/atenmed
+pm2 start ecosystem.config.js --env production
+pm2 save
+
+# 3. Se estiver com erro, ver logs:
+pm2 logs atenmed --lines 50
+
+# 4. Reiniciar:
+pm2 restart atenmed --update-env
+
+# 5. Verificar se está respondendo:
+curl http://localhost:3000/health
+
+# 6. Ver versão do Node:
+node --version
+
+# 7. Ver processos rodando:
+ps aux | grep node
+
+# 8. Ver porta 3000:
+sudo lsof -i :3000
+
