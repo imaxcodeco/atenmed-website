@@ -127,10 +127,10 @@ async function loadDoctors() {
                     </span>
                 </td>
                 <td class="actions">
-                    <button class="btn btn-secondary" onclick="editDoctor('${d._id}')" style="margin-right: 0.5rem;">
+                    <button class="btn btn-secondary btn-edit-doctor" data-doctor-id="${d._id}" style="margin-right: 0.5rem;">
                         <i class="fas fa-edit"></i> Editar
                     </button>
-                    <button class="btn btn-${d.active ? 'warning' : 'success'}" onclick="toggleDoctor('${d._id}', ${d.active})">
+                    <button class="btn btn-${d.active ? 'warning' : 'success'} btn-toggle-doctor" data-doctor-id="${d._id}" data-doctor-active="${d.active}">
                         <i class="fas fa-${d.active ? 'ban' : 'check'}"></i>
                         ${d.active ? 'Desativar' : 'Ativar'}
                     </button>
@@ -156,6 +156,26 @@ async function loadDoctors() {
                 </table>
             </div>
         `;
+        
+        // Adicionar event listeners aos botões de ação
+        list.querySelectorAll('.btn-edit-doctor').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const doctorId = this.getAttribute('data-doctor-id');
+                if (doctorId) {
+                    editDoctor(doctorId);
+                }
+            });
+        });
+        
+        list.querySelectorAll('.btn-toggle-doctor').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const doctorId = this.getAttribute('data-doctor-id');
+                const active = this.getAttribute('data-doctor-active') === 'true';
+                if (doctorId) {
+                    toggleDoctor(doctorId, active);
+                }
+            });
+        });
     } catch (error) {
         console.error('Erro ao carregar médicos:', error);
         list.innerHTML = '<div class="loading" style="color: var(--danger);">Erro ao carregar médicos</div>';

@@ -318,12 +318,17 @@ function renderClinics() {
                 <div class="empty-state-icon">🏥</div>
                 <h3>Nenhuma clínica cadastrada</h3>
                 <p>Comece adicionando sua primeira clínica</p>
-                <button class="btn btn-primary" onclick="openClinicModal()">
+                <button class="btn btn-primary" id="btnCadastrarPrimeiraClinica">
                     <i class="fas fa-plus"></i>
                     Cadastrar Primeira Clínica
                 </button>
             </div>
         `;
+        // Adicionar event listener ao botão
+        const btn = document.getElementById('btnCadastrarPrimeiraClinica');
+        if (btn) {
+            btn.addEventListener('click', () => openClinicModal());
+        }
         return;
     }
     
@@ -363,10 +368,10 @@ function renderClinics() {
                                     </a>
                                 </td>
                                 <td>
-                                    <button class="btn btn-secondary" onclick="openClinicModal('${clinic._id}')" style="margin-right: 0.5rem;">
+                                    <button class="btn btn-secondary btn-edit-clinic" data-clinic-id="${clinic._id}" style="margin-right: 0.5rem;">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="btn btn-danger" onclick="toggleClinicStatus('${clinic._id}', ${!clinic.active})">
+                                    <button class="btn btn-danger btn-toggle-clinic" data-clinic-id="${clinic._id}" data-clinic-active="${!clinic.active}">
                                         <i class="fas fa-${clinic.active ? 'ban' : 'check'}"></i>
                                     </button>
                                 </td>
@@ -379,6 +384,26 @@ function renderClinics() {
     `;
     
     content.innerHTML = table;
+    
+    // Adicionar event listeners aos botões de ação
+    content.querySelectorAll('.btn-edit-clinic').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const clinicId = this.getAttribute('data-clinic-id');
+            if (clinicId) {
+                openClinicModal(clinicId);
+            }
+        });
+    });
+    
+    content.querySelectorAll('.btn-toggle-clinic').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const clinicId = this.getAttribute('data-clinic-id');
+            const newStatus = this.getAttribute('data-clinic-active') === 'true';
+            if (clinicId) {
+                toggleClinicStatus(clinicId, newStatus);
+            }
+        });
+    });
 }
 
 // Atualizar estatísticas de clínicas

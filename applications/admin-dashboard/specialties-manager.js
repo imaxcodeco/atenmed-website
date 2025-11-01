@@ -110,10 +110,10 @@ async function loadSpecialties() {
                     </span>
                 </td>
                 <td class="actions">
-                    <button class="btn btn-secondary" onclick="editSpecialty('${s._id}')" style="margin-right: 0.5rem;">
+                    <button class="btn btn-secondary btn-edit-specialty" data-specialty-id="${s._id}" style="margin-right: 0.5rem;">
                         <i class="fas fa-edit"></i> Editar
                     </button>
-                    <button class="btn btn-${s.active ? 'warning' : 'success'}" onclick="toggleSpecialty('${s._id}', ${s.active})">
+                    <button class="btn btn-${s.active ? 'warning' : 'success'} btn-toggle-specialty" data-specialty-id="${s._id}" data-specialty-active="${s.active}">
                         <i class="fas fa-${s.active ? 'ban' : 'check'}"></i>
                         ${s.active ? 'Desativar' : 'Ativar'}
                     </button>
@@ -138,6 +138,26 @@ async function loadSpecialties() {
                 </table>
             </div>
         `;
+        
+        // Adicionar event listeners aos botões de ação
+        list.querySelectorAll('.btn-edit-specialty').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const specialtyId = this.getAttribute('data-specialty-id');
+                if (specialtyId) {
+                    editSpecialty(specialtyId);
+                }
+            });
+        });
+        
+        list.querySelectorAll('.btn-toggle-specialty').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const specialtyId = this.getAttribute('data-specialty-id');
+                const active = this.getAttribute('data-specialty-active') === 'true';
+                if (specialtyId) {
+                    toggleSpecialty(specialtyId, active);
+                }
+            });
+        });
     } catch (error) {
         console.error('Erro ao carregar especialidades:', error);
         list.innerHTML = '<div class="loading" style="color: var(--danger);">Erro ao carregar especialidades</div>';
