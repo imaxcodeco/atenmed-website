@@ -15,8 +15,8 @@
 })();
 
 // Estado (nomes únicos para evitar conflitos entre scripts)
-let specialtiesListList = [];
-let clinicsForSpecialtiesForSpecialties = [];
+let specialtiesList = [];
+let clinicsForSpecialties = [];
 
 // Verificar autenticação (usa função global do dashboard.js)
 // Helper que usa window.getAuthToken se disponível, senão fallback
