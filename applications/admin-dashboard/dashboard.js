@@ -583,6 +583,84 @@ window.showDetailsModal = function(title, content, type = 'info') {
     });
 };
 
+// Função para exibir modal de confirmação customizado
+window.showConfirmModal = function(message, onConfirm, title = 'Confirmar ação') {
+    return new Promise((resolve) => {
+        // Remover modal existente se houver
+        const existingModal = document.getElementById('confirmModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Criar modal
+        const modal = document.createElement('div');
+        modal.id = 'confirmModal';
+        modal.className = 'modal show';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 450px;">
+                <div class="modal-header">
+                    <h2>
+                        <i class="fas fa-exclamation-triangle" style="color: var(--warning);"></i>
+                        ${title}
+                    </h2>
+                    <button class="modal-close" id="closeConfirmModal">&times;</button>
+                </div>
+                <div class="modal-body" style="padding: 1.5rem;">
+                    <p style="font-size: 1rem; line-height: 1.6; color: var(--gray-700); margin: 0;">
+                        ${message}
+                    </p>
+                </div>
+                <div class="modal-footer" style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                    <button class="btn btn-secondary" id="cancelConfirmModal">Cancelar</button>
+                    <button class="btn btn-danger" id="confirmConfirmModal">
+                        <i class="fas fa-check"></i>
+                        Confirmar
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Event listeners
+        const closeBtn = document.getElementById('closeConfirmModal');
+        const cancelBtn = document.getElementById('cancelConfirmModal');
+        const confirmBtn = document.getElementById('confirmConfirmModal');
+        
+        const closeModal = (confirmed = false) => {
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.remove();
+                if (confirmed && onConfirm) {
+                    onConfirm();
+                }
+                resolve(confirmed);
+            }, 300);
+        };
+        
+        closeBtn.addEventListener('click', () => closeModal(false));
+        cancelBtn.addEventListener('click', () => closeModal(false));
+        confirmBtn.addEventListener('click', () => closeModal(true));
+        
+        // Fechar ao clicar fora (apenas se clicar no backdrop)
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal(false);
+            }
+        });
+        
+        // Fechar com ESC
+        const handleEsc = (e) => {
+            if (e.key === 'Escape') {
+                closeModal(false);
+                document.removeEventListener('keydown', handleEsc);
+            }
+        };
+        document.addEventListener('keydown', handleEsc);
+    });
+};
+
 // Funções de ação
 function refreshData() {
     loadDashboardData();
@@ -685,7 +763,13 @@ window.viewClient = async function(clientId) {
 }
 
 window.deleteClient = async function(clientId) {
-    if (!confirm('Tem certeza que deseja desativar este cliente?')) {
+    const confirmed = await showConfirmModal(
+        'Tem certeza que deseja desativar este cliente?',
+        null,
+        'Desativar Cliente'
+    );
+    
+    if (!confirmed) {
         return;
     }
     
@@ -710,7 +794,13 @@ window.deleteClient = async function(clientId) {
 }
 
 window.deleteLead = async function(leadId) {
-    if (!confirm('Tem certeza que deseja excluir este lead? Esta ação não pode ser desfeita.')) {
+    const confirmed = await showConfirmModal(
+        'Tem certeza que deseja excluir este lead? Esta ação não pode ser desfeita.',
+        null,
+        'Excluir Lead'
+    );
+    
+    if (!confirmed) {
         return;
     }
     
