@@ -20,7 +20,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky install",
+    "prepare": "husky",
     "test-webhook": "node test-webhook.js",
     "test-webhook-local": "node test-webhook-local.js",
     "test-whatsapp": "node test-whatsapp-completo.js",
