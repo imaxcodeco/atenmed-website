@@ -1,0 +1,49 @@
+=== REVISÃO DAS VARIÁVEIS DE AMBIENTE PARA PRODUÇÃO ===
+
+Execute este checklist ANTES de fazer o deploy em produção:
+
+1. CONECTIVIDADE
+   ✅ MONGODB_URI - URL completa do MongoDB Atlas
+   ✅ PORT - 3000 (padrão)
+   ✅ HOST - 0.0.0.0 (para aceitar conexões externas)
+
+2. SEGURANÇA
+   ✅ NODE_ENV - production
+   ✅ JWT_SECRET - Gerar com: node scripts/generate-secrets.js
+   ✅ SESSION_SECRET - Gerar com: node scripts/generate-secrets.js
+   ✅ BCRYPT_ROUNDS - 12 (recomendado)
+
+3. CORS
+   ✅ CORS_ORIGIN - https://atenmed.com.br,https://www.atenmed.com.br
+   ❌ NÃO use wildcards (*) em produção!
+
+4. AWS SES (EMAIL)
+   ✅ EMAIL_HOST - email-smtp.us-east-1.amazonaws.com
+   ✅ EMAIL_PORT - 587
+   ✅ EMAIL_USER - SMTP User (do console AWS SES)
+   ✅ EMAIL_PASS - SMTP Password (do console AWS SES)
+   ✅ EMAIL_FROM - AtenMed <contato@atenmed.com.br>
+
+5. WHATSAPP BUSINESS API
+   ✅ WHATSAPP_PHONE_ID - ID do número de telefone
+   ✅ WHATSAPP_TOKEN - Token de acesso
+   ✅ WHATSAPP_VERIFY_TOKEN - Token único para webhook
+   ✅ WHATSAPP_APP_SECRET - App Secret
+
+6. GOOGLE CALENDAR
+   ⚠️ GOOGLE_CLIENT_ID - (opcional, mas recomendado)
+   ⚠️ GOOGLE_CLIENT_SECRET - (opcional, mas recomendado)
+   ⚠️ GOOGLE_REDIRECT_URL - https://atenmed.com.br/api/auth/google/callback
+
+7. MONITORAMENTO
+   ⚠️ SENTRY_DSN - (opcional, mas recomendado)
+   
+8. RATE LIMITING (OPCIONAL - já tem padrões)
+   ⚠️ RATE_LIMIT_WINDOW_MS - 900000 (15 min)
+   ⚠️ RATE_LIMIT_MAX_REQUESTS - 100
+
+COMANDOS ÚTEIS:
+- Verificar arquivo .env: cat .env | grep -v "pass\|secret\|key\|token"
+- Gerar secrets: node scripts/generate-secrets.js
+- Testar configuração: node -e "require('dotenv').config(); console.log(process.env)" | grep -i "mongodb\|email\|whatsapp\|jwt"
+
