@@ -385,6 +385,7 @@ router.post('/', [
 // @access  Private (Admin, Recepcionista)
 router.get('/', [
     authenticateToken,
+    addClinicContext,
     authorize('admin', 'recepcionista'),
     query('page').optional().isInt({ min: 1 }),
     query('limit').optional().isInt({ min: 1, max: 100 }),
@@ -413,14 +414,17 @@ router.get('/', [
             };
         }
 
-        // Buscar agendamentos
-        const appointments = await Appointment.find(filters)
-            .populate('doctor', 'name email phone')
-            .populate('specialty', 'name color')
-            .populate('clinic', 'name address')
-            .sort({ scheduledDate: -1, scheduledTime: -1 })
-            .skip(skip)
-            .limit(limit);
+        // Buscar agendamentos com isolamento automático de tenant
+        const appointments = await findWithTenant(Appointment, filters, req, {
+            populate: [
+                { path: 'doctor', select: 'name email phone' },
+                { path: 'specialty', select: 'name color' },
+                { path: 'clinic', select: 'name address' }
+            ],
+            sort: { scheduledDate: -1, scheduledTime: -1 },
+            limit,
+            skip
+        });
 
         const total = await countWithTenant(Appointment, filters, req);
 
@@ -452,13 +456,18 @@ router.get('/', [
 // @access  Private
 router.get('/:id', [
     authenticateToken,
+    addClinicContext,
     param('id').isMongoId()
 ], validateRequest, async (req, res) => {
     try {
-        const appointment = await Appointment.findById(req.params.id)
-            .populate('doctor', 'name email phone crm')
-            .populate('specialty', 'name description')
-            .populate('clinic', 'name address contact');
+        // Usar helper com isolamento automático
+        const appointment = await findByIdWithTenant(Appointment, req.params.id, req, {
+            populate: [
+                { path: 'doctor', select: 'name email phone crm' },
+                { path: 'specialty', select: 'name description' },
+                { path: 'clinic', select: 'name address contact' }
+            ]
+        });
 
         if (!appointment) {
             return res.status(404).json({
@@ -487,12 +496,15 @@ router.get('/:id', [
 // @desc    Cancelar agendamento
 // @access  Private ou Public (com validação)
 router.put('/:id/cancel', [
+    authenticateToken,
+    addClinicContext,
     param('id').isMongoId(),
     body('reason').trim().isLength({ min: 3, max: 500 }).withMessage('Motivo deve ter entre 3 e 500 caracteres'),
     body('canceledBy').isIn(['patient', 'doctor', 'clinic', 'system'])
 ], validateRequest, async (req, res) => {
     try {
-        const appointment = await Appointment.findById(req.params.id);
+        // Usar helper com isolamento automático
+        const appointment = await findByIdWithTenant(Appointment, req.params.id, req);
 
         if (!appointment) {
             return res.status(404).json({
