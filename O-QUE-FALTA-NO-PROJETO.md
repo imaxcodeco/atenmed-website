@@ -267,3 +267,33 @@
 
 **Última atualização:** Janeiro 2025  
 **Status:** Sistema funcional e pronto para produção, com espaço para melhorias contínuas
+
+---
+
+## 🎉 MELHORIAS RECENTEMENTE IMPLEMENTADAS (Janeiro 2025)
+
+### ✅ **Críticas Implementadas:**
+
+- [x] Rate limiting agressivo para endpoints sensíveis (login: 5/min, cadastros: 10/h)
+- [x] Consentimento LGPD em todos os formulários públicos
+- [x] Configurações PM2 otimizadas (auto-restart, memory limits)
+- [x] Checklist para revisar variáveis de ambiente
+
+### ✅ **Monitoramento:**
+
+- [x] Sentry configurado e testado
+- [x] Health checks detalhados implementados
+- [x] Backup MongoDB automatizado
+- [x] Guias de configuração criados
+
+### ✅ **Security:**
+
+- [x] Secrets fortes (scripts de geração)
+- [x] CORS configurado corretamente
+- [x] Rate limiting em múltiplas camadas
+- [x] Proteção contra spam/abuse
+
+### ⚠️ **Falta Testar (Manual):**
+
+- [ ] Envio de emails em produção (AWS SES)
+- [ ] Configurar Uptime Robot
