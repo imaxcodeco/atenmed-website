@@ -1,11 +1,11 @@
 name: Deploy to Production
 
 on:
-  # push:
-  #   branches:
-  #     - main
-  #     - master
-  workflow_dispatch: # Deploy manual apenas (via GitHub UI)
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch: # Deploy manual também disponível
 
 jobs:
   deploy:
