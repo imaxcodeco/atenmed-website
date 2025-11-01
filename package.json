@@ -16,6 +16,10 @@
     "pm2:monit": "pm2 monit",
     "test": "NODE_ENV=test jest --coverage",
     "test:watch": "NODE_ENV=test jest --watch",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test-webhook": "node test-webhook.js",
     "test-webhook-local": "node test-webhook-local.js",
     "test-whatsapp": "node test-whatsapp-completo.js",
@@ -80,8 +84,12 @@
     "xss": "^1.0.14"
   },
   "devDependencies": {
+    "eslint": "^9.39.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
     "jest": "^29.7.0",
     "nodemon": "^3.0.2",
+    "prettier": "^3.6.2",
     "supertest": "^6.3.3",
     "tailwindcss-cli": "^0.1.2"
   },
