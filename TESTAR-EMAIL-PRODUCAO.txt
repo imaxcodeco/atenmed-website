@@ -1,0 +1,37 @@
+=== COMO TESTAR ENVIO DE EMAILS EM PRODUÇÃO ===
+
+OPÇÃO 1: TESTE VIA SCRIPT (RECOMENDADO)
+----------------------------------------
+ssh -i site-atenmed.pem ubuntu@3.129.206.231
+cd /var/www/atenmed
+node scripts/test-email-ses.js
+
+OPÇÃO 2: TESTE MANUAL VIA API
+----------------------------------------
+Envie um POST para:
+POST https://atenmed.com.br/api/test/send-email
+
+Body:
+{
+  "to": "seu-email@teste.com",
+  "subject": "Teste de Email",
+  "text": "Este é um teste de configuração"
+}
+
+OPÇÃO 3: TESTE ATRAVÉS DE FORMULÁRIO
+----------------------------------------
+1. Acesse: https://atenmed.com.br
+2. Preencha formulário de contato
+3. Verifique se email chegou
+
+CHECKLIST DE VERIFICAÇÃO:
+✅ Email chegou em menos de 1 minuto
+✅ Remetente está correto (AtenMed <contato@atenmed.com.br>)
+✅ Texto está formatado corretamente
+✅ Links funcionam
+
+PROBLEMAS COMUNS:
+- Email no spam: Verificar SPF/DKIM no domínio
+- Email não chega: Verificar AWS SES sandbox
+- Erro de conexão: Verificar credenciais SMTP
+
