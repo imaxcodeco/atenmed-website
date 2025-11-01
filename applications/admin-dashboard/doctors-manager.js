@@ -20,29 +20,24 @@ let clinicsForDoctors = [];
 let specialtiesForDoctors = [];
 
 // Verificar autenticação (usa função global do dashboard.js)
-// Não redefinir se já existe para evitar recursão
-let getAuthToken;
-if (typeof window.getAuthToken === 'function') {
-    // Usar a função global diretamente
-    getAuthToken = function() {
+// Helper que usa window.getAuthToken se disponível, senão fallback
+function getAuthToken() {
+    if (typeof window.getAuthToken === 'function') {
         return window.getAuthToken();
-    };
-} else {
+    }
     // Fallback se não existir
-    getAuthToken = function() {
-        try {
-            const auth = localStorage.getItem('atenmed_auth');
-            if (!auth) {
-                window.location.href = '/site/login.html';
-                return null;
-            }
-            const authData = JSON.parse(auth);
-            return authData.token;
-        } catch (error) {
+    try {
+        const auth = localStorage.getItem('atenmed_auth');
+        if (!auth) {
             window.location.href = '/site/login.html';
             return null;
         }
-    };
+        const authData = JSON.parse(auth);
+        return authData.token;
+    } catch (error) {
+        window.location.href = '/site/login.html';
+        return null;
+    }
 }
 
 // Usar função showAlert do dashboard.js se disponível (evitar recursão)
