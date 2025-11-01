@@ -85,6 +85,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT || 22 }}
+          command_timeout: 20m
           script: |
             cd /var/www/atenmed || cd ~/atenmed
 
@@ -97,14 +98,20 @@ jobs:
 
             # Copy new .env (será feito via secrets)
 
-            # Install dependencies (with dev for build)
-            npm ci --ignore-scripts
+            # Install dependencies (otimizado para velocidade)
+            if [ -d "node_modules" ]; then
+              echo "📦 Updating dependencies..."
+              npm install --legacy-peer-deps --ignore-scripts
+            else
+              echo "📦 Installing dependencies (first time)..."
+              npm ci --legacy-peer-deps --ignore-scripts
+            fi
 
             # Build CSS
             npm run build:css || echo "Build optional"
 
             # Remove dev dependencies
-            npm prune --omit=dev
+            npm prune --omit=dev --legacy-peer-deps
 
             # Restart with PM2
             pm2 reload ecosystem.config.js --env production || pm2 start ecosystem.config.js --env production
