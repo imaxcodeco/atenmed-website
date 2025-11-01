@@ -66,3 +66,6 @@ coverage/
 # Backup
 *.bak
 *.backup
+
+# Credenciais (NÃO REMOVER!)
+LEIA-ANTES-DE-CONFIGURAR-SMTP.md
