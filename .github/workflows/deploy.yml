@@ -10,7 +10,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -22,7 +22,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci --production
+        run: npm ci --omit=dev --ignore-scripts
 
       - name: Build CSS
         run: npm run build:css || echo "Build CSS optional"
@@ -33,41 +33,41 @@ jobs:
           NODE_ENV=production
           PORT=3000
           HOST=0.0.0.0
-          
+
           # URLs
           APP_URL=https://atenmed.com.br
           CORS_ORIGIN=https://atenmed.com.br,https://www.atenmed.com.br
-          
+
           # MongoDB
           MONGODB_URI=${{ secrets.MONGODB_URI }}
-          
+
           # JWT
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           JWT_EXPIRES_IN=7d
-          
+
           # Email (AWS SES)
           EMAIL_HOST=${{ secrets.EMAIL_HOST }}
           EMAIL_PORT=587
           EMAIL_USER=${{ secrets.EMAIL_USER }}
           EMAIL_PASS=${{ secrets.EMAIL_PASS }}
           EMAIL_FROM=${{ secrets.EMAIL_FROM }}
-          
+
           # WhatsApp
           WHATSAPP_API_URL=https://graph.facebook.com/v18.0
           WHATSAPP_PHONE_ID=${{ secrets.WHATSAPP_PHONE_ID }}
           WHATSAPP_TOKEN=${{ secrets.WHATSAPP_TOKEN }}
           WHATSAPP_VERIFY_TOKEN=${{ secrets.WHATSAPP_VERIFY_TOKEN }}
           WHATSAPP_APP_SECRET=${{ secrets.WHATSAPP_APP_SECRET }}
-          
+
           # Google Calendar
           GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_REDIRECT_URL=https://atenmed.com.br/api/auth/google/callback
-          
+
           # Security
           BCRYPT_ROUNDS=12
           SESSION_SECRET=${{ secrets.SESSION_SECRET }}
-          
+
           # Features
           ENABLE_REMINDERS=true
           ENABLE_WAITLIST=true
@@ -84,29 +84,29 @@ jobs:
           port: ${{ secrets.SERVER_PORT || 22 }}
           script: |
             cd /var/www/atenmed || cd ~/atenmed
-            
+
             # Pull latest code (tentar main, depois reorganizacao-estrutura)
             git pull origin main 2>/dev/null || git pull origin reorganizacao-estrutura || git pull origin master
-            
+
             # Backup
             mkdir -p backups
             cp .env backups/.env.$(date +%Y%m%d_%H%M%S) 2>/dev/null || true
-            
+
             # Copy new .env (será feito via secrets)
-            
+
             # Install dependencies
             npm ci --production
-            
+
             # Build
             npm run build:css || echo "Build optional"
-            
+
             # Restart with PM2
             pm2 reload ecosystem.config.js --env production || pm2 start ecosystem.config.js --env production
             pm2 save
-            
+
             # Show status
             pm2 status
-            
+
             echo "✅ Deploy completed successfully!"
 
       - name: Health Check

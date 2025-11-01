@@ -62,17 +62,17 @@ jobs:
             echo "📦 Checking dependencies..."
             if [ ! -d "node_modules" ]; then
               echo "📦 Installing dependencies (first time)..."
-              npm ci --production --legacy-peer-deps
+              npm ci --omit=dev --legacy-peer-deps --ignore-scripts
             else
               echo "📦 Updating dependencies..."
-              npm install --production --legacy-peer-deps
+              npm install --omit=dev --legacy-peer-deps --ignore-scripts
             fi
 
             # Start or restart with PM2
             echo "🔄 Restarting application..."
             pm2 restart atenmed --update-env || pm2 start ecosystem.config.js --env production
             pm2 save
-            
+
             # Wait for app to initialize
             echo "⏳ Waiting for app to start..."
             sleep 10
@@ -88,7 +88,7 @@ jobs:
               echo "⏳ Attempt $i/6 failed, waiting 3 seconds..."
               sleep 3
             done
-            
+
             # If we get here, health check failed
             echo "❌ Health check failed after 6 attempts"
             echo "=== PM2 STATUS ==="
@@ -96,4 +96,3 @@ jobs:
             echo "=== PM2 LOGS ==="
             pm2 logs atenmed --lines 100 --nostream
             exit 1
-
