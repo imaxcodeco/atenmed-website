@@ -128,10 +128,11 @@ const corsOptionsDelegate = (req, callback) => {
     const userAgent = req.get('user-agent') || '';
     
     // Lista de domínios permitidos
-    const allowedOrigins = process.env.CORS_ORIGIN?.split(',').map(o => o.trim()) || [
-        'https://atenmed.com.br',
-        'https://www.atenmed.com.br',
-        ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000', 'http://localhost:8000'] : [])
+    // Em produção, APENAS domínios específicos permitidos
+    const allowedOrigins = process.env.CORS_ORIGIN?.split(',').map(o => o.trim()).filter(o => o) || [
+        ...(process.env.NODE_ENV === 'production' 
+            ? ['https://atenmed.com.br', 'https://www.atenmed.com.br']
+            : ['http://localhost:3000', 'http://localhost:8000', 'http://127.0.0.1:3000'])
     ];
 
     // === DESENVOLVIMENTO: Permitir tudo ===

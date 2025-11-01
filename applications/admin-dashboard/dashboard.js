@@ -670,8 +670,173 @@ function refreshData() {
     showAlert('Dados atualizados com sucesso!', 'success');
 }
 
-function exportData() {
-    showAlert('Funcionalidade de exportação em desenvolvimento...', 'warning');
+async function exportData() {
+    try {
+        // Buscar todos os dados
+        const [leadsRes, clientsRes, contactsRes] = await Promise.all([
+            fetch('/api/leads'),
+            fetch('/api/clients', { headers: getAuthHeaders() }),
+            fetch('/api/contact')
+        ]);
+
+        const leads = await leadsRes.json();
+        const clients = await clientsRes.ok ? await clientsRes.json() : { data: [] };
+        const contacts = await contactsRes.json();
+
+        // Preparar dados para exportação
+        const data = {
+            exportDate: new Date().toISOString(),
+            leads: leads.data?.leads || [],
+            clients: clients.data || [],
+            contacts: contacts.data?.contatos || contacts.data || [],
+            summary: {
+                totalLeads: leads.data?.pagination?.total || leads.data?.leads?.length || 0,
+                totalClients: clients.data?.length || 0,
+                totalContacts: contacts.data?.contatos?.length || (Array.isArray(contacts.data) ? contacts.data.length : 0)
+            }
+        };
+
+        // Mostrar modal de opções de exportação
+        const exportType = await showExportModal();
+        
+        if (exportType === 'csv') {
+            exportToCSV(data);
+        } else if (exportType === 'json') {
+            exportToJSON(data);
+        }
+    } catch (error) {
+        console.error('Erro ao exportar dados:', error);
+        showAlert('Erro ao exportar dados', 'error');
+    }
+}
+
+// Função para mostrar modal de seleção de tipo de exportação
+function showExportModal() {
+    return new Promise((resolve) => {
+        const existingModal = document.getElementById('exportModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        const modal = document.createElement('div');
+        modal.id = 'exportModal';
+        modal.className = 'modal show';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 400px;">
+                <div class="modal-header">
+                    <h2>
+                        <i class="fas fa-download"></i>
+                        Exportar Relatório
+                    </h2>
+                    <button class="modal-close" id="closeExportModal">&times;</button>
+                </div>
+                <div class="modal-body" style="padding: 1.5rem;">
+                    <p style="margin-bottom: 1.5rem;">Escolha o formato de exportação:</p>
+                    <div style="display: flex; gap: 1rem; flex-direction: column;">
+                        <button class="btn btn-primary" id="exportCSV" style="width: 100%; text-align: left;">
+                            <i class="fas fa-file-csv"></i> CSV (Excel)
+                        </button>
+                        <button class="btn btn-secondary" id="exportJSON" style="width: 100%; text-align: left;">
+                            <i class="fas fa-file-code"></i> JSON
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="cancelExportModal">Cancelar</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        const closeBtn = document.getElementById('closeExportModal');
+        const cancelBtn = document.getElementById('cancelExportModal');
+        const csvBtn = document.getElementById('exportCSV');
+        const jsonBtn = document.getElementById('exportJSON');
+        
+        const closeModal = (type = null) => {
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.remove();
+                resolve(type);
+            }, 300);
+        };
+        
+        closeBtn.addEventListener('click', () => closeModal());
+        cancelBtn.addEventListener('click', () => closeModal());
+        csvBtn.addEventListener('click', () => closeModal('csv'));
+        jsonBtn.addEventListener('click', () => closeModal('json'));
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+    });
+}
+
+// Exportar para CSV
+function exportToCSV(data) {
+    let csv = 'Dados Exportados - AtenMed\n';
+    csv += `Data da Exportação: ${new Date().toLocaleString('pt-BR')}\n\n`;
+    
+    // Leads
+    csv += '=== LEADS ===\n';
+    csv += 'Nome,Email,Telefone,Especialidade,Status,Data\n';
+    (data.leads || []).forEach(lead => {
+        csv += `"${lead.nome || ''}","${lead.email || ''}","${lead.telefone || ''}","${lead.especialidade || ''}","${lead.status || ''}","${lead.createdAt ? new Date(lead.createdAt).toLocaleDateString('pt-BR') : ''}"\n`;
+    });
+    csv += '\n';
+    
+    // Clientes
+    csv += '=== CLIENTES ===\n';
+    csv += 'Nome,Email,WhatsApp,Tipo,Status,Data\n';
+    (data.clients || []).forEach(client => {
+        csv += `"${client.name || ''}","${client.email || ''}","${client.whatsapp || ''}","${client.businessType || ''}","${client.status || ''}","${client.createdAt ? new Date(client.createdAt).toLocaleDateString('pt-BR') : ''}"\n`;
+    });
+    csv += '\n';
+    
+    // Contatos
+    csv += '=== CONTATOS ===\n';
+    csv += 'Nome,Email,Telefone,Assunto,Status,Data\n';
+    (data.contacts || []).forEach(contact => {
+        csv += `"${contact.nome || ''}","${contact.email || ''}","${contact.telefone || ''}","${contact.assunto || ''}","${contact.status || ''}","${contact.createdAt ? new Date(contact.createdAt).toLocaleDateString('pt-BR') : ''}"\n`;
+    });
+    csv += '\n';
+    
+    // Resumo
+    csv += '=== RESUMO ===\n';
+    csv += `Total de Leads,${data.summary.totalLeads}\n`;
+    csv += `Total de Clientes,${data.summary.totalClients}\n`;
+    csv += `Total de Contatos,${data.summary.totalContacts}\n`;
+    
+    // Download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `atenmed-relatorio-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showAlert('Relatório CSV exportado com sucesso!', 'success');
+}
+
+// Exportar para JSON
+function exportToJSON(data) {
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `atenmed-relatorio-${new Date().toISOString().split('T')[0]}.json`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showAlert('Relatório JSON exportado com sucesso!', 'success');
 }
 
 // Funções globais para uso via onclick

@@ -19,6 +19,7 @@ require('dotenv').config();
 const Clinic = require('../models/Clinic');
 const Invoice = require('../models/Invoice');
 const logger = require('../utils/logger');
+const emailService = require('../services/emailService');
 
 async function verificarInadimplencia() {
     try {
@@ -65,13 +66,30 @@ async function verificarInadimplencia() {
             
             const clinic = invoice.clinic;
             
-            if (clinic.subscription.status === 'suspended') {
+            if (clinic.subscription?.status === 'suspended') {
                 continue; // Já suspensa
             }
 
+            // Calcular dias de atraso
+            const daysOverdue = Math.floor((Date.now() - invoice.dueDate) / (1000 * 60 * 60 * 24));
+
             // Suspender
+            if (!clinic.subscription) clinic.subscription = {};
             clinic.subscription.status = 'suspended';
             await clinic.save();
+            
+            // Enviar notificação de inadimplência
+            try {
+                if (clinic.contact?.email) {
+                    await emailService.sendOverdueNotification({
+                        ...invoice.toObject(),
+                        clinicName: clinic.name,
+                        clinicEmail: clinic.contact.email
+                    }, daysOverdue);
+                }
+            } catch (emailError) {
+                logger.error(`Erro ao enviar notificação de inadimplência ${invoice._id}:`, emailError);
+            }
             
             stats.suspensas++;
             console.log(`   ⏸️  ${clinic.name}: SUSPENSA (Fatura ${invoice.invoiceNumber})`);
@@ -95,8 +113,27 @@ async function verificarInadimplencia() {
 
             if (pendingInvoices === 0) {
                 // Reativar
+                if (!clinic.subscription) clinic.subscription = {};
                 clinic.subscription.status = 'active';
                 await clinic.save();
+                
+                // Enviar email de reativação
+                try {
+                    if (clinic.contact?.email) {
+                        await emailService.sendEmail({
+                            to: clinic.contact.email,
+                            subject: '✅ Conta Reativada - AtenMed',
+                            html: `
+                                <h2>Olá, ${clinic.name}!</h2>
+                                <p>Sua conta foi reativada com sucesso!</p>
+                                <p>Todas as faturas foram quitadas e os serviços estão disponíveis novamente.</p>
+                                <p>Acesse o portal: <a href="https://atenmed.com.br/portal">atenmed.com.br/portal</a></p>
+                            `
+                        });
+                    }
+                } catch (emailError) {
+                    logger.error(`Erro ao enviar email de reativação para ${clinic.name}:`, emailError);
+                }
                 
                 stats.reativadas++;
                 console.log(`   ✅ ${clinic.name}: REATIVADA`);
@@ -130,8 +167,18 @@ async function verificarInadimplencia() {
                 continue; // Já enviou recentemente
             }
 
-            // TODO: Enviar email/WhatsApp de lembrete
-            // await sendInvoiceReminder(invoice);
+            // Enviar email de lembrete
+            try {
+                if (invoice.clinic && invoice.clinic.contact?.email) {
+                    await emailService.sendInvoiceReminder({
+                        ...invoice.toObject(),
+                        clinicName: invoice.clinic.name,
+                        clinicEmail: invoice.clinic.contact.email
+                    });
+                }
+            } catch (emailError) {
+                logger.error(`Erro ao enviar lembrete de fatura ${invoice._id}:`, emailError);
+            }
             
             // Registrar lembrete
             invoice.reminders.push({

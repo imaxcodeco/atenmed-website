@@ -64,6 +64,43 @@ const recommendedEnvVars = {
 };
 
 /**
+ * Valida força do JWT_SECRET
+ * @param {string} secret - Secret a validar
+ * @returns {boolean} True se é forte o suficiente
+ */
+function validateSecretStrength(secret, varName = 'SECRET') {
+    if (!secret) return false;
+    
+    // Mínimo 32 caracteres para produção
+    if (secret.length < 32) {
+        logger.warn(`⚠️ ${varName} deve ter pelo menos 32 caracteres (atual: ${secret.length})`);
+        return false;
+    }
+    
+    // Verificar se não é um valor padrão/fraco
+    const weakSecrets = [
+        'GERAR_SENHA_FORTE_AQUI',
+        'seu_jwt_secret_aqui',
+        'change_this_secret',
+        'secret123',
+        'admin',
+        'password',
+        '123456'
+    ];
+    
+    const isWeak = weakSecrets.some(weak => 
+        secret.toLowerCase().includes(weak.toLowerCase())
+    );
+    
+    if (isWeak) {
+        logger.warn(`⚠️ ${varName} parece ser um valor padrão/fraca! Use: node scripts/generate-secrets.js`);
+        return false;
+    }
+    
+    return true;
+}
+
+/**
  * Valida variáveis de ambiente
  * @param {boolean} strict - Se true, falha em produção se vars faltarem
  * @returns {Object} Resultado da validação
@@ -76,11 +113,22 @@ function validateEnv(strict = true) {
     // Verificar variáveis obrigatórias
     const missingRequired = required.filter(varName => !process.env[varName]);
     
+    // Verificar força dos secrets em produção
+    const weakSecrets = [];
+    if (env === 'production') {
+        if (process.env.JWT_SECRET && !validateSecretStrength(process.env.JWT_SECRET, 'JWT_SECRET')) {
+            weakSecrets.push('JWT_SECRET');
+        }
+        if (process.env.SESSION_SECRET && !validateSecretStrength(process.env.SESSION_SECRET, 'SESSION_SECRET')) {
+            weakSecrets.push('SESSION_SECRET');
+        }
+    }
+    
     // Verificar variáveis recomendadas
     const missingRecommended = recommended.filter(varName => !process.env[varName]);
     
-    const hasErrors = missingRequired.length > 0;
-    const hasWarnings = missingRecommended.length > 0;
+    const hasErrors = missingRequired.length > 0 || (weakSecrets.length > 0 && strict);
+    const hasWarnings = missingRecommended.length > 0 || (weakSecrets.length > 0 && !strict);
     
     // Log dos resultados
     if (hasErrors) {
@@ -88,6 +136,13 @@ function validateEnv(strict = true) {
         missingRequired.forEach(varName => {
             logger.error(`   - ${varName}`);
         });
+        
+        if (weakSecrets.length > 0) {
+            logger.error(`❌ Secrets fracos detectados (${env}):`);
+            weakSecrets.forEach(varName => {
+                logger.error(`   - ${varName} (use: node scripts/generate-secrets.js)`);
+            });
+        }
         
         if (env === 'production' && strict) {
             logger.error('\n🚨 APLICAÇÃO NÃO PODE INICIAR EM PRODUÇÃO SEM ESSAS VARIÁVEIS!');
@@ -97,6 +152,9 @@ function validateEnv(strict = true) {
         }
     } else {
         logger.info(`✅ Todas as variáveis obrigatórias configuradas (${env})`);
+        if (env === 'production' && weakSecrets.length === 0) {
+            logger.info(`✅ Todos os secrets são fortes`);
+        }
     }
     
     if (hasWarnings) {
@@ -200,6 +258,7 @@ function showConfigSummary() {
 
 module.exports = {
     validateEnv,
+    validateSecretStrength,
     checkVar,
     getVar,
     getNumericVar,

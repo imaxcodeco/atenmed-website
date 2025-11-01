@@ -4,6 +4,7 @@ const Client = require('../models/Client');
 const { validationResult } = require('express-validator');
 const { authenticateToken, authorize } = require('../middleware/auth');
 const logger = require('../utils/logger');
+const emailService = require('../services/emailService');
 
 const router = express.Router();
 
@@ -99,6 +100,19 @@ router.post('/', [
         await client.save();
         
         logger.info(`Novo cliente criado: ${client.name} (${client.whatsapp})`);
+        
+        // Enviar email de boas-vindas
+        if (email) {
+            try {
+                await emailService.sendWelcomeEmail({
+                    name: name,
+                    email: email
+                });
+            } catch (emailError) {
+                logger.error('Erro ao enviar email de boas-vindas:', emailError);
+                // Não falhar a requisição por erro de email
+            }
+        }
         
         // Auto-configurar aplicações (simulado por enquanto)
         const configuredApps = [];

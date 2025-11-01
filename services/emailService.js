@@ -362,6 +362,144 @@ async function sendNewLeadNotification(lead) {
     });
 }
 
+/**
+ * Email de lembrete de fatura
+ */
+async function sendInvoiceReminder(invoice) {
+    const daysUntilDue = Math.ceil((new Date(invoice.dueDate) - new Date()) / (1000 * 60 * 60 * 24));
+    const isOverdue = daysUntilDue < 0;
+    
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: ${isOverdue ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'linear-gradient(135deg, #f59e0b, #d97706)'}; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f9f9f9; padding: 30px; }
+            .invoice-box { background: white; padding: 20px; margin: 20px 0; border-left: 4px solid #4ca5b2; border-radius: 5px; }
+            .button { display: inline-block; background: #4ca5b2; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+            .footer { background: #083e51; color: white; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 10px 10px; }
+            .alert { background: ${isOverdue ? '#fee2e2' : '#fef3c7'}; border-left: 4px solid ${isOverdue ? '#ef4444' : '#f59e0b'}; padding: 15px; margin: 20px 0; border-radius: 5px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>${isOverdue ? '⚠️ Fatura Vencida' : '💰 Lembrete de Fatura'}</h1>
+            </div>
+            <div class="content">
+                <p>Olá, <strong>${invoice.clinicName || 'Cliente'}</strong>!</p>
+                ${isOverdue 
+                    ? `<div class="alert">
+                        <p><strong>⚠️ ATENÇÃO:</strong> Sua fatura está vencida há ${Math.abs(daysUntilDue)} dia(s).</p>
+                        <p>É importante regularizar o pagamento para evitar suspensão dos serviços.</p>
+                    </div>`
+                    : `<p>Faltam <strong>${daysUntilDue} dia(s)</strong> para o vencimento da sua fatura.</p>`
+                }
+                <div class="invoice-box">
+                    <h3>📋 Detalhes da Fatura</h3>
+                    <p><strong>📄 Número:</strong> ${invoice.invoiceNumber || invoice._id}</p>
+                    <p><strong>💰 Valor:</strong> R$ ${invoice.amount.toFixed(2)}</p>
+                    <p><strong>📅 Vencimento:</strong> ${new Date(invoice.dueDate).toLocaleDateString('pt-BR')}</p>
+                    <p><strong>📊 Status:</strong> ${invoice.status}</p>
+                    ${invoice.description ? `<p><strong>📝 Descrição:</strong> ${invoice.description}</p>` : ''}
+                </div>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="https://atenmed.com.br/portal" class="button">Ver Fatura Completa</a>
+                </div>
+                <p style="font-size: 12px; color: #6b7280; margin-top: 30px;">
+                    Em caso de dúvidas, entre em contato conosco através do email contato@atenmed.com.br
+                </p>
+            </div>
+            <div class="footer">
+                <p>AtenMed - Organização inteligente para consultórios modernos</p>
+                <p>© ${new Date().getFullYear()} AtenMed. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+
+    return sendEmail({
+        to: invoice.clinicEmail || invoice.email,
+        subject: isOverdue 
+            ? `⚠️ Fatura Vencida - R$ ${invoice.amount.toFixed(2)} - AtenMed`
+            : `💰 Lembrete de Fatura - Vence em ${daysUntilDue} dia(s) - AtenMed`,
+        html
+    });
+}
+
+/**
+ * Email de notificação de inadimplência
+ */
+async function sendOverdueNotification(invoice, daysOverdue) {
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f9f9f9; padding: 30px; }
+            .alert-box { background: #fee2e2; border: 2px solid #ef4444; padding: 20px; margin: 20px 0; border-radius: 5px; }
+            .invoice-box { background: white; padding: 20px; margin: 20px 0; border-left: 4px solid #ef4444; border-radius: 5px; }
+            .button { display: inline-block; background: #ef4444; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+            .footer { background: #083e51; color: white; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 10px 10px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>⚠️ Notificação de Inadimplência</h1>
+            </div>
+            <div class="content">
+                <p>Olá, <strong>${invoice.clinicName || 'Cliente'}</strong>!</p>
+                <div class="alert-box">
+                    <h2 style="margin-top: 0; color: #dc2626;">⚠️ ATENÇÃO URGENTE</h2>
+                    <p>Sua fatura está vencida há <strong>${daysOverdue} dia(s)</strong>.</p>
+                    <p>Se o pagamento não for regularizado, os serviços podem ser suspensos.</p>
+                </div>
+                <div class="invoice-box">
+                    <h3>📋 Detalhes da Fatura</h3>
+                    <p><strong>📄 Número:</strong> ${invoice.invoiceNumber || invoice._id}</p>
+                    <p><strong>💰 Valor:</strong> R$ ${invoice.amount.toFixed(2)}</p>
+                    <p><strong>📅 Vencimento:</strong> ${new Date(invoice.dueDate).toLocaleDateString('pt-BR')}</p>
+                    <p><strong>📊 Dias em atraso:</strong> ${daysOverdue}</p>
+                </div>
+                <p><strong>Como regularizar:</strong></p>
+                <ol>
+                    <li>Acesse o portal da clínica</li>
+                    <li>Visualize a fatura pendente</li>
+                    <li>Efetue o pagamento através dos métodos disponíveis</li>
+                </ol>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="https://atenmed.com.br/portal" class="button">Acessar Portal e Pagar</a>
+                </div>
+                <p style="font-size: 12px; color: #6b7280; margin-top: 30px;">
+                    Em caso de dúvidas ou problemas com o pagamento, entre em contato:<br>
+                    📧 Email: contato@atenmed.com.br<br>
+                    📱 WhatsApp: (22) 99284-2996
+                </p>
+            </div>
+            <div class="footer">
+                <p>AtenMed - Organização inteligente para consultórios modernos</p>
+                <p>© ${new Date().getFullYear()} AtenMed. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+
+    return sendEmail({
+        to: invoice.clinicEmail || invoice.email,
+        subject: `⚠️ URGENTE: Fatura Vencida há ${daysOverdue} dia(s) - AtenMed`,
+        html
+    });
+}
+
 module.exports = {
     sendEmail,
     sendWelcomeEmail,
@@ -369,5 +507,7 @@ module.exports = {
     sendAppointmentConfirmation,
     testEmailConfiguration,
     sendLeadConfirmation,
-    sendNewLeadNotification
+    sendNewLeadNotification,
+    sendInvoiceReminder,
+    sendOverdueNotification
 };
