@@ -157,6 +157,11 @@ doctorSchema.index({ clinic: 1 });
 doctorSchema.index({ specialties: 1 });
 doctorSchema.index({ active: 1 });
 
+// Índices compostos para multi-tenancy e performance
+doctorSchema.index({ clinic: 1, active: 1 });
+doctorSchema.index({ clinic: 1, specialties: 1 });
+doctorSchema.index({ clinic: 1, email: 1 });
+
 // Virtual para appointments
 doctorSchema.virtual('appointments', {
     ref: 'Appointment',

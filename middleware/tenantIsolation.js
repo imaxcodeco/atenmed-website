@@ -145,11 +145,24 @@ async function checkResourceOwnership(resourceModel, resourceId, clinicField = '
     };
 }
 
+/**
+ * Middleware global que aplica isolamento automático em todas as queries
+ * Use ANTES das rotas protegidas
+ */
+function applyTenantIsolationGlobally(req, res, next) {
+    // Adicionar tenantFilter à request para uso em helpers
+    if (req.user && !req.isGlobalAdmin && req.clinicId) {
+        req.tenantFilter = { clinic: req.clinicId };
+    }
+    next();
+}
+
 module.exports = {
     addClinicContext,
     requireClinic,
     requireClinicRole,
     filterByClinic,
-    checkResourceOwnership
+    checkResourceOwnership,
+    applyTenantIsolationGlobally
 };
 

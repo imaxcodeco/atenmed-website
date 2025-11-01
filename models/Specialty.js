@@ -55,6 +55,10 @@ const specialtySchema = new mongoose.Schema({
 specialtySchema.index({ clinic: 1, name: 1 }, { unique: true });
 specialtySchema.index({ active: 1 });
 
+// Índices compostos para multi-tenancy e performance
+specialtySchema.index({ clinic: 1, active: 1 });
+specialtySchema.index({ clinic: 1, createdAt: -1 });
+
 // Virtual para contar médicos
 specialtySchema.virtual('doctors', {
     ref: 'Doctor',

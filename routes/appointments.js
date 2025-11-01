@@ -6,6 +6,8 @@ const Specialty = require('../models/Specialty');
 const Clinic = require('../models/Clinic');
 const googleCalendarService = require('../services/googleCalendarService');
 const { authenticateToken, authorize } = require('../middleware/auth');
+const { addClinicContext } = require('../middleware/tenantIsolation');
+const { findWithTenant, findByIdWithTenant, createWithTenant, countWithTenant } = require('../utils/tenantQuery');
 const { validationResult } = require('express-validator');
 const logger = require('../utils/logger');
 
@@ -420,7 +422,7 @@ router.get('/', [
             .skip(skip)
             .limit(limit);
 
-        const total = await Appointment.countDocuments(filters);
+        const total = await countWithTenant(Appointment, filters, req);
 
         res.json({
             success: true,

@@ -136,6 +136,14 @@ const contactSchema = new mongoose.Schema({
         },
         comentario: String,
         data: Date
+    },
+    
+    // Multi-tenancy: Clínica do contato (opcional - pode ser público ou de uma clínica específica)
+    clinic: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Clinic',
+        index: true,
+        sparse: true  // Permite null (contatos públicos do site)
     }
 }, {
     timestamps: true,
@@ -150,6 +158,12 @@ contactSchema.index({ categoria: 1 });
 contactSchema.index({ prioridade: 1 });
 contactSchema.index({ createdAt: -1 });
 contactSchema.index({ proximoFollowUp: 1 });
+
+// Índices compostos para multi-tenancy e performance
+contactSchema.index({ clinic: 1, status: 1 });
+contactSchema.index({ clinic: 1, createdAt: -1 });
+contactSchema.index({ clinic: 1, prioridade: 1 });
+contactSchema.index({ clinic: 1, categoria: 1 });
 
 // Virtual para tempo de resposta
 contactSchema.virtual('tempoResposta').get(function() {

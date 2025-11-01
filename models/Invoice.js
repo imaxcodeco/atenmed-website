@@ -139,6 +139,11 @@ const invoiceSchema = new mongoose.Schema({
 invoiceSchema.index({ clinic: 1, referenceMonth: 1 });
 invoiceSchema.index({ status: 1, dueDate: 1 });
 
+// Índices compostos para multi-tenancy e performance
+invoiceSchema.index({ clinic: 1, status: 1 });
+invoiceSchema.index({ clinic: 1, status: 1, dueDate: 1 });
+invoiceSchema.index({ clinic: 1, createdAt: -1 });
+
 // Virtual para verificar se está vencida
 invoiceSchema.virtual('isOverdue').get(function() {
     return this.status === 'pendente' && this.dueDate < new Date();

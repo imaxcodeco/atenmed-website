@@ -137,6 +137,11 @@ waitlistSchema.index({ 'patient.phone': 1 });
 waitlistSchema.index({ priority: -1, createdAt: 1 }); // Ordenar por prioridade e data
 waitlistSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 }); // TTL index
 
+// Índices compostos para multi-tenancy e performance
+waitlistSchema.index({ clinic: 1, status: 1, priority: -1 });
+waitlistSchema.index({ clinic: 1, specialty: 1, status: 1 });
+waitlistSchema.index({ clinic: 1, createdAt: -1 });
+
 // Virtual para tempo de espera
 waitlistSchema.virtual('waitTime').get(function() {
     if (this.status === 'agendada' && this.appointmentCreatedAt) {

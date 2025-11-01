@@ -167,6 +167,14 @@ const leadSchema = new mongoose.Schema({
     clinicaId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Clinic'
+    },
+    
+    // Multi-tenancy: Clínica do lead (opcional - pode ser público ou de uma clínica específica)
+    clinic: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Clinic',
+        index: true,
+        sparse: true  // Permite null (leads públicos do site)
     }
 }, {
     timestamps: true,
@@ -180,6 +188,12 @@ leadSchema.index({ telefone: 1 });
 leadSchema.index({ status: 1 });
 leadSchema.index({ createdAt: -1 });
 leadSchema.index({ especialidade: 1 });
+
+// Índices compostos para multi-tenancy e performance
+leadSchema.index({ clinic: 1, status: 1 });
+leadSchema.index({ clinic: 1, createdAt: -1 });
+leadSchema.index({ clinic: 1, especialidade: 1 });
+leadSchema.index({ clinic: 1, origem: 1 });
 
 // Virtual para tempo desde criação
 leadSchema.virtual('tempoDesdeCriacao').get(function() {

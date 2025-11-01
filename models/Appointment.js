@@ -203,6 +203,11 @@ appointmentSchema.index({ status: 1 });
 appointmentSchema.index({ scheduledDate: 1, scheduledTime: 1 });
 appointmentSchema.index({ clinic: 1, scheduledDate: 1 });
 
+// Índices compostos para multi-tenancy e performance (remover duplicatas abaixo)
+appointmentSchema.index({ clinic: 1, status: 1 });
+appointmentSchema.index({ clinic: 1, doctor: 1, scheduledDate: 1 });
+appointmentSchema.index({ clinic: 1, status: 1, scheduledDate: 1 });
+
 // Virtual para data/hora completa
 appointmentSchema.virtual('scheduledDateTime').get(function() {
     const [hours, minutes] = this.scheduledTime.split(':');
@@ -331,14 +336,11 @@ appointmentSchema.statics.getStats = function(startDate, endDate, filters = {}) 
     ]);
 };
 
-// Índices para otimização de queries
-appointmentSchema.index({ clinic: 1, scheduledDate: 1 }); // Buscar agendamentos por clínica e data
+// Índices adicionais para otimização
 appointmentSchema.index({ doctor: 1, scheduledDate: 1, scheduledTime: 1 }); // Disponibilidade de médico
-appointmentSchema.index({ 'patient.phone': 1 }); // Buscar por telefone do paciente
 appointmentSchema.index({ status: 1, scheduledDate: 1 }); // Filtrar por status e data
 appointmentSchema.index({ source: 1 }); // Rastrear origem dos agendamentos
 appointmentSchema.index({ createdAt: -1 }); // Ordenar por data de criação
-appointmentSchema.index({ clinic: 1, status: 1, scheduledDate: 1 }); // Query composta comum
 
 module.exports = mongoose.model('Appointment', appointmentSchema);
 
