@@ -479,6 +479,48 @@ router.get('/stats/overview', [
     }
 });
 
+// @route   DELETE /api/leads/:id
+// @desc    Excluir lead
+// @access  Private (Admin)
+router.delete('/:id', [
+    authenticateToken,
+    authorize('admin'),
+    param('id').isMongoId().withMessage('ID inválido')
+], validateRequest, logActivity('delete_lead'), async (req, res) => {
+    try {
+        const lead = await Lead.findById(req.params.id);
+        
+        if (!lead) {
+            return res.status(404).json({
+                success: false,
+                error: 'Lead não encontrado',
+                code: 'LEAD_NOT_FOUND'
+            });
+        }
+
+        await Lead.findByIdAndDelete(req.params.id);
+
+        logger.logBusinessEvent('lead_deleted', {
+            leadId: lead._id,
+            email: lead.email,
+            deletedBy: req.user.email
+        });
+
+        res.json({
+            success: true,
+            message: 'Lead excluído com sucesso'
+        });
+
+    } catch (error) {
+        logger.logError(error, req);
+        res.status(500).json({
+            success: false,
+            error: 'Erro interno do servidor',
+            code: 'INTERNAL_ERROR'
+        });
+    }
+});
+
 // @route   GET /api/leads/stats/pipeline
 // @desc    Obter estatísticas do pipeline de vendas
 // @access  Private (Admin, Vendedor)

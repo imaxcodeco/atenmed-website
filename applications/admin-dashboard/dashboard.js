@@ -275,8 +275,11 @@ function displayLeads(leads) {
                             <td><span class="badge badge-${getStatusClass(lead.status)}">${lead.status}</span></td>
                             <td>${new Date(lead.createdAt).toLocaleDateString('pt-BR')}</td>
                             <td>
-                                <button class="btn btn-secondary btn-view-lead" data-lead-id="${lead._id || lead.id}">
+                                <button class="btn btn-secondary btn-view-lead" data-lead-id="${lead._id || lead.id}" style="margin-right: 0.5rem;">
                                     <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-danger btn-delete-lead" data-lead-id="${lead._id || lead.id}">
+                                    <i class="fas fa-trash"></i>
                                 </button>
                             </td>
                         </tr>
@@ -294,6 +297,16 @@ function displayLeads(leads) {
             const leadId = this.getAttribute('data-lead-id');
             if (leadId) {
                 viewLead(leadId);
+            }
+        });
+    });
+    
+    // Adicionar event listeners aos botões de excluir lead
+    content.querySelectorAll('.btn-delete-lead').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const leadId = this.getAttribute('data-lead-id');
+            if (leadId) {
+                deleteLead(leadId);
             }
         });
     });
@@ -693,6 +706,33 @@ window.deleteClient = async function(clientId) {
     } catch (error) {
         console.error('Erro ao desativar cliente:', error);
         showAlert('Erro ao desativar cliente', 'error');
+    }
+}
+
+window.deleteLead = async function(leadId) {
+    if (!confirm('Tem certeza que deseja excluir este lead? Esta ação não pode ser desfeita.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/leads/${leadId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showAlert('Lead excluído com sucesso!', 'success');
+            // Recarregar leads e atualizar estatísticas
+            loadLeads();
+            loadDashboardData(); // Atualiza as estatísticas
+        } else {
+            showAlert(result.error || 'Erro ao excluir lead', 'error');
+        }
+    } catch (error) {
+        console.error('Erro ao excluir lead:', error);
+        showAlert('Erro ao excluir lead', 'error');
     }
 }
 
