@@ -95,7 +95,7 @@ jobs:
             # Copy new .env (será feito via secrets)
 
             # Install dependencies
-            npm ci --production
+            npm ci --omit=dev --ignore-scripts
 
             # Build
             npm run build:css || echo "Build optional"
