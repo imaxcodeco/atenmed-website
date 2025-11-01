@@ -14,9 +14,9 @@
     }
 })();
 
-// Estado
-let specialties = [];
-let clinics = [];
+// Estado (nomes únicos para evitar conflitos entre scripts)
+let specialtiesListList = [];
+let clinicsForSpecialtiesForSpecialties = [];
 
 // Verificar autenticação (usa função global do dashboard.js)
 // Não redefinir se já existe para evitar recursão
@@ -81,13 +81,13 @@ async function fetchJSON(url, opts = {}) {
 // Carregar clínicas
 async function loadClinicsForSpecialties() {
     try {
-        const data = await fetchJSON(`${window.API_BASE}/clinics`);
-        clinics = data.data || data || [];
+        const data = await fetchJSON(`${window.API_BASE}/clinicsForSpecialties`);
+        clinicsForSpecialties = data.data || data || [];
         
         const select = document.getElementById('specialtyClinic');
         if (select) {
             select.innerHTML = '<option value="">Selecione uma clínica...</option>' + 
-                clinics.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
+                clinicsForSpecialties.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
         }
     } catch (error) {
         console.error('Erro ao carregar clínicas:', error);
@@ -98,7 +98,7 @@ async function loadClinicsForSpecialties() {
 // Carregar especialidades baseado na clínica selecionada
 async function loadSpecialties() {
     const clinicId = document.getElementById('specialtyClinic')?.value;
-    const list = document.getElementById('specialtiesList');
+    const list = document.getElementById('specialtiesListList');
     
     if (!list) return;
     
@@ -110,15 +110,15 @@ async function loadSpecialties() {
     list.innerHTML = '<div class="loading"><div class="spinner"></div>Carregando especialidades...</div>';
     
     try {
-        const data = await fetchJSON(`${window.API_BASE}/specialties?clinicId=${clinicId}`);
-        specialties = data.data || data || [];
+        const data = await fetchJSON(`${window.API_BASE}/specialtiesList?clinicId=${clinicId}`);
+        specialtiesList = data.data || data || [];
         
-        if (specialties.length === 0) {
+        if (specialtiesList.length === 0) {
             list.innerHTML = '<div class="loading">Nenhuma especialidade cadastrada para esta clínica</div>';
             return;
         }
         
-        const rows = specialties.map(s => `
+        const rows = specialtiesList.map(s => `
             <tr>
                 <td><strong>${s.name}</strong></td>
                 <td>${s.description || '-'}</td>
@@ -176,8 +176,8 @@ window.editSpecialty = async function(id) {
             return;
         }
         
-        const data = await fetchJSON(`${window.API_BASE}/specialties?clinicId=${clinicId}`);
-        const spec = data.data?.find(x => x._id === id) || specialties.find(x => x._id === id);
+        const data = await fetchJSON(`${window.API_BASE}/specialtiesList?clinicId=${clinicId}`);
+        const spec = data.data?.find(x => x._id === id) || specialtiesList.find(x => x._id === id);
         
         if (!spec) {
             showAlert('Especialidade não encontrada', 'error');
@@ -192,7 +192,7 @@ window.editSpecialty = async function(id) {
         document.getElementById('specialtyIcon').value = spec.icon || '🏥';
         
         // Scroll para o topo do formulário
-        document.getElementById('specialties').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.getElementById('specialtiesList').scrollIntoView({ behavior: 'smooth', block: 'start' });
         
     } catch (error) {
         console.error('Erro ao carregar especialidade:', error);
@@ -207,7 +207,7 @@ window.toggleSpecialty = async function(id, active) {
     }
     
     try {
-        await fetchJSON(`${window.API_BASE}/specialties/${id}`, {
+        await fetchJSON(`${window.API_BASE}/specialtiesList/${id}`, {
             method: 'PUT',
             body: JSON.stringify({ active: !active })
         });
@@ -267,7 +267,7 @@ function setupSpecialtiesListeners() {
                 };
                 
                 const method = id ? 'PUT' : 'POST';
-                const url = id ? `${window.API_BASE}/specialties/${id}` : `${window.API_BASE}/specialties`;
+                const url = id ? `${window.API_BASE}/specialtiesList/${id}` : `${window.API_BASE}/specialtiesList`;
                 
                 await fetchJSON(url, {
                     method,
@@ -293,9 +293,9 @@ function setupSpecialtiesListeners() {
     }
     
     // Carregar quando a seção for aberta
-    const specialtiesNav = document.querySelector('[data-section="specialties"]');
-    if (specialtiesNav) {
-        specialtiesNav.addEventListener('click', () => {
+    const specialtiesListNav = document.querySelector('[data-section="specialtiesList"]');
+    if (specialtiesListNav) {
+        specialtiesListNav.addEventListener('click', () => {
             setTimeout(() => {
                 loadClinicsForSpecialties();
                 loadSpecialties();

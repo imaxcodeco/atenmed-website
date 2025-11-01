@@ -14,10 +14,10 @@
     }
 })();
 
-// Estado
-let doctors = [];
-let clinics = [];
-let specialties = [];
+// Estado (nomes únicos para evitar conflitos entre scripts)
+let doctorsList = [];
+let clinicsForDoctors = [];
+let specialtiesForDoctors = [];
 
 // Verificar autenticação (usa função global do dashboard.js)
 // Não redefinir se já existe para evitar recursão
@@ -83,12 +83,12 @@ async function fetchJSON(url, opts = {}) {
 async function loadClinicsForDoctors() {
     try {
         const data = await fetchJSON(`${window.API_BASE}/clinics`);
-        clinics = data.data || data || [];
+        clinicsForDoctors = data.data || data || [];
         
         const select = document.getElementById('doctorClinic');
         if (select) {
             select.innerHTML = '<option value="">Selecione uma clínica...</option>' + 
-                clinics.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
+                clinicsForDoctors.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
         }
     } catch (error) {
         console.error('Erro ao carregar clínicas:', error);
@@ -110,9 +110,9 @@ async function loadSpecialtiesForDoctor() {
     
     try {
         const data = await fetchJSON(`${window.API_BASE}/specialties?clinicId=${clinicId}`);
-        specialties = data.data || data || [];
+        specialtiesForDoctors = data.data || data || [];
         
-        select.innerHTML = specialties.map(s => 
+        select.innerHTML = specialtiesForDoctors.map(s => 
             `<option value="${s._id}">${s.name}</option>`
         ).join('');
     } catch (error) {
@@ -130,14 +130,14 @@ async function loadDoctors() {
     
     try {
         const data = await fetchJSON(`${window.API_BASE}/doctors`);
-        doctors = data.data || data || [];
+        doctorsList = data.data || data || [];
         
-        if (doctors.length === 0) {
+        if (doctorsList.length === 0) {
             list.innerHTML = '<div class="loading">Nenhum médico cadastrado ainda</div>';
             return;
         }
         
-        const rows = doctors.map(d => `
+        const rows = doctorsList.map(d => `
             <tr>
                 <td><strong>${d.name}</strong></td>
                 <td>${d.email}</td>
@@ -189,7 +189,7 @@ async function loadDoctors() {
 window.editDoctor = async function(id) {
     try {
         const data = await fetchJSON(`${window.API_BASE}/doctors?active=true`);
-        const doc = data.data?.find(x => x._id === id) || doctors.find(x => x._id === id);
+        const doc = data.data?.find(x => x._id === id) || doctorsList.find(x => x._id === id);
         
         if (!doc) {
             showAlert('Médico não encontrado', 'error');
