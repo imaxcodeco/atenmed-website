@@ -275,7 +275,7 @@ function displayLeads(leads) {
                             <td><span class="badge badge-${getStatusClass(lead.status)}">${lead.status}</span></td>
                             <td>${new Date(lead.createdAt).toLocaleDateString('pt-BR')}</td>
                             <td>
-                                <button class="btn btn-secondary" onclick="viewLead('${lead._id || lead.id}')">
+                                <button class="btn btn-secondary btn-view-lead" data-lead-id="${lead._id || lead.id}">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </td>
@@ -287,6 +287,16 @@ function displayLeads(leads) {
     `;
     
     content.innerHTML = table;
+    
+    // Adicionar event listeners aos botões de visualizar lead
+    content.querySelectorAll('.btn-view-lead').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const leadId = this.getAttribute('data-lead-id');
+            if (leadId) {
+                viewLead(leadId);
+            }
+        });
+    });
 }
 
 // Carregar contatos
@@ -342,7 +352,7 @@ function displayContacts(contacts) {
                             <td><span class="badge badge-${getStatusClass(contact.status)}">${contact.status}</span></td>
                             <td>${new Date(contact.createdAt).toLocaleDateString('pt-BR')}</td>
                             <td>
-                                <button class="btn btn-secondary" onclick="viewContact('${contact._id || contact.id}')">
+                                <button class="btn btn-secondary btn-view-contact" data-contact-id="${contact._id || contact.id}">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </td>
@@ -354,6 +364,16 @@ function displayContacts(contacts) {
     `;
     
     content.innerHTML = table;
+    
+    // Adicionar event listeners aos botões de visualizar contato
+    content.querySelectorAll('.btn-view-contact').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const contactId = this.getAttribute('data-contact-id');
+            if (contactId) {
+                viewContact(contactId);
+            }
+        });
+    });
 }
 
 // Carregar clientes
@@ -429,10 +449,10 @@ function displayClients(clients) {
                                 <td><span class="badge badge-${getStatusClass(client.status)}">${client.status}</span></td>
                                 <td>${new Date(client.createdAt).toLocaleDateString('pt-BR')}</td>
                                 <td>
-                                    <button class="btn btn-secondary" onclick="viewClient('${client._id}')" style="margin-right: 0.5rem;">
+                                    <button class="btn btn-secondary btn-view-client" data-client-id="${client._id}" style="margin-right: 0.5rem;">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <button class="btn btn-danger" onclick="deleteClient('${client._id}')">
+                                    <button class="btn btn-danger btn-delete-client" data-client-id="${client._id}">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
@@ -445,6 +465,25 @@ function displayClients(clients) {
     `;
     
     content.innerHTML = table;
+    
+    // Adicionar event listeners aos botões de clientes
+    content.querySelectorAll('.btn-view-client').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const clientId = this.getAttribute('data-client-id');
+            if (clientId) {
+                viewClient(clientId);
+            }
+        });
+    });
+    
+    content.querySelectorAll('.btn-delete-client').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const clientId = this.getAttribute('data-client-id');
+            if (clientId) {
+                deleteClient(clientId);
+            }
+        });
+    });
 }
 
 // Funções auxiliares
@@ -476,6 +515,61 @@ window.showAlert = function(message, type = 'success') {
     }
 };
 
+// Função para exibir modal com detalhes
+window.showDetailsModal = function(title, content, type = 'info') {
+    // Remover modal existente se houver
+    const existingModal = document.getElementById('detailsModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Criar modal
+    const modal = document.createElement('div');
+    modal.id = 'detailsModal';
+    modal.className = 'modal show';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>
+                    <i class="fas fa-${type === 'info' ? 'info-circle' : type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i>
+                    ${title}
+                </h2>
+                <button class="modal-close" id="closeDetailsModal">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 1.5rem;">
+                <div style="line-height: 1.8; color: var(--gray-700);">
+                    ${content}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="confirmDetailsModal">OK</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Event listeners para fechar
+    const closeBtn = document.getElementById('closeDetailsModal');
+    const confirmBtn = document.getElementById('confirmDetailsModal');
+    
+    const closeModal = () => {
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
+    };
+    
+    closeBtn.addEventListener('click', closeModal);
+    confirmBtn.addEventListener('click', closeModal);
+    
+    // Fechar ao clicar fora
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+};
+
 // Funções de ação
 function refreshData() {
     loadDashboardData();
@@ -500,15 +594,15 @@ window.viewLead = async function(leadId) {
         if (response.ok && result.success) {
             const lead = result.data;
             const details = `
-                <strong>Nome:</strong> ${lead.nome}<br>
-                <strong>Email:</strong> ${lead.email}<br>
-                <strong>Telefone:</strong> ${lead.telefone}<br>
-                <strong>Especialidade:</strong> ${lead.especialidade || 'Não informada'}<br>
-                <strong>Status:</strong> ${lead.status}<br>
-                <strong>Origem:</strong> ${lead.origem}<br>
-                <strong>Data:</strong> ${new Date(lead.createdAt).toLocaleString('pt-BR')}
+                <p><strong>Nome:</strong> ${lead.nome || 'Não informado'}</p>
+                <p><strong>Email:</strong> ${lead.email || 'Não informado'}</p>
+                <p><strong>Telefone:</strong> ${lead.telefone || 'Não informado'}</p>
+                <p><strong>Especialidade:</strong> ${lead.especialidade || 'Não informada'}</p>
+                <p><strong>Status:</strong> <span class="badge badge-${getStatusClass(lead.status)}">${lead.status}</span></p>
+                <p><strong>Origem:</strong> ${lead.origem || 'Não informada'}</p>
+                <p><strong>Data:</strong> ${lead.createdAt ? new Date(lead.createdAt).toLocaleString('pt-BR') : 'Não informada'}</p>
             `;
-            showAlert(details, 'info');
+            showDetailsModal('Detalhes do Lead', details, 'info');
         } else {
             showAlert('Lead não encontrado', 'error');
         }
@@ -528,14 +622,14 @@ window.viewContact = async function(contactId) {
         if (response.ok && result.success) {
             const contact = result.data;
             const details = `
-                <strong>Nome:</strong> ${contact.nome}<br>
-                <strong>Email:</strong> ${contact.email}<br>
-                <strong>Telefone:</strong> ${contact.telefone || 'Não informado'}<br>
-                <strong>Assunto:</strong> ${contact.assunto}<br>
-                <strong>Mensagem:</strong> ${contact.mensagem}<br>
-                <strong>Data:</strong> ${new Date(contact.createdAt).toLocaleString('pt-BR')}
+                <p><strong>Nome:</strong> ${contact.nome || 'Não informado'}</p>
+                <p><strong>Email:</strong> ${contact.email || 'Não informado'}</p>
+                <p><strong>Telefone:</strong> ${contact.telefone || 'Não informado'}</p>
+                <p><strong>Assunto:</strong> ${contact.assunto || 'Não informado'}</p>
+                <p><strong>Mensagem:</strong><br>${contact.mensagem || 'Não informada'}</p>
+                <p><strong>Data:</strong> ${contact.createdAt ? new Date(contact.createdAt).toLocaleString('pt-BR') : 'Não informada'}</p>
             `;
-            showAlert(details, 'info');
+            showDetailsModal('Detalhes do Contato', details, 'info');
         } else {
             showAlert('Contato não encontrado', 'error');
         }
@@ -559,15 +653,15 @@ window.viewClient = async function(clientId) {
             if (client.applications?.agendamentoInteligente) apps.push('📅 Agendamento Inteligente');
             
             const details = `
-                <strong>Nome:</strong> ${client.name}<br>
-                <strong>Email:</strong> ${client.email || 'Não informado'}<br>
-                <strong>WhatsApp:</strong> ${client.whatsapp}<br>
-                <strong>Tipo:</strong> ${client.businessType}<br>
-                <strong>Aplicações:</strong> ${apps.join(', ') || 'Nenhuma'}<br>
-                <strong>Status:</strong> ${client.status}<br>
-                <strong>Data:</strong> ${new Date(client.createdAt).toLocaleString('pt-BR')}
+                <p><strong>Nome:</strong> ${client.name || 'Não informado'}</p>
+                <p><strong>Email:</strong> ${client.email || 'Não informado'}</p>
+                <p><strong>WhatsApp:</strong> ${client.whatsapp || 'Não informado'}</p>
+                <p><strong>Tipo:</strong> ${client.businessType || 'Não informado'}</p>
+                <p><strong>Aplicações:</strong> ${apps.join(', ') || 'Nenhuma'}</p>
+                <p><strong>Status:</strong> <span class="badge badge-${getStatusClass(client.status)}">${client.status}</span></p>
+                <p><strong>Data:</strong> ${client.createdAt ? new Date(client.createdAt).toLocaleString('pt-BR') : 'Não informada'}</p>
             `;
-            showAlert(details, 'info');
+            showDetailsModal('Detalhes do Cliente', details, 'info');
         } else {
             showAlert('Cliente não encontrado', 'error');
         }
