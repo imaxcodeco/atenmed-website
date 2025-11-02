@@ -114,7 +114,12 @@ app.use(
           'data:',
         ],
         imgSrc: ["'self'", 'data:', 'https:'],
-        scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+        scriptSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          'https://cdn.jsdelivr.net',
+          'https://maps.googleapis.com',
+        ],
         scriptSrcAttr: ["'unsafe-inline'"], // Permitir event handlers inline (legacy)
         connectSrc: ["'self'", 'https://cdn.jsdelivr.net'],
       },
