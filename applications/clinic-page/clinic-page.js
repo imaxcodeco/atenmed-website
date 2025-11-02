@@ -230,7 +230,7 @@ function renderSpecialtyOptions() {
 // ===== CARREGAR MÉDICOS =====
 async function loadDoctors() {
   try {
-    const response = await fetch(`${API_BASE_URL}/clinics/${bookingApp.clinic._id}/doctors`);
+    const response = await fetch(`${API_BASE_URL}/clinics/doctors/${bookingApp.clinic._id}`);
     const data = await response.json();
 
     bookingApp.doctors = data.data || [];

@@ -122,6 +122,12 @@ app.use(
         ],
         scriptSrcAttr: ["'unsafe-inline'"], // Permitir event handlers inline (legacy)
         connectSrc: ["'self'", 'https://cdn.jsdelivr.net', 'https://maps.googleapis.com'],
+        frameSrc: [
+          "'self'",
+          'https://maps.google.com',
+          'https://www.google.com',
+          'https://maps.googleapis.com',
+        ],
       },
     },
   })
