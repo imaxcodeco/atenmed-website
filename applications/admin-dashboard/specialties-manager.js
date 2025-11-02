@@ -3,15 +3,17 @@
  * Gerenciamento de especialidades integrado ao dashboard
  */
 
-// API Base URL (usar sempre window.window.API_BASE para evitar conflitos)
-(function() {
-    if (typeof window.window.API_BASE === 'undefined') {
-        window.window.API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-            ? 'http://localhost:3000/api'
-            : (window.location.hostname === 'atenmed.com.br' || window.location.hostname === 'www.atenmed.com.br')
-            ? 'https://atenmed.com.br/api'
-            : '/api';
-    }
+// API Base URL
+(function () {
+  if (typeof window.API_BASE === 'undefined') {
+    window.API_BASE =
+      window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:3000/api'
+        : window.location.hostname === 'atenmed.com.br' ||
+            window.location.hostname === 'www.atenmed.com.br'
+          ? 'https://atenmed.com.br/api'
+          : '/api';
+  }
 })();
 
 // Estado (nomes únicos para evitar conflitos entre scripts)
@@ -23,79 +25,84 @@ let clinicsForSpecialties = [];
 
 // Usar função showAlert do dashboard.js se disponível (evitar recursão)
 function showAlert(message, type = 'success') {
-    // Verificar se existe função global E não é a própria função local
-    if (typeof window.showAlert === 'function' && window.showAlert !== showAlert) {
-        return window.showAlert(message, type);
-    }
-    // Fallback para alert simples
-    alert(message);
+  // Verificar se existe função global E não é a própria função local
+  if (typeof window.showAlert === 'function' && window.showAlert !== showAlert) {
+    return window.showAlert(message, type);
+  }
+  // Fallback para alert simples
+  alert(message);
 }
 
 // Fetch JSON helper
 async function fetchJSON(url, opts = {}) {
-    const token = window.getAuthToken ? window.getAuthToken() : null;
-    const headers = {
-        'Content-Type': 'application/json',
-        ...(opts.headers || {})
-    };
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
-    
-    const res = await fetch(url, { 
-        headers,
-        credentials: 'include',
-        ...opts 
-    });
-    
-    if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(errorText || 'Erro na requisição');
-    }
-    return res.json();
+  const token = window.getAuthToken ? window.getAuthToken() : null;
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(opts.headers || {}),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(url, {
+    headers,
+    credentials: 'include',
+    ...opts,
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(errorText || 'Erro na requisição');
+  }
+  return res.json();
 }
 
 // Carregar clínicas
 async function loadClinicsForSpecialties() {
-    try {
-        const data = await fetchJSON(`${window.API_BASE}/clinicsForSpecialties`);
-        clinicsForSpecialties = data.data || data || [];
-        
-        const select = document.getElementById('specialtyClinic');
-        if (select) {
-            select.innerHTML = '<option value="">Selecione uma clínica...</option>' + 
-                clinicsForSpecialties.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
-        }
-    } catch (error) {
-        console.error('Erro ao carregar clínicas:', error);
-        showAlert('Erro ao carregar clínicas', 'error');
+  try {
+    const data = await fetchJSON(`${window.API_BASE}/clinicsForSpecialties`);
+    clinicsForSpecialties = data.data || data || [];
+
+    const select = document.getElementById('specialtyClinic');
+    if (select) {
+      select.innerHTML =
+        '<option value="">Selecione uma clínica...</option>' +
+        clinicsForSpecialties.map((c) => `<option value="${c._id}">${c.name}</option>`).join('');
     }
+  } catch (error) {
+    console.error('Erro ao carregar clínicas:', error);
+    showAlert('Erro ao carregar clínicas', 'error');
+  }
 }
 
 // Carregar especialidades baseado na clínica selecionada
 async function loadSpecialties() {
-    const clinicId = document.getElementById('specialtyClinic')?.value;
-    const list = document.getElementById('specialtiesListList');
-    
-    if (!list) return;
-    
-    if (!clinicId) {
-        list.innerHTML = '<div class="loading">Selecione uma clínica para ver as especialidades</div>';
-        return;
+  const clinicId = document.getElementById('specialtyClinic')?.value;
+  const list = document.getElementById('specialtiesListList');
+
+  if (!list) return;
+
+  if (!clinicId) {
+    list.innerHTML = '<div class="loading">Selecione uma clínica para ver as especialidades</div>';
+    return;
+  }
+
+  list.innerHTML =
+    '<div class="loading"><div class="spinner"></div>Carregando especialidades...</div>';
+
+  try {
+    const data = await fetchJSON(`${window.API_BASE}/specialties?clinicId=${clinicId}`);
+    specialtiesList = data.data || data || [];
+
+    if (specialtiesList.length === 0) {
+      list.innerHTML =
+        '<div class="loading">Nenhuma especialidade cadastrada para esta clínica</div>';
+      return;
     }
-    
-    list.innerHTML = '<div class="loading"><div class="spinner"></div>Carregando especialidades...</div>';
-    
-    try {
-        const data = await fetchJSON(`${window.API_BASE}/specialtiesList?clinicId=${clinicId}`);
-        specialtiesList = data.data || data || [];
-        
-        if (specialtiesList.length === 0) {
-            list.innerHTML = '<div class="loading">Nenhuma especialidade cadastrada para esta clínica</div>';
-            return;
-        }
-        
-        const rows = specialtiesList.map(s => `
+
+    const rows = specialtiesList
+      .map(
+        (s) => `
             <tr>
                 <td><strong>${s.name}</strong></td>
                 <td>${s.description || '-'}</td>
@@ -119,9 +126,11 @@ async function loadSpecialties() {
                     </button>
                 </td>
             </tr>
-        `).join('');
-        
-        list.innerHTML = `
+        `
+      )
+      .join('');
+
+    list.innerHTML = `
             <div class="table-container">
                 <table class="table">
                     <thead>
@@ -138,173 +147,176 @@ async function loadSpecialties() {
                 </table>
             </div>
         `;
-        
-        // Adicionar event listeners aos botões de ação
-        list.querySelectorAll('.btn-edit-specialty').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const specialtyId = this.getAttribute('data-specialty-id');
-                if (specialtyId) {
-                    editSpecialty(specialtyId);
-                }
-            });
-        });
-        
-        list.querySelectorAll('.btn-toggle-specialty').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const specialtyId = this.getAttribute('data-specialty-id');
-                const active = this.getAttribute('data-specialty-active') === 'true';
-                if (specialtyId) {
-                    toggleSpecialty(specialtyId, active);
-                }
-            });
-        });
-    } catch (error) {
-        console.error('Erro ao carregar especialidades:', error);
-        list.innerHTML = '<div class="loading" style="color: var(--danger);">Erro ao carregar especialidades</div>';
-    }
+
+    // Adicionar event listeners aos botões de ação
+    list.querySelectorAll('.btn-edit-specialty').forEach((btn) => {
+      btn.addEventListener('click', function () {
+        const specialtyId = this.getAttribute('data-specialty-id');
+        if (specialtyId) {
+          window.editSpecialty(specialtyId);
+        }
+      });
+    });
+
+    list.querySelectorAll('.btn-toggle-specialty').forEach((btn) => {
+      btn.addEventListener('click', function () {
+        const specialtyId = this.getAttribute('data-specialty-id');
+        const active = this.getAttribute('data-specialty-active') === 'true';
+        if (specialtyId) {
+          window.toggleSpecialty(specialtyId, active);
+        }
+      });
+    });
+  } catch (error) {
+    console.error('Erro ao carregar especialidades:', error);
+    list.innerHTML =
+      '<div class="loading" style="color: var(--danger);">Erro ao carregar especialidades</div>';
+  }
 }
 
 // Editar especialidade
-window.editSpecialty = async function(id) {
-    try {
-        const clinicId = document.getElementById('specialtyClinic')?.value;
-        if (!clinicId) {
-            showAlert('Por favor, selecione uma clínica primeiro', 'error');
-            return;
-        }
-        
-        const data = await fetchJSON(`${window.API_BASE}/specialtiesList?clinicId=${clinicId}`);
-        const spec = data.data?.find(x => x._id === id) || specialtiesList.find(x => x._id === id);
-        
-        if (!spec) {
-            showAlert('Especialidade não encontrada', 'error');
-            return;
-        }
-        
-        document.getElementById('specialtyId').value = spec._id;
-        document.getElementById('specialtyClinic').value = spec.clinic || clinicId;
-        document.getElementById('specialtyName').value = spec.name || '';
-        document.getElementById('specialtyDescription').value = spec.description || '';
-        document.getElementById('specialtyColor').value = spec.color || '#45a7b1';
-        document.getElementById('specialtyIcon').value = spec.icon || '🏥';
-        
-        // Scroll para o topo do formulário
-        document.getElementById('specialtiesList').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        
-    } catch (error) {
-        console.error('Erro ao carregar especialidade:', error);
-        showAlert('Erro ao carregar dados da especialidade', 'error');
+window.editSpecialty = async function (id) {
+  try {
+    const clinicId = document.getElementById('specialtyClinic')?.value;
+    if (!clinicId) {
+      showAlert('Por favor, selecione uma clínica primeiro', 'error');
+      return;
     }
+
+    const data = await fetchJSON(`${window.API_BASE}/specialties?clinicId=${clinicId}`);
+    const spec = data.data?.find((x) => x._id === id) || specialtiesList.find((x) => x._id === id);
+
+    if (!spec) {
+      showAlert('Especialidade não encontrada', 'error');
+      return;
+    }
+
+    document.getElementById('specialtyId').value = spec._id;
+    document.getElementById('specialtyClinic').value = spec.clinic || clinicId;
+    document.getElementById('specialtyName').value = spec.name || '';
+    document.getElementById('specialtyDescription').value = spec.description || '';
+    document.getElementById('specialtyColor').value = spec.color || '#45a7b1';
+    document.getElementById('specialtyIcon').value = spec.icon || '🏥';
+
+    // Scroll para o topo do formulário
+    document
+      .getElementById('specialtiesList')
+      .scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (error) {
+    console.error('Erro ao carregar especialidade:', error);
+    showAlert('Erro ao carregar dados da especialidade', 'error');
+  }
 };
 
 // Toggle status da especialidade
-window.toggleSpecialty = async function(id, active) {
-    if (!confirm(`Deseja ${active ? 'desativar' : 'ativar'} esta especialidade?`)) {
-        return;
-    }
-    
-    try {
-        await fetchJSON(`${window.API_BASE}/specialtiesList/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify({ active: !active })
-        });
-        
-        showAlert(`Especialidade ${active ? 'desativada' : 'ativada'} com sucesso!`, 'success');
-        await loadSpecialties();
-    } catch (error) {
-        console.error('Erro ao atualizar especialidade:', error);
-        showAlert('Erro ao atualizar status da especialidade', 'error');
-    }
+window.toggleSpecialty = async function (id, active) {
+  if (!confirm(`Deseja ${active ? 'desativar' : 'ativar'} esta especialidade?`)) {
+    return;
+  }
+
+  try {
+    await fetchJSON(`${window.API_BASE}/specialtiesList/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ active: !active }),
+    });
+
+    showAlert(`Especialidade ${active ? 'desativada' : 'ativada'} com sucesso!`, 'success');
+    await loadSpecialties();
+  } catch (error) {
+    console.error('Erro ao atualizar especialidade:', error);
+    showAlert('Erro ao atualizar status da especialidade', 'error');
+  }
 };
 
 // Configurar event listeners
 function setupSpecialtiesListeners() {
-    // Reload button
-    const reloadBtn = document.getElementById('specialtyReloadBtn');
-    if (reloadBtn) {
-        reloadBtn.addEventListener('click', loadSpecialties);
-    }
-    
-    // Reset button
-    const resetBtn = document.getElementById('specialtyResetBtn');
-    if (resetBtn) {
-        resetBtn.addEventListener('click', () => {
-            document.getElementById('specialtyForm')?.reset();
-            document.getElementById('specialtyId').value = '';
-            document.getElementById('specialtyColor').value = '#45a7b1';
-            document.getElementById('specialtyIcon').value = '🏥';
+  // Reload button
+  const reloadBtn = document.getElementById('specialtyReloadBtn');
+  if (reloadBtn) {
+    reloadBtn.addEventListener('click', loadSpecialties);
+  }
+
+  // Reset button
+  const resetBtn = document.getElementById('specialtyResetBtn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      document.getElementById('specialtyForm')?.reset();
+      document.getElementById('specialtyId').value = '';
+      document.getElementById('specialtyColor').value = '#45a7b1';
+      document.getElementById('specialtyIcon').value = '🏥';
+    });
+  }
+
+  // Clinic change - carregar especialidades
+  const clinicSelect = document.getElementById('specialtyClinic');
+  if (clinicSelect) {
+    clinicSelect.addEventListener('change', loadSpecialties);
+  }
+
+  // Form submit
+  const form = document.getElementById('specialtyForm');
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalText = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+
+      try {
+        const id = document.getElementById('specialtyId').value;
+        const payload = {
+          clinic: document.getElementById('specialtyClinic').value,
+          name: document.getElementById('specialtyName').value,
+          description: document.getElementById('specialtyDescription').value,
+          color: document.getElementById('specialtyColor').value,
+          icon: document.getElementById('specialtyIcon').value,
+        };
+
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `${window.API_BASE}/specialties/${id}` : `${window.API_BASE}/specialties`;
+
+        await fetchJSON(url, {
+          method,
+          body: JSON.stringify(payload),
         });
-    }
-    
-    // Clinic change - carregar especialidades
-    const clinicSelect = document.getElementById('specialtyClinic');
-    if (clinicSelect) {
-        clinicSelect.addEventListener('change', loadSpecialties);
-    }
-    
-    // Form submit
-    const form = document.getElementById('specialtyForm');
-    if (form) {
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const submitBtn = form.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
-            
-            try {
-                const id = document.getElementById('specialtyId').value;
-                const payload = {
-                    clinic: document.getElementById('specialtyClinic').value,
-                    name: document.getElementById('specialtyName').value,
-                    description: document.getElementById('specialtyDescription').value,
-                    color: document.getElementById('specialtyColor').value,
-                    icon: document.getElementById('specialtyIcon').value
-                };
-                
-                const method = id ? 'PUT' : 'POST';
-                const url = id ? `${window.API_BASE}/specialtiesList/${id}` : `${window.API_BASE}/specialtiesList`;
-                
-                await fetchJSON(url, {
-                    method,
-                    body: JSON.stringify(payload)
-                });
-                
-                showAlert(id ? 'Especialidade atualizada com sucesso!' : 'Especialidade cadastrada com sucesso!', 'success');
-                
-                document.getElementById('specialtyForm').reset();
-                document.getElementById('specialtyId').value = '';
-                document.getElementById('specialtyColor').value = '#45a7b1';
-                document.getElementById('specialtyIcon').value = '🏥';
-                await loadSpecialties();
-                
-            } catch (error) {
-                console.error('Erro ao salvar especialidade:', error);
-                showAlert(error.message || 'Erro ao salvar especialidade', 'error');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
-            }
-        });
-    }
-    
-    // Carregar quando a seção for aberta
-    const specialtiesListNav = document.querySelector('[data-section="specialtiesList"]');
-    if (specialtiesListNav) {
-        specialtiesListNav.addEventListener('click', () => {
-            setTimeout(() => {
-                loadClinicsForSpecialties();
-                loadSpecialties();
-            }, 100);
-        });
-    }
+
+        showAlert(
+          id ? 'Especialidade atualizada com sucesso!' : 'Especialidade cadastrada com sucesso!',
+          'success'
+        );
+
+        document.getElementById('specialtyForm').reset();
+        document.getElementById('specialtyId').value = '';
+        document.getElementById('specialtyColor').value = '#45a7b1';
+        document.getElementById('specialtyIcon').value = '🏥';
+        await loadSpecialties();
+      } catch (error) {
+        console.error('Erro ao salvar especialidade:', error);
+        showAlert(error.message || 'Erro ao salvar especialidade', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+      }
+    });
+  }
+
+  // Carregar quando a seção for aberta
+  const specialtiesListNav = document.querySelector('[data-section="specialtiesList"]');
+  if (specialtiesListNav) {
+    specialtiesListNav.addEventListener('click', () => {
+      setTimeout(() => {
+        loadClinicsForSpecialties();
+        loadSpecialties();
+      }, 100);
+    });
+  }
 }
 
 // Inicializar quando o DOM estiver pronto
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupSpecialtiesListeners);
+  document.addEventListener('DOMContentLoaded', setupSpecialtiesListeners);
 } else {
-    setupSpecialtiesListeners();
+  setupSpecialtiesListeners();
 }
-
