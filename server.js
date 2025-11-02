@@ -331,24 +331,37 @@ app.use('/apps/portal', express.static(path.join(__dirname, 'applications/clinic
 // IMPORTANTE: Servir arquivos estáticos do admin-dashboard para /crm e /dashboard
 // Isso permite que dashboard.css, dashboard.js, clinics-manager.js, etc sejam acessíveis
 // Middleware customizado para forçar no-cache em arquivos JS do admin-dashboard
-app.use('/crm', (req, res, next) => {
-  // Forçar no-cache para arquivos JS/CSS do admin dashboard
-  if (req.path.match(/\.(js|css)$/)) {
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-  }
-  next();
-}, express.static(path.join(__dirname, 'applications/admin-dashboard')));
-app.use('/dashboard', (req, res, next) => {
-  // Forçar no-cache para arquivos JS/CSS do admin dashboard
-  if (req.path.match(/\.(js|css)$/)) {
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-  }
-  next();
-}, express.static(path.join(__dirname, 'applications/admin-dashboard')));
+app.use(
+  '/crm',
+  (req, res, next) => {
+    // Forçar no-cache para arquivos JS/CSS do admin dashboard
+    if (req.path.match(/\.(js|css)$/)) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+    next();
+  },
+  express.static(path.join(__dirname, 'applications/admin-dashboard'))
+);
+// Dashboard static files middleware (skips HTML to allow app.get('/dashboard') to handle it)
+app.use(
+  '/dashboard',
+  (req, res, next) => {
+    // Pular arquivo HTML para permitir que app.get('/dashboard') o sirva
+    if (req.path === '/' || req.path.match(/\.html$/)) {
+      return next();
+    }
+    // Forçar no-cache para arquivos JS/CSS do admin dashboard
+    if (req.path.match(/\.(js|css)$/)) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+    next();
+  },
+  express.static(path.join(__dirname, 'applications/admin-dashboard'))
+);
 
 // Servir arquivos estáticos da página pública de clínica
 // IMPORTANTE: Deve vir ANTES da rota dinâmica /clinica/:slug
