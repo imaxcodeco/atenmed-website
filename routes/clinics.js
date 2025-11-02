@@ -14,6 +14,12 @@ const logger = require('../utils/logger');
 const metaWhatsappService = require('../services/metaWhatsappService');
 const clinicService = require('../services/clinicService');
 
+// Middleware de logging para debug
+router.use((req, res, next) => {
+  logger.info(`🔥 CLINICS ROUTE: ${req.method} ${req.path}`);
+  next();
+});
+
 // ===== ROTAS PÚBLICAS =====
 
 /**
