@@ -3,10 +3,10 @@
  * Gerenciamento de clínicas integrado ao dashboard
  */
 
-// API Base URL (usar sempre window.window.API_BASE para evitar conflitos)
+// API Base URL (usar sempre window.API_BASE para evitar conflitos)
 (function () {
-  if (typeof window.window.API_BASE === 'undefined') {
-    window.window.API_BASE =
+  if (typeof window.API_BASE === 'undefined') {
+    window.API_BASE =
       window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:3000/api'
         : window.location.hostname === 'atenmed.com.br' ||
