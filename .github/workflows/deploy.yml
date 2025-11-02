@@ -116,8 +116,8 @@ jobs:
             # Remove dev dependencies
             npm prune --omit=dev --legacy-peer-deps
 
-            # Restart with PM2
-            pm2 reload ecosystem.config.js --env production || pm2 start ecosystem.config.js --env production
+            # Restart with PM2 (force restart para garantir reload completo)
+            pm2 restart atenmed || pm2 start ecosystem.config.js --env production
             pm2 save
 
             # Show status
