@@ -227,10 +227,24 @@ async function loadClinicData(clinicId) {
     const token = window.getAuthToken ? window.getAuthToken() : null;
     if (!token) return;
 
-    const response = await fetch(`${window.API_BASE}/clinics/${clinicId}`, {
+    const url = `${window.API_BASE}/clinics/${clinicId}`;
+    console.log('🔥 DEBUG loadClinicData:', {
+      clinicId,
+      API_BASE: window.API_BASE,
+      url,
+      hasToken: !!token,
+    });
+
+    const response = await fetch(url, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+    });
+
+    console.log('🔥 DEBUG response:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
     });
 
     if (!response.ok) {
