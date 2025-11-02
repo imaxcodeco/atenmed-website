@@ -196,8 +196,19 @@ async function loadSpecialties() {
 
 function renderSpecialtiesSidebar() {
   const container = document.getElementById('specialties-list');
+  if (!container) return;
+
+  // Renderizar como cards no novo grid
   container.innerHTML = bookingApp.specialties
-    .map((spec) => `<span class="specialty-tag">${spec.name}</span>`)
+    .map(
+      (spec) => `
+        <div class="specialty-card" onclick="bookingApp.selectSpecialty('${spec._id}')">
+            <i class="fas ${spec.icon || 'fa-stethoscope'}"></i>
+            <h4>${spec.name}</h4>
+            ${spec.description ? `<p>${spec.description}</p>` : ''}
+        </div>
+    `
+    )
     .join('');
 }
 

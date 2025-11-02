@@ -101,10 +101,23 @@
     <!-- Main Content -->
     <main class="main-content">
         <div class="container">
+            
+            <!-- Seção de Especialidades (Primeira visão) -->
+            <section class="section-specialties" id="especialidades">
+                <div class="section-header">
+                    <h2><i class="fas fa-stethoscope"></i> Nossas Especialidades</h2>
+                    <p>Oferecemos cuidados completos para sua saúde</p>
+                </div>
+                <div id="specialties-list" class="specialties-grid">
+                    <!-- Preenchido via JS -->
+                </div>
+            </section>
+
+            <!-- Grid Principal: Sobre + Agendamento -->
             <div class="content-grid">
                 
-                <!-- Left Column - Informações -->
-                <aside class="clinic-sidebar">
+                <!-- Left: Sobre + Equipe + Mapa -->
+                <aside class="clinic-info-sidebar">
                     
                     <!-- Sobre a Clínica -->
                     <section class="info-card">
@@ -114,26 +127,10 @@
                         </div>
                     </section>
 
-                    <!-- Especialidades -->
-                    <section class="info-card">
-                        <h2><i class="fas fa-stethoscope"></i> Especialidades</h2>
-                        <div id="specialties-list" class="specialties-grid">
-                            <!-- Preenchido via JS -->
-                        </div>
-                    </section>
-
                     <!-- Médicos -->
                     <section class="info-card">
                         <h2><i class="fas fa-user-md"></i> Nossos Profissionais</h2>
                         <div id="doctors-list" class="doctors-list">
-                            <!-- Preenchido via JS -->
-                        </div>
-                    </section>
-
-                    <!-- Convênios -->
-                    <section class="info-card" id="insurance-section" style="display: none;">
-                        <h2><i class="fas fa-hospital"></i> Convênios Aceitos</h2>
-                        <div id="insurance-list" class="insurance-grid">
                             <!-- Preenchido via JS -->
                         </div>
                     </section>
@@ -154,7 +151,7 @@
 
                 </aside>
 
-                <!-- Right Column - Agendamento -->
+                <!-- Right: Agendamento Sticky -->
                 <section class="booking-section" id="agendar">
                     
                     <div class="booking-card">
