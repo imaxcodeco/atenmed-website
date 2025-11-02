@@ -289,9 +289,11 @@ router.post('/:id/meta-register', authenticateToken, authorize('admin'), async (
  */
 router.get('/:id', authenticateToken, authorize('admin'), async (req, res) => {
   try {
+    logger.info(`GET /api/clinics/:id - ID: ${req.params.id}, User: ${req.user?._id}`);
     const clinic = await Clinic.findById(req.params.id).select('-__v');
 
     if (!clinic) {
+      logger.warn(`Clínica não encontrada: ${req.params.id}`);
       return res.status(404).json({
         success: false,
         error: 'Clínica não encontrada',
