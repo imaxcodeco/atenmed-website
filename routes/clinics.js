@@ -57,11 +57,11 @@ router.get('/slug/:slug', async (req, res) => {
 });
 
 /**
- * @route   GET /api/clinics/:clinicId/public
+ * @route   GET /api/clinics/public/:clinicId
  * @desc    Buscar informações públicas da clínica
  * @access  Public
  */
-router.get('/:clinicId/public', async (req, res) => {
+router.get('/public/:clinicId', async (req, res) => {
   try {
     const clinic = await Clinic.findOne({
       _id: req.params.clinicId,
@@ -93,11 +93,11 @@ router.get('/:clinicId/public', async (req, res) => {
 });
 
 /**
- * @route   GET /api/clinics/:clinicId/stats
+ * @route   GET /api/clinics/stats/:clinicId
  * @desc    Estatísticas públicas da clínica
  * @access  Public
  */
-router.get('/:clinicId/stats', async (req, res) => {
+router.get('/stats/:clinicId', async (req, res) => {
   try {
     const clinic = await Clinic.findById(req.params.clinicId).select('stats rating').lean();
 
@@ -342,11 +342,11 @@ router.put('/:id/branding', authenticateToken, async (req, res) => {
 });
 
 /**
- * @route   GET /api/clinics/:id/doctors
+ * @route   GET /api/clinics/doctors/:id
  * @desc    Listar médicos da clínica
  * @access  Public
  */
-router.get('/:id/doctors', async (req, res) => {
+router.get('/doctors/:id', async (req, res) => {
   try {
     const doctors = await Doctor.find({
       clinic: req.params.id,
