@@ -344,17 +344,14 @@ app.use(
   },
   express.static(path.join(__dirname, 'applications/admin-dashboard'))
 );
-// Dashboard static files middleware (skips HTML to allow app.get('/dashboard') to handle it)
+// Dashboard static files (only JS/CSS, HTML is served by app.get('/dashboard'))
 app.use(
   '/dashboard',
   (req, res, next) => {
-    // Pular arquivo HTML para permitir que app.get('/dashboard') o sirva
+    // Pular arquivos HTML para permitir que app.get('/dashboard') os sirva
     if (req.path === '/' || req.path.match(/\.html$/)) {
       return next();
     }
-    next();
-  },
-  (req, res, next) => {
     // Forçar no-cache para arquivos JS/CSS do admin dashboard
     if (req.path.match(/\.(js|css)$/)) {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
