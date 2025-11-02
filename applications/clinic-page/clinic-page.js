@@ -177,12 +177,21 @@ function renderClinicInfo() {
 // ===== CARREGAR ESPECIALIDADES =====
 async function loadSpecialties() {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/appointments/clinics/${bookingApp.clinic._id}/specialties`
-    );
+    const url = `${API_BASE_URL}/appointments/clinics/${bookingApp.clinic._id}/specialties`;
+    console.log('📡 Carregando especialidades de:', url);
+
+    const response = await fetch(url);
+    console.log('📥 Response status:', response.status, response.ok);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
     const data = await response.json();
+    console.log('📦 Dados recebidos:', data);
 
     bookingApp.specialties = data.data || [];
+    console.log('✅ Especialidades carregadas:', bookingApp.specialties.length);
 
     // Renderizar na sidebar
     renderSpecialtiesSidebar();
@@ -190,13 +199,41 @@ async function loadSpecialties() {
     // Renderizar no booking
     renderSpecialtyOptions();
   } catch (error) {
-    console.error('Erro ao carregar especialidades:', error);
+    console.error('❌ Erro ao carregar especialidades:', error);
+    // Mostrar mensagem de erro na interface
+    const container = document.getElementById('specialties-list');
+    if (container) {
+      container.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--error);">
+          <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 20px;"></i>
+          <p style="font-size: 1.1rem;">Erro ao carregar especialidades.</p>
+          <p style="font-size: 0.9rem; margin-top: 10px;">Por favor, recarregue a página.</p>
+        </div>
+      `;
+    }
   }
 }
 
 function renderSpecialtiesSidebar() {
   const container = document.getElementById('specialties-list');
-  if (!container) return;
+  if (!container) {
+    console.error('❌ Container specialties-list não encontrado');
+    return;
+  }
+
+  console.log('🔍 Renderizando especialidades:', bookingApp.specialties);
+
+  // Se não houver especialidades, mostrar mensagem
+  if (!bookingApp.specialties || bookingApp.specialties.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-light);">
+        <i class="fas fa-info-circle" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 20px; opacity: 0.5;"></i>
+        <p style="font-size: 1.1rem;">Nenhuma especialidade cadastrada no momento.</p>
+        <p style="font-size: 0.9rem; margin-top: 10px;">Entre em contato para mais informações.</p>
+      </div>
+    `;
+    return;
+  }
 
   // Renderizar como cards no novo grid
   container.innerHTML = bookingApp.specialties
@@ -210,6 +247,8 @@ function renderSpecialtiesSidebar() {
     `
     )
     .join('');
+
+  console.log('✅ Especialidades renderizadas:', bookingApp.specialties.length);
 }
 
 function renderSpecialtyOptions() {
