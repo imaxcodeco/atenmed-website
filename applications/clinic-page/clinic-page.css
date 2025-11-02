@@ -1,995 +1,1293 @@
 /* ===== VARIÁVEIS CSS (Personalizáveis por clínica) ===== */
 :root {
-    --primary-color: #45a7b1;
-    --secondary-color: #184354;
-    --accent-color: #6dd5ed;
-    --text-dark: #2c3e50;
-    --text-light: #64748b;
-    --background: #f8fafc;
-    --white: #ffffff;
-    --border: #e2e8f0;
-    --success: #10b981;
-    --warning: #f59e0b;
-    --error: #ef4444;
-    --shadow: rgba(0, 0, 0, 0.1);
-    --shadow-lg: rgba(0, 0, 0, 0.15);
+  --primary-color: #45a7b1;
+  --secondary-color: #184354;
+  --accent-color: #6dd5ed;
+  --text-dark: #2c3e50;
+  --text-light: #64748b;
+  --background: #f8fafc;
+  --white: #ffffff;
+  --border: #e2e8f0;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --shadow: rgba(0, 0, 0, 0.1);
+  --shadow-lg: rgba(0, 0, 0, 0.15);
+  --gradient-primary: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  --gradient-hover: linear-gradient(135deg, #50b8c4, #1f5569);
 }
 
 /* ===== RESET & BASE ===== */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: var(--text-dark);
-    background: var(--background);
-    line-height: 1.6;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text-dark);
+  background: var(--background);
+  line-height: 1.6;
 }
 
 .container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
 /* ===== LOADING ===== */
 .loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.95);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    transition: opacity 0.3s ease;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.3s ease;
 }
 
 .loading-overlay.hidden {
-    opacity: 0;
-    pointer-events: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .spinner {
-    width: 50px;
-    height: 50px;
-    border: 4px solid var(--border);
-    border-top-color: var(--primary-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--border);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ===== HEADER ===== */
 .clinic-header {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    color: var(--white);
-    padding: 40px 0;
-    position: relative;
-    overflow: hidden;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: var(--white);
+  padding: 40px 0;
+  position: relative;
+  overflow: hidden;
 }
 
 .clinic-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.05)" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,133.3C960,128,1056,96,1152,90.7C1248,85,1344,107,1392,117.3L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
-    background-size: cover;
-    opacity: 0.3;
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.05)" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,133.3C960,128,1056,96,1152,90.7C1248,85,1344,107,1392,117.3L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>')
+    no-repeat bottom;
+  background-size: cover;
+  opacity: 0.3;
 }
 
 .clinic-header .container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: relative;
-    z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
 .clinic-branding {
-    display: flex;
-    gap: 20px;
-    align-items: center;
+  display: flex;
+  gap: 20px;
+  align-items: center;
 }
 
 .clinic-logo {
-    width: 120px;
-    height: 120px;
-    object-fit: contain;
-    background: white;
-    border-radius: 15px;
-    padding: 10px;
-    box-shadow: 0 4px 15px var(--shadow-lg);
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  background: white;
+  border-radius: 15px;
+  padding: 10px;
+  box-shadow: 0 4px 15px var(--shadow-lg);
 }
 
 .clinic-info h1 {
-    font-size: 2.5rem;
-    margin-bottom: 5px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+  font-size: 2.5rem;
+  margin-bottom: 5px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .clinic-slogan {
-    font-size: 1.1rem;
-    opacity: 0.95;
-    margin-bottom: 10px;
+  font-size: 1.1rem;
+  opacity: 0.95;
+  margin-bottom: 10px;
 }
 
 .clinic-rating {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .stars {
-    color: #fbbf24;
-    font-size: 1.2rem;
+  color: #fbbf24;
+  font-size: 1.2rem;
 }
 
 .rating-count {
-    font-size: 0.9rem;
-    opacity: 0.9;
+  font-size: 0.9rem;
+  opacity: 0.9;
 }
 
 .btn-primary-header {
-    background: var(--white);
-    color: var(--primary-color);
-    padding: 15px 30px;
-    border-radius: 50px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 1.1rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    transition: all 0.3s ease;
+  background: var(--white);
+  color: var(--primary-color);
+  padding: 15px 30px;
+  border-radius: 50px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
 }
 
 .btn-primary-header:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
 /* ===== QUICK INFO BAR ===== */
 .quick-info {
-    background: var(--white);
-    box-shadow: 0 2px 10px var(--shadow);
-    padding: 25px 0;
-    margin-bottom: 40px;
+  background: var(--white);
+  box-shadow: 0 2px 10px var(--shadow);
+  padding: 25px 0;
+  margin-bottom: 40px;
 }
 
 .info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 30px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
 }
 
 .info-item {
-    display: flex;
-    gap: 15px;
-    align-items: center;
+  display: flex;
+  gap: 15px;
+  align-items: center;
 }
 
 .info-item i {
-    font-size: 2rem;
-    color: var(--primary-color);
+  font-size: 2rem;
+  color: var(--primary-color);
 }
 
 .info-item .label {
-    display: block;
-    font-size: 0.85rem;
-    color: var(--text-light);
-    font-weight: 500;
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-light);
+  font-weight: 500;
 }
 
 .info-item .value {
-    display: block;
-    font-size: 1rem;
-    color: var(--text-dark);
-    font-weight: 600;
+  display: block;
+  font-size: 1rem;
+  color: var(--text-dark);
+  font-weight: 600;
 }
 
 .whatsapp-link {
-    color: #25d366 !important;
-    text-decoration: none;
+  color: #25d366 !important;
+  text-decoration: none;
 }
 
 .whatsapp-link:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 /* ===== MAIN CONTENT ===== */
 .main-content {
-    padding: 40px 0 80px;
+  padding: 40px 0 80px;
 }
 
 .content-grid {
-    display: grid;
-    grid-template-columns: 400px 1fr;
-    gap: 40px;
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 40px;
 }
 
 /* ===== SIDEBAR ===== */
 .clinic-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
 }
 
 .info-card {
-    background: var(--white);
-    border-radius: 12px;
-    padding: 25px;
-    box-shadow: 0 2px 8px var(--shadow);
+  background: var(--white);
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 2px 8px var(--shadow);
 }
 
 .info-card h2 {
-    font-size: 1.3rem;
-    color: var(--text-dark);
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  font-size: 1.3rem;
+  color: var(--text-dark);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .info-card h2 i {
-    color: var(--primary-color);
+  color: var(--primary-color);
 }
 
 .clinic-description {
-    color: var(--text-light);
-    line-height: 1.8;
+  color: var(--text-light);
+  line-height: 1.8;
 }
 
 /* Especialidades */
 .specialties-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .specialty-tag {
-    background: var(--background);
-    color: var(--primary-color);
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    border: 2px solid var(--primary-color);
-    transition: all 0.3s ease;
+  background: var(--background);
+  color: var(--primary-color);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: 2px solid var(--primary-color);
+  transition: all 0.3s ease;
 }
 
 .specialty-tag:hover {
-    background: var(--primary-color);
-    color: var(--white);
+  background: var(--primary-color);
+  color: var(--white);
 }
 
 /* Médicos */
 .doctors-list {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
 .doctor-card {
-    display: flex;
-    gap: 15px;
-    padding: 15px;
-    background: var(--background);
-    border-radius: 10px;
-    transition: all 0.3s ease;
+  display: flex;
+  gap: 15px;
+  padding: 15px;
+  background: var(--background);
+  border-radius: 10px;
+  transition: all 0.3s ease;
 }
 
 .doctor-card:hover {
-    background: var(--primary-color);
-    color: var(--white);
-    transform: translateX(5px);
+  background: var(--primary-color);
+  color: var(--white);
+  transform: translateX(5px);
 }
 
 .doctor-avatar {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    object-fit: cover;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .doctor-info h4 {
-    font-size: 1rem;
-    margin-bottom: 3px;
+  font-size: 1rem;
+  margin-bottom: 3px;
 }
 
 .doctor-specialty {
-    font-size: 0.85rem;
-    opacity: 0.8;
+  font-size: 0.85rem;
+  opacity: 0.8;
 }
 
 /* Convênios */
 .insurance-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
 }
 
 .insurance-item {
-    background: var(--background);
-    padding: 10px;
-    border-radius: 8px;
-    text-align: center;
-    font-size: 0.9rem;
-    font-weight: 500;
+  background: var(--background);
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
 /* Mapa */
 .map-container {
-    border-radius: 8px;
-    overflow: hidden;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 /* ===== BOOKING SECTION ===== */
 .booking-card {
-    background: var(--white);
-    border-radius: 12px;
-    padding: 30px;
-    box-shadow: 0 2px 8px var(--shadow);
+  background: var(--white);
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 2px 8px var(--shadow);
 }
 
 .booking-header {
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 2px solid var(--border);
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--border);
 }
 
 .booking-header h2 {
-    font-size: 1.8rem;
-    color: var(--text-dark);
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  font-size: 1.8rem;
+  color: var(--text-dark);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .booking-header h2 i {
-    color: var(--primary-color);
+  color: var(--primary-color);
 }
 
 .booking-header p {
-    color: var(--text-light);
+  color: var(--text-light);
 }
 
 /* Booking Steps */
 .booking-step {
-    animation: fadeIn 0.3s ease;
+  animation: fadeIn 0.3s ease;
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .step-title {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 15px;
-    margin-bottom: 25px;
-    font-size: 1.3rem;
-    color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 25px;
+  font-size: 1.3rem;
+  color: var(--text-dark);
 }
 
 .step-number {
-    background: var(--primary-color);
-    color: var(--white);
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
+  background: var(--primary-color);
+  color: var(--white);
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
 }
 
 .btn-back {
-    background: var(--background);
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    color: var(--text-dark);
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
+  background: var(--background);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  color: var(--text-dark);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
 }
 
 .btn-back:hover {
-    background: var(--primary-color);
-    color: var(--white);
+  background: var(--primary-color);
+  color: var(--white);
 }
 
 /* Option Grid */
 .option-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 15px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
 }
 
 .option-card {
-    background: var(--background);
-    border: 2px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
+  background: var(--background);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .option-card:hover {
-    border-color: var(--primary-color);
-    background: var(--white);
-    transform: translateY(-3px);
-    box-shadow: 0 4px 12px var(--shadow);
+  border-color: var(--primary-color);
+  background: var(--white);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px var(--shadow);
 }
 
 .option-card i {
-    font-size: 2.5rem;
-    color: var(--primary-color);
-    margin-bottom: 10px;
+  font-size: 2.5rem;
+  color: var(--primary-color);
+  margin-bottom: 10px;
 }
 
 .option-card h4 {
-    font-size: 1.1rem;
-    color: var(--text-dark);
-    margin-bottom: 5px;
+  font-size: 1.1rem;
+  color: var(--text-dark);
+  margin-bottom: 5px;
 }
 
 .option-card p {
-    font-size: 0.85rem;
-    color: var(--text-light);
+  font-size: 0.85rem;
+  color: var(--text-light);
 }
 
 /* Doctor Options */
 .doctor-options {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
 .doctor-option-card {
-    display: flex;
-    gap: 20px;
-    padding: 20px;
-    background: var(--background);
-    border: 2px solid var(--border);
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  background: var(--background);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .doctor-option-card:hover {
-    border-color: var(--primary-color);
-    background: var(--white);
-    box-shadow: 0 4px 12px var(--shadow);
+  border-color: var(--primary-color);
+  background: var(--white);
+  box-shadow: 0 4px 12px var(--shadow);
 }
 
 .doctor-option-avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    object-fit: cover;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .doctor-option-info {
-    flex: 1;
+  flex: 1;
 }
 
 .doctor-option-info h4 {
-    font-size: 1.2rem;
-    color: var(--text-dark);
-    margin-bottom: 5px;
+  font-size: 1.2rem;
+  color: var(--text-dark);
+  margin-bottom: 5px;
 }
 
 .doctor-option-specialty {
-    color: var(--primary-color);
-    font-weight: 500;
-    margin-bottom: 5px;
+  color: var(--primary-color);
+  font-weight: 500;
+  margin-bottom: 5px;
 }
 
 .doctor-option-bio {
-    font-size: 0.9rem;
-    color: var(--text-light);
+  font-size: 0.9rem;
+  color: var(--text-light);
 }
 
 /* Calendar */
 .calendar-container {
-    background: var(--background);
-    border-radius: 12px;
-    padding: 20px;
+  background: var(--background);
+  border-radius: 12px;
+  padding: 20px;
 }
 
 .calendar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
 .calendar-header h4 {
-    font-size: 1.2rem;
-    color: var(--text-dark);
+  font-size: 1.2rem;
+  color: var(--text-dark);
 }
 
 .btn-icon {
-    background: var(--white);
-    border: 1px solid var(--border);
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
+  background: var(--white);
+  border: 1px solid var(--border);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
 }
 
 .btn-icon:hover {
-    background: var(--primary-color);
-    color: var(--white);
-    border-color: var(--primary-color);
+  background: var(--primary-color);
+  color: var(--white);
+  border-color: var(--primary-color);
 }
 
 .calendar {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
 }
 
 .calendar-day {
-    aspect-ratio: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--white);
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.3s ease;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--white);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
 .calendar-day.disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 .calendar-day.available:hover {
-    border-color: var(--primary-color);
-    background: var(--primary-color);
-    color: var(--white);
+  border-color: var(--primary-color);
+  background: var(--primary-color);
+  color: var(--white);
 }
 
 .calendar-day.selected {
-    background: var(--primary-color);
-    color: var(--white);
-    border-color: var(--primary-color);
+  background: var(--primary-color);
+  color: var(--white);
+  border-color: var(--primary-color);
 }
 
 .calendar-day.today {
-    border-color: var(--accent-color);
-    font-weight: bold;
+  border-color: var(--accent-color);
+  font-weight: bold;
 }
 
 /* Time Slots */
 .selected-info {
-    background: var(--background);
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
+  background: var(--background);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
 }
 
 .time-slots-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
 }
 
 .time-slot {
-    background: var(--background);
-    border: 2px solid var(--border);
-    padding: 15px;
-    border-radius: 8px;
-    text-align: center;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.3s ease;
+  background: var(--background);
+  border: 2px solid var(--border);
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
 }
 
 .time-slot:hover {
-    border-color: var(--primary-color);
-    background: var(--white);
+  border-color: var(--primary-color);
+  background: var(--white);
 }
 
 .time-slot.selected {
-    background: var(--primary-color);
-    color: var(--white);
-    border-color: var(--primary-color);
+  background: var(--primary-color);
+  color: var(--white);
+  border-color: var(--primary-color);
 }
 
 .time-slot.unavailable {
-    opacity: 0.3;
-    cursor: not-allowed;
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 /* Patient Form */
 .patient-form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
 }
 
 .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .form-group label {
-    font-weight: 600;
-    color: var(--text-dark);
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  font-weight: 600;
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .form-group label i {
-    color: var(--primary-color);
+  color: var(--primary-color);
 }
 
 .form-group input,
 .form-group textarea {
-    padding: 12px;
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    font-size: 1rem;
-    font-family: inherit;
-    transition: all 0.3s ease;
+  padding: 12px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: all 0.3s ease;
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
-    outline: none;
-    border-color: var(--primary-color);
+  outline: none;
+  border-color: var(--primary-color);
 }
 
 /* Booking Summary */
 .booking-summary {
-    background: var(--background);
-    padding: 20px;
-    border-radius: 12px;
-    margin-top: 10px;
+  background: var(--background);
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 10px;
 }
 
 .booking-summary h4 {
-    font-size: 1.1rem;
-    color: var(--text-dark);
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  font-size: 1.1rem;
+  color: var(--text-dark);
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .summary-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
 }
 
 .summary-item {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 .summary-item .label {
-    font-size: 0.85rem;
-    color: var(--text-light);
-    font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--text-light);
+  font-weight: 500;
 }
 
 .summary-item .value {
-    font-size: 1rem;
-    color: var(--text-dark);
-    font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-dark);
+  font-weight: 600;
 }
 
 .btn-confirm-booking {
-    background: var(--success);
-    color: var(--white);
-    border: none;
-    padding: 18px;
-    border-radius: 12px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    transition: all 0.3s ease;
-    margin-top: 20px;
+  background: var(--success);
+  color: var(--white);
+  border: none;
+  padding: 18px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  margin-top: 20px;
 }
 
 .btn-confirm-booking:hover {
-    background: #059669;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  background: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 /* Confirmation */
 .confirmation-success {
-    text-align: center;
-    padding: 40px 20px;
+  text-align: center;
+  padding: 40px 20px;
 }
 
 .success-icon {
-    font-size: 5rem;
-    color: var(--success);
-    margin-bottom: 20px;
+  font-size: 5rem;
+  color: var(--success);
+  margin-bottom: 20px;
 }
 
 .confirmation-success h3 {
-    font-size: 2rem;
-    color: var(--text-dark);
-    margin-bottom: 10px;
+  font-size: 2rem;
+  color: var(--text-dark);
+  margin-bottom: 10px;
 }
 
 .confirmation-details {
-    background: var(--background);
-    padding: 25px;
-    border-radius: 12px;
-    margin: 30px 0;
-    display: inline-block;
-    min-width: 400px;
+  background: var(--background);
+  padding: 25px;
+  border-radius: 12px;
+  margin: 30px 0;
+  display: inline-block;
+  min-width: 400px;
 }
 
 .detail-row {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 15px;
-    font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+  font-size: 1.1rem;
 }
 
 .detail-row:last-child {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 .detail-row i {
-    color: var(--primary-color);
-    width: 25px;
+  color: var(--primary-color);
+  width: 25px;
 }
 
 .confirmation-actions {
-    display: flex;
-    gap: 15px;
-    justify-content: center;
-    margin: 30px 0;
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin: 30px 0;
 }
 
 .btn-secondary {
-    background: var(--background);
-    color: var(--text-dark);
-    border: 2px solid var(--border);
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.3s ease;
+  background: var(--background);
+  color: var(--text-dark);
+  border: 2px solid var(--border);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
 }
 
 .btn-secondary:hover {
-    border-color: var(--primary-color);
-    background: var(--primary-color);
-    color: var(--white);
+  border-color: var(--primary-color);
+  background: var(--primary-color);
+  color: var(--white);
 }
 
 .btn-whatsapp {
-    background: #25d366;
-    color: var(--white);
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.3s ease;
+  background: #25d366;
+  color: var(--white);
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
 }
 
 .btn-whatsapp:hover {
-    background: #1da851;
+  background: #1da851;
 }
 
 .confirmation-note {
-    color: var(--text-light);
-    margin: 20px 0;
+  color: var(--text-light);
+  margin: 20px 0;
 }
 
 .btn-new-booking {
-    background: var(--white);
-    color: var(--primary-color);
-    border: 2px solid var(--primary-color);
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
+  background: var(--white);
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .btn-new-booking:hover {
-    background: var(--primary-color);
-    color: var(--white);
+  background: var(--primary-color);
+  color: var(--white);
 }
 
 /* ===== FOOTER ===== */
 .clinic-footer {
-    background: var(--text-dark);
-    color: var(--white);
-    padding: 40px 0 20px;
-    margin-top: 80px;
+  background: var(--text-dark);
+  color: var(--white);
+  padding: 40px 0 20px;
+  margin-top: 80px;
 }
 
 .footer-content {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 40px;
-    margin-bottom: 30px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 40px;
+  margin-bottom: 30px;
 }
 
 .footer-section h4 {
-    font-size: 1.2rem;
-    margin-bottom: 15px;
-    color: var(--accent-color);
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+  color: var(--accent-color);
 }
 
 .footer-section p {
-    margin-bottom: 10px;
-    opacity: 0.9;
+  margin-bottom: 10px;
+  opacity: 0.9;
 }
 
 .social-links {
-    display: flex;
-    gap: 15px;
+  display: flex;
+  gap: 15px;
 }
 
 .social-link {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    color: var(--white);
-    transition: all 0.3s ease;
-    text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  color: var(--white);
+  transition: all 0.3s ease;
+  text-decoration: none;
 }
 
 .social-link:hover {
-    background: var(--primary-color);
-    transform: translateY(-3px);
+  background: var(--primary-color);
+  transform: translateY(-3px);
 }
 
 .footer-bottom {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding-top: 20px;
-    text-align: center;
-    opacity: 0.8;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 20px;
+  text-align: center;
+  opacity: 0.8;
 }
 
 .powered-by {
-    margin-top: 10px;
-    font-size: 0.9rem;
+  margin-top: 10px;
+  font-size: 0.9rem;
 }
 
 .powered-by a {
-    color: var(--accent-color);
-    text-decoration: none;
+  color: var(--accent-color);
+  text-decoration: none;
 }
 
 .powered-by a:hover {
-    text-decoration: underline;
+  text-decoration: underline;
+}
+
+/* ===== MELHORIAS VISUAIS ===== */
+
+/* Animações de entrada */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Cards com hover effect melhorado */
+.info-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.info-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px var(--shadow-lg);
+}
+
+/* Quick Info com destaque */
+.quick-info {
+  position: relative;
+  overflow: hidden;
+}
+
+.quick-info::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(69, 167, 177, 0.1), transparent);
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Melhorias no header */
+.clinic-header {
+  position: relative;
+}
+
+.clinic-header .clinic-branding {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.clinic-header .btn-primary-header {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+/* Info cards com ícones animados */
+.info-card h2 i {
+  transition: transform 0.3s ease;
+}
+
+.info-card:hover h2 i {
+  transform: scale(1.2) rotate(5deg);
+}
+
+/* Specialty tags melhorados */
+.specialty-tag {
+  position: relative;
+  overflow: hidden;
+}
+
+.specialty-tag::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.specialty-tag:hover::before {
+  left: 100%;
+}
+
+/* Doctor cards com overlay */
+.doctor-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.doctor-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--gradient-primary);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.doctor-card:hover::after {
+  opacity: 0.1;
+}
+
+.doctor-card:hover .doctor-info {
+  position: relative;
+  z-index: 1;
+  color: var(--text-dark);
+}
+
+/* Booking card com destaque */
+.booking-card {
+  position: relative;
+}
+
+.booking-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gradient-primary);
+  border-radius: 12px 12px 0 0;
+}
+
+/* Step transitions melhoradas */
+.booking-step {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+/* Time slots com efeito de onda */
+.time-slot::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(69, 167, 177, 0.2);
+  transform: translate(-50%, -50%);
+  transition:
+    width 0.6s ease,
+    height 0.6s ease;
+  z-index: -1;
+}
+
+.time-slot:hover::before {
+  width: 200%;
+  height: 200%;
+}
+
+/* Botões com glow effect */
+.btn-confirm-booking {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-confirm-booking::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition:
+    width 0.6s ease,
+    height 0.6s ease;
+}
+
+.btn-confirm-booking:hover::before {
+  width: 300%;
+  height: 300%;
+}
+
+.btn-confirm-booking i,
+.btn-confirm-booking span {
+  position: relative;
+  z-index: 1;
+}
+
+/* Calendar improvements */
+.calendar-day {
+  position: relative;
+}
+
+.calendar-day.today::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent-color);
+}
+
+/* Map container com border animado */
+.map-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.map-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid var(--primary-color);
+  border-radius: 8px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.map-container:hover::before {
+  opacity: 0.3;
+}
+
+/* Footer com gradient */
+.clinic-footer {
+  position: relative;
+  overflow: hidden;
+}
+
+.clinic-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--gradient-primary);
+}
+
+/* Social links com efeito pulse */
+.social-link {
+  position: relative;
+}
+
+.social-link:hover {
+  animation: pulse 0.6s ease;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Loading spinner melhorado */
+.spinner {
+  position: relative;
+}
+
+.spinner::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border: 4px solid transparent;
+  border-top-color: var(--accent-color);
+  border-radius: 50%;
+  animation: spin 1.5s linear infinite reverse;
 }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1200px) {
-    .content-grid {
-        grid-template-columns: 350px 1fr;
-        gap: 30px;
-    }
+  .content-grid {
+    grid-template-columns: 350px 1fr;
+    gap: 30px;
+  }
 }
 
 @media (max-width: 968px) {
-    .content-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .clinic-header .container {
-        flex-direction: column;
-        text-align: center;
-        gap: 20px;
-    }
-    
-    .clinic-branding {
-        flex-direction: column;
-    }
-    
-    .info-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-    
-    .summary-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .confirmation-details {
-        min-width: auto;
-        width: 100%;
-    }
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .clinic-header .container {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+  }
+
+  .clinic-branding {
+    flex-direction: column;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .confirmation-details {
+    min-width: auto;
+    width: 100%;
+  }
 }
 
 @media (max-width: 640px) {
-    .clinic-info h1 {
-        font-size: 1.8rem;
-    }
-    
-    .option-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .time-slots-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    
-    .calendar {
-        gap: 5px;
-    }
-    
-    .confirmation-actions {
-        flex-direction: column;
-    }
-    
-    .footer-content {
-        grid-template-columns: 1fr;
-        gap: 30px;
-    }
-}
+  .clinic-info h1 {
+    font-size: 1.8rem;
+  }
 
+  .option-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .time-slots-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .calendar {
+    gap: 5px;
+  }
+
+  .confirmation-actions {
+    flex-direction: column;
+  }
+
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+}
