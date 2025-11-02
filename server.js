@@ -352,6 +352,9 @@ app.use(
     if (req.path === '/' || req.path.match(/\.html$/)) {
       return next();
     }
+    next();
+  },
+  (req, res, next) => {
     // Forçar no-cache para arquivos JS/CSS do admin dashboard
     if (req.path.match(/\.(js|css)$/)) {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
