@@ -15,6 +15,7 @@ const logger = require('../utils/logger');
 const metaWhatsappService = require('../services/metaWhatsappService');
 const clinicService = require('../services/clinicService');
 const crypto = require('crypto');
+const emailService = require('../services/emailService');
 
 // Middleware de logging para debug
 router.use((req, res, next) => {
@@ -377,6 +378,25 @@ router.post('/', authenticateToken, authorize('admin'), async (req, res) => {
 
         await ownerUser.save();
         logger.info(`✅ Usuário owner criado: ${ownerUser.email}`);
+
+        // Enviar email de boas-vindas
+        try {
+          const emailResult = await emailService.sendClinicOwnerWelcomeEmail({
+            clinic,
+            user: ownerUser,
+            password: tempPassword,
+            publicUrl: fullPublicUrl,
+          });
+
+          if (emailResult.success) {
+            logger.info(`📧 Email de boas-vindas enviado para: ${ownerUser.email}`);
+          } else {
+            logger.warn(`⚠️ Falha ao enviar email de boas-vindas: ${emailResult.error}`);
+          }
+        } catch (emailError) {
+          logger.error('Erro ao enviar email de boas-vindas:', emailError);
+          // Não bloquear criação se falhar envio de email
+        }
       } catch (userError) {
         logger.error('Erro ao criar usuário owner:', userError);
         // Não bloquear criação da clínica se falhar criação do usuário
