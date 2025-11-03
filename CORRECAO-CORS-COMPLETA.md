@@ -3,6 +3,7 @@
 ## 🔧 PROBLEMA IDENTIFICADO
 
 O CORS estava bloqueando requisições legítimas do próprio site, especialmente:
+
 - Requisições same-origin (que não enviam Origin header)
 - Requisições AJAX após login
 - Navegação entre páginas do dashboard
@@ -95,10 +96,9 @@ A correção foi commitada e enviada para o repositório. O deploy automático s
 ## ✅ RESULTADO ESPERADO
 
 Após o deploy:
+
 - ✅ Login funcionando
 - ✅ Navegação após login funcionando
 - ✅ APIs respondendo corretamente
 - ✅ Dashboards carregando dados
 - ✅ Sem erros de CORS
-
-

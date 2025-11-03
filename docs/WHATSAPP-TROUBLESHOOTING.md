@@ -3,6 +3,7 @@
 ## 🚨 Erro 403 Forbidden - SOLUCIONADO
 
 ### Problema
+
 Ao tentar enviar mensagens ou configurar o webhook, você recebe erro **403 Forbidden**.
 
 ### Causas e Soluções
@@ -10,6 +11,7 @@ Ao tentar enviar mensagens ou configurar o webhook, você recebe erro **403 Forb
 #### 1. ✅ Token Expirado ou Inválido
 
 **Sintomas:**
+
 - Erro 403 ao enviar mensagens
 - Resposta da API: `"error": { "code": 190, "message": "Invalid OAuth access token" }`
 
@@ -39,6 +41,7 @@ curl -X POST https://seu-dominio.com.br/api/whatsapp/send-test \
 #### 2. ✅ Phone Number ID Incorreto
 
 **Sintomas:**
+
 - Erro 403 ao enviar mensagens
 - Resposta: `"error": { "code": 100, "message": "Invalid parameter" }`
 
@@ -59,6 +62,7 @@ WHATSAPP_PHONE_ID=123456789012345  # ID numérico longo
 #### 3. ✅ Permissões Insuficientes
 
 **Sintomas:**
+
 - Erro 403 em qualquer operação
 - Resposta: `"error": { "code": 200, "message": "Permissions error" }`
 
@@ -71,24 +75,28 @@ WHATSAPP_PHONE_ID=123456789012345  # ID numérico longo
 5. Verifique se tem acesso ao **Phone Number**
 
 **Permissões necessárias:**
+
 - ✅ `whatsapp_business_messaging`
 - ✅ `whatsapp_business_management`
 
 #### 4. ✅ Conta Não Verificada / Limitada
 
 **Sintomas:**
+
 - Erro 403 ao enviar para números que não estão na lista
 - Resposta: `"error": { "code": 131031, "message": "Business account is restricted" }`
 
 **Solução:**
 
 **Modo Teste (Desenvolvimento):**
+
 1. Acesse Meta Developer → WhatsApp → API Setup
 2. Role até **"To"**
 3. Adicione números de teste (máximo 5)
 4. Envie código de verificação para cada número
 
 **Modo Produção:**
+
 1. Complete a verificação do seu negócio no Meta Business Manager
 2. Siga o processo em: https://business.facebook.com/
 3. Pode levar até 48 horas
@@ -96,10 +104,12 @@ WHATSAPP_PHONE_ID=123456789012345  # ID numérico longo
 #### 5. ✅ Rate Limiting da API
 
 **Sintomas:**
+
 - Erro 403 após enviar muitas mensagens
 - Resposta: `"error": { "code": 131056, "message": "Rate limit hit" }`
 
 **Limites da API:**
+
 - **80 mensagens por segundo**
 - **1.000 mensagens por minuto**
 - **10.000 mensagens por hora** (contas não verificadas)
@@ -115,6 +125,7 @@ A nova versão V2 já implementa rate limiting automático!
 ```
 
 Se ainda assim atingir o limite:
+
 1. Aguarde alguns minutos
 2. Use a fila de mensagens (habilite Redis)
 3. Distribua envios ao longo do tempo
@@ -124,6 +135,7 @@ Se ainda assim atingir o limite:
 ## 🔒 Erro 401 Unauthorized
 
 ### Causa
+
 Token de autenticação completamente inválido ou ausente.
 
 ### Solução
@@ -145,6 +157,7 @@ pm2 restart atenmed
 ## 📛 Erro 400 Bad Request
 
 ### Causa
+
 Parâmetros inválidos na requisição.
 
 ### Possíveis Problemas
@@ -153,11 +166,11 @@ Parâmetros inválidos na requisição.
 
 ```javascript
 // ❌ ERRADO
-const phone = "+55 (11) 99999-9999";
-const phone = "11999999999"; // Sem código do país
+const phone = '+55 (11) 99999-9999';
+const phone = '11999999999'; // Sem código do país
 
 // ✅ CORRETO
-const phone = "5511999999999"; // Código do país + DDD + número
+const phone = '5511999999999'; // Código do país + DDD + número
 ```
 
 #### Mensagem Vazia ou Muito Longa
@@ -167,11 +180,11 @@ const phone = "5511999999999"; // Código do país + DDD + número
 
 ```javascript
 // ❌ ERRADO
-await sendMessage(phone, ""); // Vazio
-await sendMessage(phone, "a".repeat(5000)); // Muito longo
+await sendMessage(phone, ''); // Vazio
+await sendMessage(phone, 'a'.repeat(5000)); // Muito longo
 
 // ✅ CORRETO
-await sendMessage(phone, "Olá! Tudo bem?");
+await sendMessage(phone, 'Olá! Tudo bem?');
 ```
 
 ---
@@ -190,32 +203,36 @@ curl "https://seu-dominio.com.br/api/whatsapp/webhook?hub.mode=subscribe&hub.ver
 ### Checklist
 
 - [ ] **HTTPS configurado** (certificado SSL válido)
+
   ```bash
   curl -I https://seu-dominio.com.br
   # Deve retornar 200 OK sem erros de SSL
   ```
 
 - [ ] **URL acessível externamente**
+
   ```bash
   # De FORA do servidor
   curl https://seu-dominio.com.br/api/whatsapp/health
   ```
 
 - [ ] **Porta 443 aberta**
+
   ```bash
   # No servidor
   sudo ufw status
   # Deve mostrar: 443/tcp ALLOW
-  
+
   # Se não estiver aberta:
   sudo ufw allow 443/tcp
   ```
 
 - [ ] **Token de verificação correto**
+
   ```bash
   # Verifique no .env
   grep WHATSAPP_VERIFY_TOKEN .env
-  
+
   # Deve ser EXATAMENTE o mesmo que você colocou no Meta
   ```
 
@@ -278,6 +295,7 @@ Error: "CONTACT_BLOCKED"
 Você só pode enviar mensagens de template fora da janela de 24h.
 
 **Solução:**
+
 - Dentro de 24h da última mensagem do usuário: qualquer mensagem
 - Fora da janela: apenas templates aprovados pelo Meta
 
@@ -302,6 +320,7 @@ https://seu-dominio.com.br/admin
 ```
 
 Dashboard mostra:
+
 - Mensagens na fila
 - Mensagens processadas
 - Mensagens que falharam
@@ -416,26 +435,17 @@ Se precisar ajustar o rate limiting:
 // Em services/whatsappServiceV2.js
 
 const limiter = new Bottleneck({
-    reservoir: 80, // Número de mensagens por janela
-    reservoirRefreshAmount: 80,
-    reservoirRefreshInterval: 1000, // 1 segundo
-    maxConcurrent: 10, // Requisições simultâneas
-    minTime: 13 // Mínimo entre requisições (ms)
+  reservoir: 80, // Número de mensagens por janela
+  reservoirRefreshAmount: 80,
+  reservoirRefreshInterval: 1000, // 1 segundo
+  maxConcurrent: 10, // Requisições simultâneas
+  minTime: 13, // Mínimo entre requisições (ms)
 });
 ```
 
 ---
 
 **Última atualização:** 27/10/2025  
-**Versão:** 2.0  
+**Versão:** 2.0
 
 **Precisa de mais ajuda?** Consulte `docs/WHATSAPP-V2-SETUP.md` para setup completo.
-
-
-
-
-
-
-
-
-

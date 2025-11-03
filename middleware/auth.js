@@ -19,8 +19,10 @@ const authenticateToken = async (req, res, next) => {
     // Verificar token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Buscar usuário no banco
-    const user = await User.findById(decoded.userId).select('-senha');
+    // Buscar usuário no banco (com populate da clínica)
+    const user = await User.findById(decoded.userId)
+      .select('-senha')
+      .populate('clinic', 'name slug logo');
 
     if (!user) {
       return res.status(401).json({

@@ -9,7 +9,7 @@ A nova versão (V2) do serviço de WhatsApp inclui:
 ✅ **Rate Limiting Inteligente** - Respeita limites da API do WhatsApp (80 msg/s)  
 ✅ **Validação de Signature** - Verifica autenticidade dos webhooks do Meta  
 ✅ **Tratamento de Erros Específicos** - Mensagens claras para cada tipo de erro  
-✅ **Logs Detalhados** - Melhor visibilidade do que está acontecendo  
+✅ **Logs Detalhados** - Melhor visibilidade do que está acontecendo
 
 ---
 
@@ -78,9 +78,9 @@ Exemplo: `atenmed_webhook_2025`
 4. Na seção **Webhooks**, clique em **Editar**
 5. Configure:
 
-| Campo | Valor |
-|-------|-------|
-| **URL de callback** | `https://seu-dominio.com.br/api/whatsapp/webhook` |
+| Campo               | Valor                                               |
+| ------------------- | --------------------------------------------------- |
+| **URL de callback** | `https://seu-dominio.com.br/api/whatsapp/webhook`   |
 | **Verificar token** | O valor que você colocou em `WHATSAPP_VERIFY_TOKEN` |
 
 6. Clique em **Verificar e salvar**
@@ -103,6 +103,7 @@ curl https://seu-dominio.com.br/api/whatsapp/health
 ```
 
 **Resposta esperada:**
+
 ```json
 {
   "success": true,
@@ -180,6 +181,7 @@ curl -X POST https://seu-dominio.com.br/api/whatsapp/test-webhook \
 **Causa:** Token de autenticação inválido
 
 **Solução:**
+
 ```bash
 # 1. Gere um novo token no Meta Developer
 # 2. Atualize o .env
@@ -201,6 +203,7 @@ curl https://seu-dominio.com.br/api/whatsapp/webhook?hub.mode=subscribe&hub.veri
 ```
 
 **Checklist:**
+
 - [ ] HTTPS configurado corretamente (certificado SSL válido)
 - [ ] URL acessível externamente
 - [ ] Porta 443 aberta no firewall
@@ -225,6 +228,7 @@ curl https://seu-dominio.com.br/api/whatsapp/webhook?hub.mode=subscribe&hub.veri
 **Causa:** O número de telefone não está registrado no WhatsApp
 
 **Solução:**
+
 1. Verifique se o número está no formato correto: `5511999999999` (código do país + DDD + número)
 2. Certifique-se de que o número possui WhatsApp ativo
 3. Teste com seu próprio número primeiro
@@ -350,11 +354,13 @@ app.use('/api/whatsapp-v2', require('./routes/whatsappV2')); // V2
 ### Problema não resolvido?
 
 1. **Verifique os logs:**
+
    ```bash
    pm2 logs atenmed --lines 100
    ```
 
 2. **Execute o debug:**
+
    ```bash
    curl -H "Authorization: Bearer TOKEN" \
      https://seu-dominio.com.br/api/whatsapp/debug-webhook
@@ -386,6 +392,7 @@ curl -H "Authorization: Bearer TOKEN" \
 ```
 
 **Vantagens:**
+
 - ✅ Retry automático em caso de falha
 - ✅ Não perde mensagens se o servidor reiniciar
 - ✅ Priorização de mensagens
@@ -396,6 +403,7 @@ curl -H "Authorization: Bearer TOKEN" \
 Acesse: `https://seu-dominio.com.br/admin`
 
 Você poderá:
+
 - Ver mensagens na fila
 - Ver mensagens processadas
 - Ver mensagens que falharam
@@ -406,12 +414,3 @@ Você poderá:
 **Atualizado:** 27/10/2025  
 **Versão:** 2.0  
 **Status:** ✅ Pronto para produção
-
-
-
-
-
-
-
-
-
