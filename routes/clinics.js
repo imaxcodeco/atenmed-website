@@ -291,10 +291,21 @@ router.post('/:id/meta-register', authenticateToken, authorize('admin'), async (
 /**
  * @route   GET /api/clinics/:id
  * @desc    Buscar clínica específica por ID
- * @access  Private (Admin)
+ * @access  Private (Admin ou Clinic Owner)
  */
-router.get('/:id', authenticateToken, authorize('admin'), async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
+    // Verificar se usuário é admin global OU dono da clínica
+    const isGlobalAdmin = req.isGlobalAdmin;
+    const isClinicOwner = req.clinicId && req.clinicId.toString() === req.params.id;
+
+    if (!isGlobalAdmin && !isClinicOwner) {
+      return res.status(403).json({
+        success: false,
+        error: 'Acesso negado. Você não tem permissão para visualizar esta clínica.',
+      });
+    }
+
     logger.info(`GET /api/clinics/:id - ID: ${req.params.id}, User: ${req.user?._id}`);
     const clinic = await Clinic.findById(req.params.id).select('-__v');
 
@@ -373,8 +384,22 @@ router.post('/', authenticateToken, authorize('admin'), async (req, res) => {
  * @desc    Atualizar clínica
  * @access  Private (Admin)
  */
-router.put('/:id', authenticateToken, authorize('admin'), async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
+    // Verificar se usuário é admin global OU dono da clínica
+    const isGlobalAdmin = req.isGlobalAdmin;
+    const isClinicOwner =
+      req.clinicId &&
+      req.clinicId.toString() === req.params.id &&
+      ['owner', 'admin'].includes(req.clinicRole);
+
+    if (!isGlobalAdmin && !isClinicOwner) {
+      return res.status(403).json({
+        success: false,
+        error: 'Acesso negado. Você não tem permissão para editar esta clínica.',
+      });
+    }
+
     const clinic = await Clinic.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
@@ -445,6 +470,20 @@ router.delete('/:id', authenticateToken, authorize('admin'), async (req, res) =>
  */
 router.put('/:id/branding', authenticateToken, async (req, res) => {
   try {
+    // Verificar se usuário é admin global OU dono da clínica
+    const isGlobalAdmin = req.isGlobalAdmin;
+    const isClinicOwner =
+      req.clinicId &&
+      req.clinicId.toString() === req.params.id &&
+      ['owner', 'admin'].includes(req.clinicRole);
+
+    if (!isGlobalAdmin && !isClinicOwner) {
+      return res.status(403).json({
+        success: false,
+        error: 'Acesso negado. Você não tem permissão para editar esta clínica.',
+      });
+    }
+
     const { primaryColor, secondaryColor, accentColor, logo, favicon } = req.body;
 
     const clinic = await Clinic.findByIdAndUpdate(
