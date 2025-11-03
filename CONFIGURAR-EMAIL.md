@@ -35,15 +35,19 @@ O sistema de email **não está configurado**, então emails não estão sendo e
 Adicione no `.env` do servidor:
 
 ```bash
-EMAIL_HOST=email-smtp.sa-east-1.amazonaws.com  # São Paulo
+# Configure com suas credenciais AWS SES:
+EMAIL_HOST=email-smtp.us-east-2.amazonaws.com  # ou sa-east-1 se em SP
 EMAIL_PORT=587
 EMAIL_SECURE=false
-EMAIL_USER=AKIAIOSFODNN7EXAMPLE
-EMAIL_PASS=BjawsqNAkido/9EXAMPLExj7e1nKwk0PQ
+EMAIL_USER=SUA_CHAVE_DE_ACESSO_AQUI             # Exemplo: AKIAIOSFODNN7EXAMPLE
+EMAIL_PASS=SUA_CHAVE_SECRETA_AQUI                # Exemplo: BjawsqNAkido/9EXAMPLExj7e1nKwk0PQ
 EMAIL_FROM=AtenMed <contato@atenmed.com.br>
 ```
 
-⚠️ **Depois de configurar, reinicie o servidor Node.js**
+⚠️ **IMPORTANTE:**
+
+- Substitua pelos seus valores reais da imagem acima
+- Depois de configurar, **reinicie o servidor Node.js**
 
 ---
 
