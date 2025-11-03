@@ -186,6 +186,10 @@ window.openClinicModal = function (clinicIdOrEvent = null) {
     clinicIdGlobal = clinicId;
     loadClinicData(clinicId);
     if (modalTitle) modalTitle.textContent = 'Editar Clínica';
+
+    // Ocultar seção de proprietário em edição
+    const ownerSection = document.getElementById('ownerSection');
+    if (ownerSection) ownerSection.style.display = 'none';
   } else {
     if (modalTitle) modalTitle.textContent = 'Nova Clínica';
     // Valores padrão
@@ -198,6 +202,10 @@ window.openClinicModal = function (clinicIdOrEvent = null) {
     if (endHour) endHour.value = 18;
     if (whatsappBot) whatsappBot.checked = true;
     if (active) active.checked = true;
+
+    // Mostrar seção de proprietário em criação
+    const ownerSection = document.getElementById('ownerSection');
+    if (ownerSection) ownerSection.style.display = 'block';
   }
 
   modal.classList.add('show');
@@ -361,6 +369,19 @@ async function saveClinic(event) {
       active: document.getElementById('clinicActive').checked,
     };
 
+    // Adicionar dados do owner se for criação e campos preenchidos
+    if (!clinicId) {
+      const ownerName = document.getElementById('clinicOwnerName').value;
+      const ownerEmail = document.getElementById('clinicOwnerEmail').value;
+
+      if (ownerEmail) {
+        data.owner = {
+          name: ownerName,
+          email: ownerEmail,
+        };
+      }
+    }
+
     const url = clinicId ? `${window.API_BASE}/clinics/${clinicId}` : `${window.API_BASE}/clinics`;
 
     const method = clinicId ? 'PUT' : 'POST';
@@ -385,10 +406,18 @@ async function saveClinic(event) {
       'success'
     );
 
-    // Mostrar URL pública se for criação nova
+    // Mostrar URL pública e credenciais se for criação nova
     if (!clinicId && result.data?.fullPublicUrl) {
       setTimeout(() => {
-        showAlert(`🌐 Página pública: ${result.data.fullPublicUrl}`, 'info');
+        if (result.data.credentials) {
+          const creds = result.data.credentials;
+          showAlert(
+            `✅ Clínica criada!\n🌐 Página: ${result.data.fullPublicUrl}\n🔐 Login: ${creds.email}\n🔑 Senha: ${creds.password}\n\n⚠️ ANOTE A SENHA!`,
+            'info'
+          );
+        } else {
+          showAlert(`🌐 Página pública: ${result.data.fullPublicUrl}`, 'info');
+        }
       }, 1000);
     }
 

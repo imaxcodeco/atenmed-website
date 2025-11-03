@@ -9,10 +9,12 @@ const Clinic = require('../models/Clinic');
 const Doctor = require('../models/Doctor');
 const Specialty = require('../models/Specialty');
 const Appointment = require('../models/Appointment');
+const User = require('../models/User');
 const { authenticateToken, authorize } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const metaWhatsappService = require('../services/metaWhatsappService');
 const clinicService = require('../services/clinicService');
+const crypto = require('crypto');
 
 // Middleware de logging para debug
 router.use((req, res, next) => {
@@ -352,14 +354,53 @@ router.post('/', authenticateToken, authorize('admin'), async (req, res) => {
     // Criar clínica usando serviço centralizado
     const { clinic, publicUrl, fullPublicUrl } = await clinicService.createClinic(clinicData);
 
+    // Criar usuário owner se dados fornecidos
+    let ownerUser = null;
+    let tempPassword = null;
+
+    if (clinicData.owner && clinicData.owner.email) {
+      try {
+        // Gerar senha temporária
+        tempPassword = crypto.randomBytes(8).toString('hex');
+
+        // Criar usuário
+        ownerUser = new User({
+          nome: clinicData.owner.name || 'Proprietário',
+          email: clinicData.owner.email,
+          senha: tempPassword,
+          role: 'admin',
+          ativo: true,
+          clinic: clinic._id,
+          clinicRole: 'owner',
+          departamento: 'administracao',
+        });
+
+        await ownerUser.save();
+        logger.info(`✅ Usuário owner criado: ${ownerUser.email}`);
+      } catch (userError) {
+        logger.error('Erro ao criar usuário owner:', userError);
+        // Não bloquear criação da clínica se falhar criação do usuário
+      }
+    }
+
+    const responseData = {
+      ...clinic.toObject(),
+      publicUrl,
+      fullPublicUrl,
+    };
+
+    // Incluir credenciais na resposta se usuário foi criado
+    if (ownerUser && tempPassword) {
+      responseData.credentials = {
+        email: ownerUser.email,
+        password: tempPassword,
+      };
+    }
+
     res.status(201).json({
       success: true,
       message: 'Clínica criada com sucesso',
-      data: {
-        ...clinic.toObject(),
-        publicUrl,
-        fullPublicUrl,
-      },
+      data: responseData,
     });
   } catch (error) {
     if (error.code === 11000) {

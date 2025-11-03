@@ -538,7 +538,7 @@ document.getElementById('settingsForm')?.addEventListener('submit', async (e) =>
 // Logout
 function logout() {
   if (confirm('Deseja realmente sair?')) {
-    localStorage.removeItem('token');
+    localStorage.removeItem('atenmed_auth');
     window.location.href = '/login.html';
   }
 }
