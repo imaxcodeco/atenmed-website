@@ -86,14 +86,9 @@ jobs:
             set -e
             echo "🔍 Checking directory..."
 
-            # Configurar SSH para GitHub (usar a mesma chave do deploy)
+            # Adicionar GitHub aos known_hosts (usar a chave já existente no servidor)
             mkdir -p ~/.ssh
             chmod 700 ~/.ssh
-            if [ ! -f ~/.ssh/id_rsa ]; then
-              echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
-              chmod 600 ~/.ssh/id_rsa
-            fi
-            # Adicionar GitHub aos known_hosts
             ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || true
 
             # Forçar usar /var/www/atenmed
