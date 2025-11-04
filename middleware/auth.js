@@ -51,8 +51,17 @@ const authenticateToken = async (req, res, next) => {
     // Multi-tenancy: adicionar contexto da clínica
     if (user.clinic) {
       // Extrair ID se clinic estiver populado (objeto) ou usar diretamente se for ObjectId
-      req.clinicId = user.clinic._id || user.clinic;
+      // user.clinic pode ser um objeto populado { _id: ..., name: ... } ou um ObjectId
+      if (user.clinic._id) {
+        req.clinicId = user.clinic._id;
+      } else {
+        req.clinicId = user.clinic;
+      }
       req.clinicRole = user.clinicRole || 'viewer';
+
+      logger.info(
+        `🔐 User ${user.email} vinculado à clínica: ${req.clinicId} (role: ${req.clinicRole})`
+      );
     }
 
     // Se é admin global (sem clínica vinculada)
