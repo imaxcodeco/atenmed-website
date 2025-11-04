@@ -1,7 +1,10 @@
 /**
  * AtenMed - Portal da Clínica
  * JavaScript para gerenciamento do dashboard do cliente
+ * Versão: 2024-11-04-v2
  */
+
+console.log('🔍 DEBUG - portal.js carregado - versão 2024-11-04-v2');
 
 let currentClinic = null;
 let currentUser = null;
@@ -15,13 +18,17 @@ function getAuthToken() {
 
 // Verificar autenticação ao carregar
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('🔍 DEBUG - DOMContentLoaded disparado');
   checkAuth();
 });
 
 // Verificar se usuário está autenticado
 async function checkAuth() {
+  console.log('🔍 DEBUG - checkAuth() chamado');
+
   // Buscar autenticação do localStorage
   const authData = localStorage.getItem('atenmed_auth');
+  console.log('🔍 DEBUG - authData do localStorage:', authData ? 'EXISTE' : 'NÃO EXISTE');
 
   if (!authData) {
     window.location.href = '/login.html?redirect=/portal';
@@ -44,7 +51,11 @@ async function checkAuth() {
     }
 
     const userData = await userResponse.json();
+    console.log('🔍 DEBUG - userData completo:', JSON.stringify(userData, null, 2));
     currentUser = userData.data;
+    console.log('🔍 DEBUG - currentUser atribuído:', currentUser);
+    console.log('🔍 DEBUG - currentUser.clinic:', currentUser?.clinic);
+    console.log('🔍 DEBUG - typeof currentUser.clinic:', typeof currentUser?.clinic);
 
     // Atualizar interface com nome do usuário
     const initials =
@@ -58,6 +69,7 @@ async function checkAuth() {
     document.getElementById('userAvatar').textContent = initials;
 
     // Carregar dados da clínica
+    console.log('🔍 DEBUG - Chamando loadClinicData()...');
     await loadClinicData();
   } catch (error) {
     console.error('Erro de autenticação:', error);
