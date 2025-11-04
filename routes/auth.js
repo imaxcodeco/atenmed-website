@@ -260,9 +260,33 @@ router.post(
 // @access  Private
 router.get('/me', authenticateToken, logActivity('get_profile'), async (req, res) => {
   try {
+    // Garantir que clinic está populado (authenticateToken já faz isso, mas garantir aqui também)
+    const userData = req.user.obterDadosPublicos();
+
+    // Se clinic foi populado (é um objeto), garantir que está incluído
+    // Se clinic não foi populado mas existe (é um ObjectId), converter para string
+    if (req.user.clinic) {
+      if (req.user.clinic._id) {
+        // Clinic está populado como objeto
+        userData.clinic = {
+          _id: req.user.clinic._id,
+          name: req.user.clinic.name,
+          slug: req.user.clinic.slug,
+          logo: req.user.clinic.logo,
+        };
+      } else {
+        // Clinic é apenas um ObjectId
+        userData.clinic = req.user.clinic.toString();
+      }
+    }
+
+    logger.info(
+      `🔍 GET /api/auth/me - User: ${userData.email}, Clinic: ${JSON.stringify(userData.clinic)}`
+    );
+
     res.json({
       success: true,
-      data: req.user.obterDadosPublicos(),
+      data: userData,
     });
   } catch (error) {
     logger.logError(error, req);
