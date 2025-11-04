@@ -307,18 +307,35 @@ router.get('/:id', authenticateToken, async (req, res) => {
     // Verificar se usuário é admin global OU dono da clínica
     const isGlobalAdmin = req.isGlobalAdmin;
 
-    // Comparar IDs corretamente (pode ser ObjectId ou string)
-    const userClinicId = req.clinicId ? req.clinicId.toString() : null;
-    const requestedClinicId = req.params.id;
+    // Extrair clinicId do usuário de forma mais robusta
+    let userClinicId = null;
+    if (req.clinicId) {
+      userClinicId = req.clinicId.toString();
+    } else if (req.user?.clinic) {
+      // Fallback: tentar extrair do user.clinic diretamente
+      if (req.user.clinic._id) {
+        userClinicId = req.user.clinic._id.toString();
+      } else {
+        userClinicId = req.user.clinic.toString();
+      }
+    }
+
+    const requestedClinicId = req.params.id.toString().trim();
+    userClinicId = userClinicId ? userClinicId.trim() : null;
+
+    // Comparação mais flexível: normalizar ambos para string
     const isClinicOwner = userClinicId && userClinicId === requestedClinicId;
 
+    // Verificar também se o usuário tem role adequada para a clínica
+    const hasValidRole = !req.clinicRole || ['owner', 'admin'].includes(req.clinicRole);
+
     logger.info(
-      `🔍 Auth check - GlobalAdmin: ${isGlobalAdmin}, ClinicOwner: ${isClinicOwner}, UserClinicId: ${userClinicId}, RequestedId: ${requestedClinicId}`
+      `🔍 Auth check - GlobalAdmin: ${isGlobalAdmin}, ClinicOwner: ${isClinicOwner}, UserClinicId: "${userClinicId}", RequestedId: "${requestedClinicId}", HasValidRole: ${hasValidRole}`
     );
 
-    if (!isGlobalAdmin && !isClinicOwner) {
+    if (!isGlobalAdmin && (!isClinicOwner || !hasValidRole)) {
       logger.warn(
-        `❌ Acesso negado - UserClinicId: ${userClinicId}, RequestedId: ${requestedClinicId}`
+        `❌ Acesso negado - UserClinicId: "${userClinicId}", RequestedId: "${requestedClinicId}", IsGlobalAdmin: ${isGlobalAdmin}, IsClinicOwner: ${isClinicOwner}, HasValidRole: ${hasValidRole}, ClinicRole: ${req.clinicRole}`
       );
       return res.status(403).json({
         success: false,
@@ -328,7 +345,10 @@ router.get('/:id', authenticateToken, async (req, res) => {
           requestedClinicId,
           isGlobalAdmin,
           isClinicOwner,
+          hasValidRole,
+          clinicRole: req.clinicRole,
           userEmail: req.user?.email,
+          userClinicRaw: req.user?.clinic,
         },
       });
     }
