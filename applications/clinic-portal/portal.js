@@ -75,14 +75,26 @@ async function loadClinicData() {
       throw new Error('Token não encontrado');
     }
 
+    // Debug: log do currentUser
+    console.log('🔍 DEBUG - currentUser:', currentUser);
+    console.log('🔍 DEBUG - currentUser.clinic:', currentUser.clinic);
+    console.log('🔍 DEBUG - typeof currentUser.clinic:', typeof currentUser.clinic);
+
     // Se usuário tem clínica vinculada, buscar direto
     const clinicId = currentUser.clinic?._id || currentUser.clinic;
+    console.log('🔍 DEBUG - clinicId extraído:', clinicId);
+    console.log('🔍 DEBUG - clinicId tipo:', typeof clinicId);
+
     if (clinicId) {
+      console.log('🔍 DEBUG - Fazendo requisição para:', `/api/clinics/${clinicId}`);
       const response = await fetch(`/api/clinics/${clinicId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+
+      console.log('🔍 DEBUG - Response status:', response.status);
+      console.log('🔍 DEBUG - Response ok:', response.ok);
 
       if (!response.ok) {
         throw new Error(`Erro HTTP: ${response.status} ${response.statusText}`);
