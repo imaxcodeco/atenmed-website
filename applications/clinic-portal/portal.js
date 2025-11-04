@@ -83,6 +83,11 @@ async function loadClinicData() {
           Authorization: `Bearer ${token}`,
         },
       });
+
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status} ${response.statusText}`);
+      }
+
       const data = await response.json();
 
       if (data.success && data.data) {
@@ -92,7 +97,10 @@ async function loadClinicData() {
         loadInvoices();
         renderScheduleForm();
       } else {
-        showAlert('Erro ao carregar dados da clínica', 'error');
+        showAlert(
+          `Erro ao carregar dados da clínica: ${data.error || 'Erro desconhecido'}`,
+          'error'
+        );
       }
     } else {
       // Se não tem clínica vinculada (admin global), listar todas
@@ -120,7 +128,12 @@ async function loadClinicData() {
     }
   } catch (error) {
     console.error('Erro ao carregar clínica:', error);
-    showAlert('Erro ao carregar dados da clínica', 'error');
+    showAlert(`Erro ao carregar dados da clínica: ${error.message}`, 'error');
+    // Garantir que o nome "Carregando..." seja substituído mesmo em caso de erro
+    const clinicNameEl = document.getElementById('clinicName');
+    if (clinicNameEl) {
+      clinicNameEl.textContent = 'Erro ao carregar';
+    }
   }
 }
 
