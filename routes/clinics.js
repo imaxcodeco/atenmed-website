@@ -463,9 +463,11 @@ router.put('/:id', authenticateToken, async (req, res) => {
   try {
     // Verificar se usuário é admin global OU dono da clínica
     const isGlobalAdmin = req.isGlobalAdmin;
+    const userClinicId = req.clinicId ? req.clinicId.toString() : null;
+    const requestedClinicId = req.params.id;
     const isClinicOwner =
-      req.clinicId &&
-      req.clinicId.toString() === req.params.id &&
+      userClinicId &&
+      userClinicId === requestedClinicId &&
       ['owner', 'admin'].includes(req.clinicRole);
 
     if (!isGlobalAdmin && !isClinicOwner) {
@@ -547,9 +549,11 @@ router.put('/:id/branding', authenticateToken, async (req, res) => {
   try {
     // Verificar se usuário é admin global OU dono da clínica
     const isGlobalAdmin = req.isGlobalAdmin;
+    const userClinicId = req.clinicId ? req.clinicId.toString() : null;
+    const requestedClinicId = req.params.id;
     const isClinicOwner =
-      req.clinicId &&
-      req.clinicId.toString() === req.params.id &&
+      userClinicId &&
+      userClinicId === requestedClinicId &&
       ['owner', 'admin'].includes(req.clinicRole);
 
     if (!isGlobalAdmin && !isClinicOwner) {
