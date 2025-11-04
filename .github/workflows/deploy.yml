@@ -86,6 +86,16 @@ jobs:
             set -e
             echo "🔍 Checking directory..."
 
+            # Configurar SSH para GitHub (usar a mesma chave do deploy)
+            mkdir -p ~/.ssh
+            chmod 700 ~/.ssh
+            if [ ! -f ~/.ssh/id_rsa ]; then
+              echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+              chmod 600 ~/.ssh/id_rsa
+            fi
+            # Adicionar GitHub aos known_hosts
+            ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+
             # Forçar usar /var/www/atenmed
             if [ ! -d "/var/www/atenmed" ]; then
               echo "⚠️ /var/www/atenmed não existe, tentando criar..."
@@ -100,14 +110,21 @@ jobs:
 
             # Garantir que está na branch main
             if [ -d ".git" ]; then
+              # Configurar remote para usar SSH se estiver usando HTTPS
+              REMOTE_URL=$(git remote get-url origin 2>/dev/null || echo "")
+              if [[ "$REMOTE_URL" == *"https://github.com"* ]]; then
+                echo "🔄 Convertendo remote de HTTPS para SSH..."
+                git remote set-url origin git@github.com:imaxcodeco/atenmed-website.git
+              fi
+              
               git fetch origin
               git checkout main 2>/dev/null || git checkout master 2>/dev/null || echo "Já na branch correta"
               git pull origin main || git pull origin master
             else
-              echo "⚠️ Não é um repo git, clonando..."
+              echo "⚠️ Não é um repo git, clonando via SSH..."
               cd /var/www
               sudo rm -rf atenmed
-              git clone https://github.com/imaxcodeco/atenmed-website.git atenmed
+              git clone git@github.com:imaxcodeco/atenmed-website.git atenmed
               cd atenmed
               git checkout main || git checkout master
               sudo chown -R $USER:$USER .
