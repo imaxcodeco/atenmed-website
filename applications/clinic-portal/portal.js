@@ -81,7 +81,19 @@ async function loadClinicData() {
     console.log('🔍 DEBUG - typeof currentUser.clinic:', typeof currentUser.clinic);
 
     // Se usuário tem clínica vinculada, buscar direto
-    const clinicId = currentUser.clinic?._id || currentUser.clinic;
+    // Clinic pode ser: objeto { _id: "...", name: "..." } ou string ID
+    let clinicId = null;
+    if (currentUser.clinic) {
+      if (typeof currentUser.clinic === 'object' && currentUser.clinic._id) {
+        clinicId = currentUser.clinic._id;
+      } else if (typeof currentUser.clinic === 'string') {
+        clinicId = currentUser.clinic;
+      } else {
+        // Tentar converter para string se for ObjectId
+        clinicId = String(currentUser.clinic);
+      }
+    }
+
     console.log('🔍 DEBUG - clinicId extraído:', clinicId);
     console.log('🔍 DEBUG - clinicId tipo:', typeof clinicId);
 
