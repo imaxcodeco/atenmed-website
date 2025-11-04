@@ -298,6 +298,12 @@ router.post('/:id/meta-register', authenticateToken, authorize('admin'), async (
  */
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
+    // Debug: verificar o que temos em req
+    logger.info(
+      `🔍 GET /api/clinics/:id - User: ${req.user?.email}, ClinicId: ${req.clinicId}, ClinicRole: ${req.clinicRole}, IsGlobalAdmin: ${req.isGlobalAdmin}`
+    );
+    logger.info(`🔍 req.user.clinic: ${JSON.stringify(req.user?.clinic)}`);
+
     // Verificar se usuário é admin global OU dono da clínica
     const isGlobalAdmin = req.isGlobalAdmin;
 
@@ -311,6 +317,9 @@ router.get('/:id', authenticateToken, async (req, res) => {
     );
 
     if (!isGlobalAdmin && !isClinicOwner) {
+      logger.warn(
+        `❌ Acesso negado - UserClinicId: ${userClinicId}, RequestedId: ${requestedClinicId}`
+      );
       return res.status(403).json({
         success: false,
         error: 'Acesso negado. Você não tem permissão para visualizar esta clínica.',
@@ -319,6 +328,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
           requestedClinicId,
           isGlobalAdmin,
           isClinicOwner,
+          userEmail: req.user?.email,
         },
       });
     }
