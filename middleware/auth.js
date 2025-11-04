@@ -4,82 +4,58 @@ const logger = require('../utils/logger');
 
 // Middleware para verificar token JWT
 const authenticateToken = async (req, res, next) => {
-    try {
-        const authHeader = req.headers['authorization'];
-        const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
-        if (!token) {
-            return res.status(401).json({
-                error: 'Token de acesso requerido',
-                code: 'TOKEN_REQUIRED'
-            });
-        }
-
-        // Verificar token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        
-        // Buscar usuário no banco
-        const user = await User.findById(decoded.userId).select('-senha');
-        
-        if (!user) {
-            return res.status(401).json({
-                error: 'Usuário não encontrado',
-                code: 'USER_NOT_FOUND'
-            });
-        }
-
-        if (!user.ativo) {
-            return res.status(401).json({
-                error: 'Usuário inativo',
-                code: 'USER_INACTIVE'
-            });
-        }
-
-        if (user.estaBloqueado) {
-            return res.status(401).json({
-                error: 'Usuário bloqueado',
-                code: 'USER_BLOCKED'
-            });
-        }
-
-        // Adicionar usuário à requisição
-        req.user = user;
-        
-        // Multi-tenancy: adicionar contexto da clínica
-        if (user.clinic) {
-            req.clinicId = user.clinic;
-            req.clinicRole = user.clinicRole || 'viewer';
-        }
-        
-        // Se é admin global (sem clínica vinculada)
-        if (user.role === 'admin' && !user.clinic) {
-            req.isGlobalAdmin = true;
-        }
-        
-        next();
-
-    } catch (error) {
-        logger.logError(error, req);
-        
-        if (error.name === 'JsonWebTokenError') {
-            return res.status(401).json({
-                error: 'Token inválido',
-                code: 'INVALID_TOKEN'
-            });
-        }
-        
-        if (error.name === 'TokenExpiredError') {
-            return res.status(401).json({
-                error: 'Token expirado',
-                code: 'TOKEN_EXPIRED'
-            });
-        }
-
-        return res.status(500).json({
-            error: 'Erro interno do servidor',
-            code: 'INTERNAL_ERROR'
-        });
+    if (!token) {
+      return res.status(401).json({
+        error: 'Token de acesso requerido',
+        code: 'TOKEN_REQUIRED',
+      });
     }
+
+    // Verificar token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Buscar usuário no banco (+populate clínica)
+    const user = await User.findById(decoded.userId)
+      .select('-senha')
+      .populate('clinic', 'name slug logo');
+
+    if (!user) {
+      return res.status(401).json({ error: 'Usuário não encontrado', code: 'USER_NOT_FOUND' });
+    }
+    if (!user.ativo) {
+      return res.status(401).json({ error: 'Usuário inativo', code: 'USER_INACTIVE' });
+    }
+    if (user.estaBloqueado) {
+      return res.status(401).json({ error: 'Usuário bloqueado', code: 'USER_BLOCKED' });
+    }
+
+    req.user = user;
+
+    // Garantir req.clinicId como string
+    if (user.clinic) {
+      req.clinicId = (user.clinic._id ? user.clinic._id : user.clinic).toString();
+      req.clinicRole = user.clinicRole || 'viewer';
+      logger.info(`🔐 User ${user.email} vinculado à clínica: ${req.clinicId} (role: ${req.clinicRole})`);
+    }
+    if (user.role === 'admin' && !user.clinic) {
+      req.isGlobalAdmin = true;
+    }
+
+    next();
+  } catch (error) {
+    logger.logError(error, req);
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ error: 'Token inválido', code: 'INVALID_TOKEN' });
+    }
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Token expirado', code: 'TOKEN_EXPIRED' });
+    }
+    return res.status(500).json({ error: 'Erro interno do servidor', code: 'INTERNAL_ERROR' });
+  }
 };
 
 // Middleware para verificar roles
