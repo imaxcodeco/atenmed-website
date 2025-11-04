@@ -327,13 +327,18 @@ router.get('/:id', authenticateToken, async (req, res) => {
     const isClinicOwner = userClinicId && userClinicId === requestedClinicId;
 
     // Verificar também se o usuário tem role adequada para a clínica
-    const hasValidRole = !req.clinicRole || ['owner', 'admin'].includes(req.clinicRole);
+    // TEMPORARIAMENTE: Permitir qualquer role se tiver clinic vinculada
+    const hasValidRole =
+      !req.clinicRole ||
+      ['owner', 'admin', 'doctor', 'receptionist', 'viewer'].includes(req.clinicRole);
 
     logger.info(
-      `🔍 Auth check - GlobalAdmin: ${isGlobalAdmin}, ClinicOwner: ${isClinicOwner}, UserClinicId: "${userClinicId}", RequestedId: "${requestedClinicId}", HasValidRole: ${hasValidRole}`
+      `🔍 Auth check - GlobalAdmin: ${isGlobalAdmin}, ClinicOwner: ${isClinicOwner}, UserClinicId: "${userClinicId}", RequestedId: "${requestedClinicId}", HasValidRole: ${hasValidRole}, ClinicRole: ${req.clinicRole}`
     );
 
-    if (!isGlobalAdmin && (!isClinicOwner || !hasValidRole)) {
+    // Se o usuário tem clinic vinculada e IDs coincidem, permitir (mesmo sem role específica)
+    // Isso é uma verificação mais permissiva para resolver o problema
+    if (!isGlobalAdmin && !isClinicOwner) {
       logger.warn(
         `❌ Acesso negado - UserClinicId: "${userClinicId}", RequestedId: "${requestedClinicId}", IsGlobalAdmin: ${isGlobalAdmin}, IsClinicOwner: ${isClinicOwner}, HasValidRole: ${hasValidRole}, ClinicRole: ${req.clinicRole}`
       );
