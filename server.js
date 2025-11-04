@@ -465,7 +465,7 @@ app.get(['/crm', '/pipeline', '/vendas'], (req, res) => {
   res.sendFile(path.join(__dirname, 'applications/crm-pipeline/index.html'));
 });
 
-app.get(['/portal', '/minha-clinica'], (req, res) => {
+app.get(['/portal', '/portal/', '/minha-clinica'], (req, res) => {
   res.sendFile(path.join(__dirname, 'applications/clinic-portal/index.html'));
 });
 
