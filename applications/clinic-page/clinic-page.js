@@ -58,7 +58,136 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Ano atual no footer
   document.getElementById('current-year').textContent = new Date().getFullYear();
+
+  // Configurar navegação
+  setupNavigation();
 });
+
+// ===== NAVEGAÇÃO SUPERIOR =====
+function setupNavigation() {
+  const navBar = document.getElementById('top-nav-bar');
+  const menuToggle = document.getElementById('menu-toggle');
+
+  if (menuToggle) {
+    menuToggle.addEventListener('click', toggleMobileMenu);
+  }
+
+  // Fechar menu ao clicar em link
+  const navLinks = document.querySelectorAll('.nav-link');
+  navLinks.forEach((link) => {
+    link.addEventListener('click', () => {
+      setTimeout(closeMobileMenu, 300);
+    });
+  });
+
+  // Adicionar shadow e atualizar indicador quando rolar
+  if (navBar) {
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 10) {
+        navBar.classList.add('scrolled');
+      } else {
+        navBar.classList.remove('scrolled');
+      }
+
+      // Atualizar indicador de seção ativa
+      updateActiveNavLink();
+
+      // Mostrar/ocultar botão voltar ao topo
+      const backToTop = document.getElementById('back-to-top');
+      if (backToTop) {
+        if (window.scrollY > 300) {
+          backToTop.classList.add('visible');
+        } else {
+          backToTop.classList.remove('visible');
+        }
+      }
+    });
+  }
+
+  // Botão voltar ao topo
+  const backToTop = document.getElementById('back-to-top');
+  if (backToTop) {
+    backToTop.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+}
+
+// Função para scroll suave
+function scrollToSection(sectionId) {
+  const element = document.getElementById(sectionId);
+  if (element) {
+    const navBar = document.getElementById('top-nav-bar');
+    const navHeight = navBar ? navBar.offsetHeight : 70;
+    const elementPosition = element.offsetTop;
+    const offsetPosition = elementPosition - navHeight;
+
+    window.scrollTo({
+      top: offsetPosition,
+      behavior: 'smooth',
+    });
+
+    // Fechar menu mobile se estiver aberto
+    closeMobileMenu();
+  }
+}
+
+// Menu mobile toggle
+function toggleMobileMenu() {
+  const menu = document.getElementById('nav-menu');
+  const toggle = document.getElementById('menu-toggle');
+
+  if (menu && toggle) {
+    menu.classList.toggle('active');
+    toggle.classList.toggle('active');
+  }
+}
+
+function closeMobileMenu() {
+  const menu = document.getElementById('nav-menu');
+  const toggle = document.getElementById('menu-toggle');
+
+  if (menu && toggle) {
+    menu.classList.remove('active');
+    toggle.classList.remove('active');
+  }
+}
+
+// Atualizar link ativo no menu baseado na posição do scroll
+function updateActiveNavLink() {
+  const sections = [
+    'inicio',
+    'sobre',
+    'especialidades',
+    'profissionais',
+    'agendar',
+    'localizacao',
+    'depoimentos',
+  ];
+  const navLinks = document.querySelectorAll('.nav-link');
+  const navBar = document.getElementById('top-nav-bar');
+  const navHeight = navBar ? navBar.offsetHeight : 70;
+
+  let currentSection = '';
+
+  sections.forEach((sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const rect = element.getBoundingClientRect();
+      if (rect.top <= navHeight + 50 && rect.bottom >= navHeight + 50) {
+        currentSection = sectionId;
+      }
+    }
+  });
+
+  navLinks.forEach((link) => {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === `#${currentSection}`) {
+      link.classList.add('active');
+    }
+  });
+}
 
 // ===== CARREGAR DADOS DA CLÍNICA =====
 async function loadClinicData(clinicSlug) {
@@ -113,6 +242,32 @@ function renderClinicInfo() {
   if (clinic.rating) {
     document.getElementById('clinic-rating-count').textContent =
       `(${clinic.rating.count} avaliações)`;
+  }
+
+  // Badges (se aceita convênios, etc)
+  const badgesContainer = document.getElementById('clinic-badges');
+  if (badgesContainer) {
+    badgesContainer.innerHTML = '';
+
+    if (clinic.acceptsInsurance) {
+      badgesContainer.innerHTML +=
+        '<span class="badge badge-primary"><i class="fas fa-shield-alt"></i> Aceita Convênios</span>';
+    }
+
+    if (clinic.emergencyService) {
+      badgesContainer.innerHTML +=
+        '<span class="badge"><i class="fas fa-ambulance"></i> Atendimento 24h</span>';
+    }
+
+    if (clinic.wheelchairAccessible) {
+      badgesContainer.innerHTML +=
+        '<span class="badge"><i class="fas fa-wheelchair"></i> Acessível</span>';
+    }
+
+    if (clinic.parking) {
+      badgesContainer.innerHTML +=
+        '<span class="badge"><i class="fas fa-parking"></i> Estacionamento</span>';
+    }
   }
 
   // Quick Info
@@ -170,8 +325,20 @@ function renderClinicInfo() {
 
   // SEO
   document.title = `${clinic.name} - Agendar Consulta Online`;
-  document.getElementById('clinic-title').textContent = `${clinic.name} - Agendar Consulta`;
-  document.getElementById('clinic-description').content = clinic.description || '';
+  document.getElementById('clinic-description').content =
+    clinic.description || 'Agende sua consulta online';
+
+  // WhatsApp flutuante
+  const whatsappFloat = document.getElementById('whatsapp-float');
+  if (whatsappFloat && clinic.contact?.whatsapp) {
+    const whatsappNumber = clinic.contact.whatsapp.replace(/\D/g, '');
+    whatsappFloat.href = `https://wa.me/${whatsappNumber}?text=Olá! Gostaria de saber mais sobre ${encodeURIComponent(clinic.name)}`;
+  } else if (whatsappFloat) {
+    whatsappFloat.style.display = 'none';
+  }
+
+  // Carregar depoimentos
+  loadTestimonials();
 }
 
 // ===== CARREGAR ESPECIALIDADES =====
@@ -678,6 +845,69 @@ function showLoading(show) {
   }
 }
 
+// ===== CARREGAR DEPOIMENTOS =====
+async function loadTestimonials() {
+  const testimonialsContainer = document.getElementById('testimonials-list');
+  if (!testimonialsContainer || !bookingApp.clinic) return;
+
+  try {
+    // Buscar avaliações/reviews da clínica (se tiver endpoint)
+    const clinicId = bookingApp.clinic._id;
+
+    // TODO: Implementar endpoint de avaliações
+    // const response = await fetch(`${API_BASE_URL}/clinics/${clinicId}/testimonials`);
+    // const data = await response.json();
+
+    // Mock data por enquanto
+    const mockTestimonials = [
+      {
+        author: 'Maria S.',
+        avatar: 'MS',
+        rating: 5,
+        text: 'Excelente atendimento! Profissionais muito qualificados e ambiente acolhedor.',
+        date: 'Há 2 semanas',
+      },
+      {
+        author: 'João P.',
+        avatar: 'JP',
+        rating: 5,
+        text: 'A clínica é muito bem equipada e o agendamento online facilitou muito minha vida.',
+        date: 'Há 1 mês',
+      },
+    ];
+
+    if (mockTestimonials.length === 0) {
+      testimonialsContainer.parentElement.parentElement.style.display = 'none';
+      return;
+    }
+
+    testimonialsContainer.innerHTML = mockTestimonials
+      .map(
+        (testimonial) => `
+      <div class="testimonial-card">
+        <div class="testimonial-header">
+          <div class="testimonial-avatar">${testimonial.avatar}</div>
+          <div class="testimonial-author">
+            <div class="testimonial-author-name">${testimonial.author}</div>
+            <div class="testimonial-date">${testimonial.date}</div>
+          </div>
+        </div>
+        <div class="testimonial-rating">
+          ${'<i class="fas fa-star"></i>'.repeat(testimonial.rating)}
+        </div>
+        <p class="testimonial-text">"${testimonial.text}"</p>
+      </div>
+    `
+      )
+      .join('');
+  } catch (error) {
+    console.error('Erro ao carregar depoimentos:', error);
+    if (testimonialsContainer) {
+      testimonialsContainer.parentElement.parentElement.style.display = 'none';
+    }
+  }
+}
+
 function showError(message) {
   showLoading(false);
   alert(message);
@@ -685,3 +915,6 @@ function showError(message) {
 
 // ===== EXPORTAR =====
 window.bookingApp = bookingApp;
+window.scrollToSection = scrollToSection;
+window.toggleMobileMenu = toggleMobileMenu;
+window.updateActiveNavLink = updateActiveNavLink;

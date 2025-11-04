@@ -19,7 +19,7 @@
     <link rel="icon" id="clinic-favicon" type="image/png" href="/assets/images/logo-transp.png">
     
     <!-- Styles -->
-    <link rel="stylesheet" href="clinic-page.css?v=2024-11-02-002">
+    <link rel="stylesheet" href="clinic-page.css?v=2024-11-02-004">
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -31,6 +31,65 @@
         <p>Carregando...</p>
     </div>
 
+    <!-- Top Navigation Bar (Fixo) -->
+    <nav class="top-nav-bar" id="top-nav-bar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <a href="https://atenmed.com.br" class="brand-link">
+                    <img src="/site/assets/images/logo-transp.png" alt="AtenMed" class="brand-logo">
+                    <span class="brand-text">AtenMed</span>
+                </a>
+            </div>
+            
+            <ul class="nav-menu" id="nav-menu">
+                <li class="nav-item">
+                    <a href="#inicio" class="nav-link" onclick="scrollToSection('inicio'); return false;">
+                        <i class="fas fa-home"></i> Início
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#sobre" class="nav-link" onclick="scrollToSection('sobre'); return false;">
+                        <i class="fas fa-info-circle"></i> Sobre
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#especialidades" class="nav-link" onclick="scrollToSection('especialidades'); return false;">
+                        <i class="fas fa-stethoscope"></i> Especialidades
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#profissionais" class="nav-link" onclick="scrollToSection('profissionais'); return false;">
+                        <i class="fas fa-user-md"></i> Profissionais
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#agendar" class="nav-link nav-cta" onclick="scrollToSection('agendar'); return false;">
+                        <i class="fas fa-calendar-check"></i> Agendar
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#localizacao" class="nav-link" onclick="scrollToSection('localizacao'); return false;">
+                        <i class="fas fa-map-marker-alt"></i> Localização
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="nav-actions">
+                <a href="/apps/clinic-portal" class="btn-login">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </a>
+                <button class="menu-toggle" id="menu-toggle" aria-label="Menu mobile" onclick="toggleMobileMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Anchor para navegação -->
+    <div id="inicio"></div>
+
     <!-- Header da Clínica -->
     <header class="clinic-header" id="clinic-header">
         <div class="header-overlay"></div>
@@ -40,6 +99,9 @@
                 <div class="clinic-info">
                     <h1 id="clinic-name">Carregando...</h1>
                     <p id="clinic-slogan" class="clinic-slogan"></p>
+                    <div class="clinic-badges" id="clinic-badges">
+                        <!-- Preenchido via JS -->
+                    </div>
                     <div class="clinic-rating">
                         <span class="stars">
                             <i class="fas fa-star"></i>
@@ -120,7 +182,7 @@
                 <aside class="clinic-info-sidebar">
                     
                     <!-- Sobre a Clínica -->
-                    <section class="info-card">
+                    <section class="info-card" id="sobre">
                         <h2><i class="fas fa-info-circle"></i> Sobre a Clínica</h2>
                         <div id="clinic-about" class="clinic-description">
                             Carregando informações...
@@ -128,7 +190,7 @@
                     </section>
 
                     <!-- Médicos -->
-                    <section class="info-card">
+                    <section class="info-card" id="profissionais">
                         <h2><i class="fas fa-user-md"></i> Nossos Profissionais</h2>
                         <div id="doctors-list" class="doctors-list">
                             <!-- Preenchido via JS -->
@@ -136,7 +198,7 @@
                     </section>
 
                     <!-- Mapa -->
-                    <section class="info-card">
+                    <section class="info-card" id="localizacao">
                         <h2><i class="fas fa-map"></i> Localização</h2>
                         <div id="clinic-map" class="map-container">
                             <iframe id="map-iframe" 
@@ -353,6 +415,19 @@
         </div>
     </main>
 
+    <!-- Seção de Depoimentos -->
+    <section class="testimonials-section" id="depoimentos">
+        <div class="container">
+            <div class="section-header">
+                <h2><i class="fas fa-comments"></i> O que nossos pacientes dizem</h2>
+                <p>Experiências reais de quem confia em nós</p>
+            </div>
+            <div id="testimonials-list" class="testimonials-grid">
+                <!-- Preenchido via JS -->
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer class="clinic-footer">
         <div class="container">
@@ -383,8 +458,16 @@
         </div>
     </footer>
 
+    <!-- Botões Flutuantes -->
+    <a href="#" id="whatsapp-float" class="whatsapp-float" target="_blank" aria-label="Falar no WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+    <button id="back-to-top" class="back-to-top" aria-label="Voltar ao topo">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
     <!-- Scripts -->
-    <script src="clinic-page.js?v=2024-11-02-002"></script>
+    <script src="clinic-page.js?v=2024-11-02-004"></script>
 </body>
 </html>
 
