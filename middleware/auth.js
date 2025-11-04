@@ -48,17 +48,17 @@ const authenticateToken = async (req, res, next) => {
     // Adicionar usuário à requisição
     req.user = user;
 
-    // Multi-tenancy: adicionar contexto da clínica
+    // Multi-tenancy: garantir que req.clinicId seja sempre uma string com o _id da clínica
     if (user.clinic) {
-      // Extrair ID se clinic estiver populado (objeto) ou usar diretamente se for ObjectId
-      // user.clinic pode ser um objeto populado { _id: ..., name: ... } ou um ObjectId
-      if (user.clinic._id) {
-        req.clinicId = user.clinic._id;
+      if (typeof user.clinic === 'object' && user.clinic._id) {
+        req.clinicId = user.clinic._id.toString();
       } else {
-        req.clinicId = user.clinic;
+        req.clinicId = user.clinic.toString();
       }
+
       req.clinicRole = user.clinicRole || 'viewer';
 
+      // Log para depuração
       logger.info(
         `🔐 User ${user.email} vinculado à clínica: ${req.clinicId} (role: ${req.clinicRole})`
       );
