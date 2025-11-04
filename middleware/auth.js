@@ -50,7 +50,8 @@ const authenticateToken = async (req, res, next) => {
 
     // Multi-tenancy: adicionar contexto da clínica
     if (user.clinic) {
-      req.clinicId = user.clinic;
+      // Extrair ID se clinic estiver populado (objeto) ou usar diretamente se for ObjectId
+      req.clinicId = user.clinic._id || user.clinic;
       req.clinicRole = user.clinicRole || 'viewer';
     }
 

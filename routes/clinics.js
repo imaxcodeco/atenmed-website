@@ -300,12 +300,26 @@ router.get('/:id', authenticateToken, async (req, res) => {
   try {
     // Verificar se usuário é admin global OU dono da clínica
     const isGlobalAdmin = req.isGlobalAdmin;
-    const isClinicOwner = req.clinicId && req.clinicId.toString() === req.params.id;
+
+    // Comparar IDs corretamente (pode ser ObjectId ou string)
+    const userClinicId = req.clinicId ? req.clinicId.toString() : null;
+    const requestedClinicId = req.params.id;
+    const isClinicOwner = userClinicId && userClinicId === requestedClinicId;
+
+    logger.info(
+      `🔍 Auth check - GlobalAdmin: ${isGlobalAdmin}, ClinicOwner: ${isClinicOwner}, UserClinicId: ${userClinicId}, RequestedId: ${requestedClinicId}`
+    );
 
     if (!isGlobalAdmin && !isClinicOwner) {
       return res.status(403).json({
         success: false,
         error: 'Acesso negado. Você não tem permissão para visualizar esta clínica.',
+        debug: {
+          userClinicId,
+          requestedClinicId,
+          isGlobalAdmin,
+          isClinicOwner,
+        },
       });
     }
 
