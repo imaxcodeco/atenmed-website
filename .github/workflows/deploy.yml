@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - master
-  workflow_dispatch: # Deploy manual também disponível
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -22,13 +22,10 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci --ignore-scripts
+        run: npm ci --production
 
       - name: Build CSS
         run: npm run build:css || echo "Build CSS optional"
-
-      - name: Clean dev dependencies
-        run: npm prune --omit=dev
 
       - name: Create .env file
         run: |
@@ -71,9 +68,6 @@ jobs:
           BCRYPT_ROUNDS=12
           SESSION_SECRET=${{ secrets.SESSION_SECRET }}
 
-          # Monitoring (Sentry)
-          SENTRY_DSN=${{ secrets.SENTRY_DSN }}
-
           # Features
           ENABLE_REMINDERS=true
           ENABLE_WAITLIST=true
@@ -82,42 +76,57 @@ jobs:
           EOF
 
       - name: Deploy to Server
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT || 22 }}
-          command_timeout: 20m
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT || 22 }}
           script: |
-            cd /var/www/atenmed || cd ~/atenmed
+            set -e
+            echo "🔍 Checking directory..."
 
-            # Pull latest code (tentar main, depois reorganizacao-estrutura)
-            git pull origin main 2>/dev/null || git pull origin reorganizacao-estrutura || git pull origin master
+            # Forçar usar /var/www/atenmed
+            if [ ! -d "/var/www/atenmed" ]; then
+              echo "⚠️ /var/www/atenmed não existe, tentando criar..."
+              sudo mkdir -p /var/www/atenmed
+              sudo chown -R $USER:$USER /var/www/atenmed
+            fi
+
+            cd /var/www/atenmed
+            echo "📂 Diretório atual: $(pwd)"
+            echo "🔍 Branch atual antes do pull: $(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'não é um repo git')"
+            echo "🔍 Commit atual: $(git rev-parse --short HEAD 2>/dev/null || echo 'não encontrado')"
+
+            # Garantir que está na branch main
+            if [ -d ".git" ]; then
+              git fetch origin
+              git checkout main 2>/dev/null || git checkout master 2>/dev/null || echo "Já na branch correta"
+              git pull origin main || git pull origin master
+            else
+              echo "⚠️ Não é um repo git, clonando..."
+              cd /var/www
+              sudo rm -rf atenmed
+              git clone https://github.com/imaxcodeco/atenmed-website.git atenmed
+              cd atenmed
+              git checkout main || git checkout master
+              sudo chown -R $USER:$USER .
+            fi
+
+            echo "✅ Commit após pull: $(git rev-parse --short HEAD)"
 
             # Backup
             mkdir -p backups
             cp .env backups/.env.$(date +%Y%m%d_%H%M%S) 2>/dev/null || true
 
-            # Copy new .env (será feito via secrets)
+            # Install dependencies
+            npm install --production --legacy-peer-deps --ignore-scripts
 
-            # Install dependencies (otimizado para velocidade)
-            if [ -d "node_modules" ]; then
-              echo "📦 Updating dependencies..."
-              npm install --legacy-peer-deps --ignore-scripts
-            else
-              echo "📦 Installing dependencies (first time)..."
-              npm ci --legacy-peer-deps --ignore-scripts
-            fi
-
-            # Build CSS
+            # Build
             npm run build:css || echo "Build optional"
 
-            # Remove dev dependencies
-            npm prune --omit=dev --legacy-peer-deps
-
-            # Restart with PM2 (force restart para garantir reload completo)
-            pm2 restart atenmed || pm2 start ecosystem.config.js --env production
+            # Restart with PM2
+            pm2 restart atenmed --update-env || pm2 start ecosystem.config.js --env production
             pm2 save
 
             # Show status

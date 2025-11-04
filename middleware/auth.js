@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const logger = require('../utils/logger');
-const { setUser } = require('../utils/sentry');
 
 // Middleware para verificar token JWT
 const authenticateToken = async (req, res, next) => {
@@ -19,81 +18,45 @@ const authenticateToken = async (req, res, next) => {
     // Verificar token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Buscar usuário no banco (com populate da clínica)
+    // Buscar usuário no banco (+populate clínica)
     const user = await User.findById(decoded.userId)
       .select('-senha')
       .populate('clinic', 'name slug logo');
 
     if (!user) {
-      return res.status(401).json({
-        error: 'Usuário não encontrado',
-        code: 'USER_NOT_FOUND',
-      });
+      return res.status(401).json({ error: 'Usuário não encontrado', code: 'USER_NOT_FOUND' });
     }
-
     if (!user.ativo) {
-      return res.status(401).json({
-        error: 'Usuário inativo',
-        code: 'USER_INACTIVE',
-      });
+      return res.status(401).json({ error: 'Usuário inativo', code: 'USER_INACTIVE' });
     }
-
     if (user.estaBloqueado) {
-      return res.status(401).json({
-        error: 'Usuário bloqueado',
-        code: 'USER_BLOCKED',
-      });
+      return res.status(401).json({ error: 'Usuário bloqueado', code: 'USER_BLOCKED' });
     }
 
-    // Adicionar usuário à requisição
     req.user = user;
 
-    // Multi-tenancy: garantir que req.clinicId seja sempre uma string com o _id da clínica
+    // Garantir req.clinicId como string
     if (user.clinic) {
-      if (typeof user.clinic === 'object' && user.clinic._id) {
-        req.clinicId = user.clinic._id.toString();
-      } else {
-        req.clinicId = user.clinic.toString();
-      }
-
+      req.clinicId = (user.clinic._id ? user.clinic._id : user.clinic).toString();
       req.clinicRole = user.clinicRole || 'viewer';
-
-      // Log para depuração
       logger.info(
         `🔐 User ${user.email} vinculado à clínica: ${req.clinicId} (role: ${req.clinicRole})`
       );
     }
-
-    // Se é admin global (sem clínica vinculada)
     if (user.role === 'admin' && !user.clinic) {
       req.isGlobalAdmin = true;
     }
 
-    // Definir usuário no Sentry para rastreamento
-    setUser(user);
-
     next();
   } catch (error) {
     logger.logError(error, req);
-
     if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({
-        error: 'Token inválido',
-        code: 'INVALID_TOKEN',
-      });
+      return res.status(401).json({ error: 'Token inválido', code: 'INVALID_TOKEN' });
     }
-
     if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        error: 'Token expirado',
-        code: 'TOKEN_EXPIRED',
-      });
+      return res.status(401).json({ error: 'Token expirado', code: 'TOKEN_EXPIRED' });
     }
-
-    return res.status(500).json({
-      error: 'Erro interno do servidor',
-      code: 'INTERNAL_ERROR',
-    });
+    return res.status(500).json({ error: 'Erro interno do servidor', code: 'INTERNAL_ERROR' });
   }
 };
 
