@@ -98,47 +98,47 @@ jobs:
             echo "🔍 Branch atual antes do pull: $(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'não é um repo git')"
             echo "🔍 Commit atual: $(git rev-parse --short HEAD 2>/dev/null || echo 'não encontrado')"
 
-            # Configurar chave SSH para GitHub (usar a mesma chave do servidor)
-            echo "🔑 Configurando chave SSH para GitHub..."
-            mkdir -p ~/.ssh
-            chmod 700 ~/.ssh
+            # Configurar git para usar HTTPS com token do GitHub
+            echo "🔑 Configurando git para usar HTTPS..."
 
-            # Criar chave SSH a partir do secret (se não existir)
-            if [ ! -f ~/.ssh/id_rsa ]; then
-              echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
-              chmod 600 ~/.ssh/id_rsa
-              
-              # Gerar chave pública se não existir
-              if [ ! -f ~/.ssh/id_rsa.pub ]; then
-                ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
-              fi
-              
-              # Adicionar GitHub aos known_hosts
-              ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+            # Usar GITHUB_TOKEN se disponível, senão tentar sem token
+            GIT_TOKEN=""
+            if [ -n "${{ secrets.GITHUB_TOKEN }}" ]; then
+              GIT_TOKEN="x-access-token:${{ secrets.GITHUB_TOKEN }}@"
+              echo "✅ Token do GitHub disponível"
+            elif [ -n "${{ secrets.GITHUB_PAT }}" ]; then
+              GIT_TOKEN="${{ secrets.GITHUB_PAT }}@"
+              echo "✅ Personal Access Token disponível"
+            else
+              echo "⚠️ Nenhum token disponível - tentando sem autenticação"
             fi
 
-            # Configurar git para usar SSH
-            git config --global url."git@github.com:".insteadOf "https://github.com/" || true
+            # Configurar remote para HTTPS
+            REMOTE_URL=$(git remote get-url origin 2>/dev/null || echo "")
+            if [[ "$REMOTE_URL" == *"git@github.com"* ]] || [[ -z "$REMOTE_URL" ]]; then
+              echo "🔄 Configurando remote para HTTPS..."
+              if [ -n "$GIT_TOKEN" ]; then
+                git remote set-url origin https://${GIT_TOKEN}github.com/imaxcodeco/atenmed-website.git
+              else
+                git remote set-url origin https://github.com/imaxcodeco/atenmed-website.git
+              fi
+            fi
 
             # Garantir que está na branch main
             if [ -d ".git" ]; then
-              # Configurar remote para usar SSH
-              REMOTE_URL=$(git remote get-url origin 2>/dev/null || echo "")
-              if [[ "$REMOTE_URL" == *"https://github.com"* ]] || [[ -z "$REMOTE_URL" ]]; then
-                echo "🔄 Configurando remote para SSH..."
-                git remote set-url origin git@github.com:imaxcodeco/atenmed-website.git
-              fi
-              
-              # Tentar fazer pull usando SSH
-              echo "🔄 Fazendo pull via SSH..."
-              GIT_SSH_COMMAND="ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" git fetch origin
+              echo "🔄 Fazendo pull via HTTPS..."
+              git fetch origin
               git checkout main 2>/dev/null || git checkout master 2>/dev/null || echo "Já na branch correta"
-              GIT_SSH_COMMAND="ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" git pull origin main || GIT_SSH_COMMAND="ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" git pull origin master
+              git pull origin main || git pull origin master
             else
-              echo "⚠️ Não é um repo git, clonando via SSH..."
+              echo "⚠️ Não é um repo git, clonando via HTTPS..."
               cd /var/www
               sudo rm -rf atenmed
-              GIT_SSH_COMMAND="ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" git clone git@github.com:imaxcodeco/atenmed-website.git atenmed
+              if [ -n "$GIT_TOKEN" ]; then
+                git clone https://${GIT_TOKEN}github.com/imaxcodeco/atenmed-website.git atenmed
+              else
+                git clone https://github.com/imaxcodeco/atenmed-website.git atenmed
+              fi
               cd atenmed
               git checkout main || git checkout master
               sudo chown -R $USER:$USER .
