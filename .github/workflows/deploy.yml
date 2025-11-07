@@ -98,47 +98,32 @@ jobs:
             echo "🔍 Branch atual antes do pull: $(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'não é um repo git')"
             echo "🔍 Commit atual: $(git rev-parse --short HEAD 2>/dev/null || echo 'não encontrado')"
 
-            # Configurar git para usar HTTPS com token do GitHub
-            echo "🔑 Configurando git para usar HTTPS..."
+            # Configurar git para usar SSH (Deploy Key)
+            echo "🔑 Configurando git para usar SSH..."
 
-            # Usar GITHUB_TOKEN se disponível, senão tentar sem token
-            GIT_TOKEN=""
-            if [ -n "${{ secrets.GITHUB_TOKEN }}" ]; then
-              GIT_TOKEN="x-access-token:${{ secrets.GITHUB_TOKEN }}@"
-              echo "✅ Token do GitHub disponível"
-            elif [ -n "${{ secrets.GITHUB_PAT }}" ]; then
-              GIT_TOKEN="${{ secrets.GITHUB_PAT }}@"
-              echo "✅ Personal Access Token disponível"
-            else
-              echo "⚠️ Nenhum token disponível - tentando sem autenticação"
-            fi
+            # Configurar SSH para GitHub
+            mkdir -p ~/.ssh
+            ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+            chmod 600 ~/.ssh/known_hosts 2>/dev/null || true
 
-            # Configurar remote para HTTPS
+            # Configurar remote para SSH
             REMOTE_URL=$(git remote get-url origin 2>/dev/null || echo "")
-            if [[ "$REMOTE_URL" == *"git@github.com"* ]] || [[ -z "$REMOTE_URL" ]]; then
-              echo "🔄 Configurando remote para HTTPS..."
-              if [ -n "$GIT_TOKEN" ]; then
-                git remote set-url origin https://${GIT_TOKEN}github.com/imaxcodeco/atenmed-website.git
-              else
-                git remote set-url origin https://github.com/imaxcodeco/atenmed-website.git
-              fi
+            if [[ "$REMOTE_URL" == *"https://"* ]] || [[ -z "$REMOTE_URL" ]]; then
+              echo "🔄 Configurando remote para SSH..."
+              git remote set-url origin git@github.com:imaxcodeco/atenmed-website.git || true
             fi
 
             # Garantir que está na branch main
             if [ -d ".git" ]; then
-              echo "🔄 Fazendo pull via HTTPS..."
+              echo "🔄 Fazendo pull via SSH..."
               git fetch origin
               git checkout main 2>/dev/null || git checkout master 2>/dev/null || echo "Já na branch correta"
               git pull origin main || git pull origin master
             else
-              echo "⚠️ Não é um repo git, clonando via HTTPS..."
+              echo "⚠️ Não é um repo git, clonando via SSH..."
               cd /var/www
               sudo rm -rf atenmed
-              if [ -n "$GIT_TOKEN" ]; then
-                git clone https://${GIT_TOKEN}github.com/imaxcodeco/atenmed-website.git atenmed
-              else
-                git clone https://github.com/imaxcodeco/atenmed-website.git atenmed
-              fi
+              git clone git@github.com:imaxcodeco/atenmed-website.git atenmed
               cd atenmed
               git checkout main || git checkout master
               sudo chown -R $USER:$USER .
