@@ -249,6 +249,7 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // Rate limiting agressivo para endpoints de autenticação
+// eslint-disable-next-line no-unused-vars
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
   max: 5, // apenas 5 tentativas por IP a cada 15 minutos
@@ -269,6 +270,7 @@ const authLimiter = rateLimit({
 });
 
 // Rate limiting moderado para endpoints de registro/cadastro
+// eslint-disable-next-line no-unused-vars
 const registrationLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hora
   max: 10, // 10 cadastros por IP por hora
