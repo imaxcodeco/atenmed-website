@@ -134,14 +134,8 @@ jobs:
               fi
               
               echo "🔄 Fazendo pull via HTTPS..."
-              if [ -n "$GIT_TOKEN" ]; then
-                # Usar token na URL temporariamente para pull
-                git fetch origin https://${GIT_TOKEN}@github.com/imaxcodeco/atenmed-website.git || \
-                git fetch origin || true
-              else
-                git fetch origin || true
-              fi
-              
+              # O remote já está configurado com o token na URL, então apenas fazer fetch/pull
+              git fetch origin || true
               git checkout main 2>/dev/null || git checkout master 2>/dev/null || echo "Já na branch correta"
               git reset --hard origin/main 2>/dev/null || git reset --hard origin/master 2>/dev/null || true
             else
