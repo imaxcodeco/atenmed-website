@@ -449,6 +449,7 @@ app.use('/admin', queuesDashboardRoutes);
 app.use('/api', googleCalendarRoutes);
 
 // Rotas de Agentes de IA (deve vir antes do catch-all)
+console.log('📌 [SERVER START] Registrando rotas de agentes: /api/agents');
 logger.info('📌 Registrando rotas de agentes: /api/agents');
 app.use('/api/agents', agentRoutes);
 // Rotas de Teste de Agentes (mesmo prefixo, mas rota específica /:id/test)
@@ -506,27 +507,36 @@ app.get(['/portal', '/portal/', '/minha-clinica'], (req, res) => {
 });
 
 // Rotas de Agentes de IA - Interface (DEVE VIR ANTES DO CATCH-ALL)
+// IMPORTANTE: Estas rotas devem vir ANTES do catch-all app.get('*')
+console.log('📌 [SERVER START] Registrando rotas de interface: /ai-agents, /agentes, /agentes-ia');
 logger.info('📌 Registrando rotas de interface: /ai-agents, /agentes, /agentes-ia');
+
 app.get('/ai-agents', (req, res) => {
+  console.log(`🔍 [ROUTE] Rota /ai-agents acessada - IP: ${req.ip}`);
   logger.info(`🔍 Rota /ai-agents acessada`);
   const filePath = path.join(__dirname, 'applications/ai-agents/index.html');
   const fs = require('fs');
+  console.log(`🔍 [ROUTE] Tentando servir: ${filePath}`);
   logger.info(`🔍 Tentando servir: ${filePath}`);
   if (fs.existsSync(filePath)) {
+    console.log(`✅ [ROUTE] Arquivo encontrado, enviando...`);
     logger.info(`✅ Arquivo encontrado, enviando...`);
     res.sendFile(filePath);
   } else {
+    console.error(`❌ [ROUTE] Arquivo não encontrado: ${filePath}`);
     logger.error(`❌ Arquivo não encontrado: ${filePath}`);
     res.status(404).send('Interface de Agentes não encontrada');
   }
 });
 
 app.get('/agentes', (req, res) => {
+  console.log(`🔍 [ROUTE] Rota /agentes acessada`);
   logger.info(`🔍 Rota /agentes acessada`);
   res.sendFile(path.join(__dirname, 'applications/ai-agents/index.html'));
 });
 
 app.get('/agentes-ia', (req, res) => {
+  console.log(`🔍 [ROUTE] Rota /agentes-ia acessada`);
   logger.info(`🔍 Rota /agentes-ia acessada`);
   res.sendFile(path.join(__dirname, 'applications/ai-agents/index.html'));
 });
