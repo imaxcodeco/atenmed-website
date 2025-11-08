@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentes de IA - AtenMed</title>
+    <link rel="stylesheet" href="/apps/ai-agents/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1><i class="fas fa-robot"></i> Agentes IA</h1>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-view="dashboard">
+                    <i class="fas fa-chart-line"></i> Dashboard
+                </a>
+                <a href="#" class="nav-item" data-view="agents">
+                    <i class="fas fa-robot"></i> Meus Agentes
+                </a>
+                <a href="#" class="nav-item" data-view="templates">
+                    <i class="fas fa-layer-group"></i> Templates
+                </a>
+                <a href="#" class="nav-item" data-view="conversations">
+                    <i class="fas fa-comments"></i> Conversas
+                </a>
+                <a href="#" class="nav-item" data-view="analytics">
+                    <i class="fas fa-chart-bar"></i> Analytics
+                </a>
+                <a href="#" class="nav-item" data-view="settings">
+                    <i class="fas fa-cog"></i> Configurações
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn-primary btn-new-agent">
+                    <i class="fas fa-plus"></i> Novo Agente
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard View -->
+            <div id="dashboard-view" class="view active">
+                <div class="view-header">
+                    <h2>Dashboard</h2>
+                    <div class="view-actions">
+                        <button class="btn-secondary" onclick="refreshDashboard()">
+                            <i class="fas fa-sync-alt"></i> Atualizar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="total-agents">0</h3>
+                            <p>Agentes Ativos</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="total-conversations">0</h3>
+                            <p>Conversas Hoje</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="total-leads">0</h3>
+                            <p>Leads Gerados</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="satisfaction-rate">0%</h3>
+                            <p>Taxa de Satisfação</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <h3>Agentes Recentes</h3>
+                        <div id="recent-agents" class="agents-list">
+                            <!-- Preenchido via JS -->
+                        </div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>Atividade Recente</h3>
+                        <div id="recent-activity" class="activity-list">
+                            <!-- Preenchido via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Agents View -->
+            <div id="agents-view" class="view">
+                <div class="view-header">
+                    <h2>Meus Agentes</h2>
+                    <div class="view-actions">
+                        <input type="text" class="search-input" placeholder="Buscar agentes..." id="search-agents">
+                        <button class="btn-primary btn-new-agent">
+                            <i class="fas fa-plus"></i> Novo Agente
+                        </button>
+                    </div>
+                </div>
+
+                <div class="agents-grid" id="agents-grid">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+
+            <!-- Templates View -->
+            <div id="templates-view" class="view">
+                <div class="view-header">
+                    <h2>Templates</h2>
+                    <p class="view-subtitle">Escolha um template para começar rapidamente</p>
+                </div>
+
+                <div class="templates-grid" id="templates-grid">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+
+            <!-- Conversations View -->
+            <div id="conversations-view" class="view">
+                <div class="view-header">
+                    <h2>Conversas</h2>
+                    <div class="view-actions">
+                        <input type="text" class="search-input" placeholder="Buscar conversas..." id="search-conversations" style="width: 200px;">
+                        <select class="filter-select" id="filter-agent">
+                            <option value="">Todos os agentes</option>
+                        </select>
+                        <select class="filter-select" id="filter-status">
+                            <option value="">Todos os status</option>
+                            <option value="active">Ativas</option>
+                            <option value="completed">Concluídas</option>
+                            <option value="abandoned">Abandonadas</option>
+                            <option value="handed_off">Transferidas</option>
+                            <option value="archived">Arquivadas</option>
+                        </select>
+                        <select class="filter-select" id="filter-channel">
+                            <option value="">Todos os canais</option>
+                            <option value="website">Website</option>
+                            <option value="whatsapp">WhatsApp</option>
+                            <option value="instagram">Instagram</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="conversations-container">
+                    <div class="conversations-sidebar">
+                        <div class="conversations-list" id="conversations-list">
+                            <!-- Preenchido via JS -->
+                        </div>
+                        <div class="conversations-pagination" id="conversations-pagination">
+                            <!-- Preenchido via JS -->
+                        </div>
+                    </div>
+                    <div class="conversation-detail" id="conversation-detail">
+                        <div class="conversation-empty-state">
+                            <i class="fas fa-comments" style="font-size: 3rem; color: var(--gray-400); margin-bottom: 1rem;"></i>
+                            <p>Selecione uma conversa para visualizar</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics View -->
+            <div id="analytics-view" class="view">
+                <div class="view-header">
+                    <h2>Analytics</h2>
+                    <div class="view-actions">
+                        <select class="filter-select" id="analytics-period" onchange="loadAnalytics()">
+                            <option value="7">Últimos 7 dias</option>
+                            <option value="30" selected>Últimos 30 dias</option>
+                            <option value="90">Últimos 90 dias</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="analytics-content">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+
+            <!-- Settings View -->
+            <div id="settings-view" class="view">
+                <div class="view-header">
+                    <h2>Configurações</h2>
+                </div>
+                <div class="settings-content">
+                    <div class="settings-section">
+                        <h3>White Label</h3>
+                        <div class="form-group">
+                            <label class="form-label">Logo Personalizado</label>
+                            <input type="file" class="form-input" accept="image/*" id="logo-upload">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cor Primária</label>
+                            <input type="color" class="form-input" value="#45a7b1" id="primary-color">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nome da Plataforma</label>
+                            <input type="text" class="form-input" value="AtenMed" id="platform-name">
+                        </div>
+                        <button class="btn-primary" onclick="saveWhiteLabelSettings()">
+                            <i class="fas fa-save"></i> Salvar Configurações
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Agent Editor Modal -->
+        <div id="agent-editor-modal" class="modal">
+            <div class="modal-content large">
+                <div class="modal-header">
+                    <h2 id="modal-title">Novo Agente</h2>
+                    <button class="modal-close" onclick="closeAgentEditor()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="agent-editor-content">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="testAgent(currentAgent?._id || '')" id="test-agent-btn" style="display: none;">
+                        <i class="fas fa-vial"></i> Testar Agente
+                    </button>
+                    <button class="btn-secondary" onclick="closeAgentEditor()">Cancelar</button>
+                    <button class="btn-primary" onclick="saveAgent()">Salvar Agente</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/apps/ai-agents/app.js"></script>
+</body>
+</html>
+

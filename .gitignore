@@ -50,6 +50,9 @@ mongo-data/
 tokens/
 google-credentials.json
 
+# Sessões WhatsApp Web (não oficial)
+sessions/
+
 # Coverage
 coverage/
 .nyc_output/

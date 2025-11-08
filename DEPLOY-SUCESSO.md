@@ -137,3 +137,7 @@ Seu sistema AtenMed está **100% operacional em produção**!
 Qualquer push para a branch `main` resultará em deploy automático.
 
 **Mantenha o código versionado e os deploys serão sempre automáticos!** 🚀
+
+
+
+

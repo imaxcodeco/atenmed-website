@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Fluxos - AtenMed</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f3f4f6;
+        }
+        
+        .flow-editor-container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .flow-sidebar {
+            width: 300px;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+        
+        .flow-sidebar h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #111827;
+        }
+        
+        .node-type {
+            padding: 0.75rem;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+            cursor: move;
+            transition: all 0.2s;
+        }
+        
+        .node-type:hover {
+            border-color: #45a7b1;
+            background: #f0f9ff;
+        }
+        
+        .node-type-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            color: #111827;
+        }
+        
+        .node-type-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.875rem;
+        }
+        
+        .node-type.message .node-type-icon { background: #45a7b1; }
+        .node-type.question .node-type-icon { background: #10b981; }
+        .node-type.action .node-type-icon { background: #f59e0b; }
+        .node-type.condition .node-type-icon { background: #ef4444; }
+        
+        .flow-canvas-container {
+            flex: 1;
+            position: relative;
+            background: #f9fafb;
+        }
+        
+        .flow-canvas {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: auto;
+        }
+        
+        .flow-node {
+            position: absolute;
+            min-width: 200px;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            cursor: move;
+            border: 2px solid transparent;
+        }
+        
+        .flow-node.selected {
+            border-color: #45a7b1;
+            box-shadow: 0 0 0 3px rgba(69, 167, 177, 0.1);
+        }
+        
+        .flow-node-header {
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem 0.5rem 0 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .flow-node.message .flow-node-header { background: #45a7b1; }
+        .flow-node.question .flow-node-header { background: #10b981; }
+        .flow-node.action .flow-node-header { background: #f59e0b; }
+        .flow-node.condition .flow-node-header { background: #ef4444; }
+        
+        .flow-node-content {
+            padding: 1rem;
+        }
+        
+        .flow-node-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+        
+        .flow-node-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .flow-toolbar {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            z-index: 10;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #45a7b1;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #3a8b94;
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #111827;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .btn-secondary:hover {
+            background: #f9fafb;
+        }
+        
+        .connection-line {
+            position: absolute;
+            pointer-events: none;
+            stroke: #45a7b1;
+            stroke-width: 2;
+            fill: none;
+        }
+        
+        .connection-arrow {
+            fill: #45a7b1;
+        }
+    </style>
+</head>
+<body>
+    <div class="flow-editor-container">
+        <div class="flow-sidebar">
+            <h2>Elementos do Fluxo</h2>
+            <div class="node-type message" draggable="true" data-type="message">
+                <div class="node-type-header">
+                    <div class="node-type-icon">💬</div>
+                    <span>Mensagem</span>
+                </div>
+            </div>
+            <div class="node-type question" draggable="true" data-type="question">
+                <div class="node-type-header">
+                    <div class="node-type-icon">❓</div>
+                    <span>Pergunta</span>
+                </div>
+            </div>
+            <div class="node-type action" draggable="true" data-type="action">
+                <div class="node-type-header">
+                    <div class="node-type-icon">⚡</div>
+                    <span>Ação</span>
+                </div>
+            </div>
+            <div class="node-type condition" draggable="true" data-type="condition">
+                <div class="node-type-header">
+                    <div class="node-type-icon">🔀</div>
+                    <span>Condição</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flow-canvas-container">
+            <div class="flow-toolbar">
+                <button class="btn btn-secondary" onclick="clearCanvas()">Limpar</button>
+                <button class="btn btn-primary" onclick="saveFlow()">Salvar Fluxo</button>
+            </div>
+            <div class="flow-canvas" id="flow-canvas">
+                <svg id="connections-svg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;"></svg>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let nodes = [];
+        let selectedNode = null;
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+        let connections = [];
+        
+        const canvas = document.getElementById('flow-canvas');
+        const svg = document.getElementById('connections-svg');
+        
+        // Drag and drop dos tipos de nó
+        document.querySelectorAll('.node-type').forEach(nodeType => {
+            nodeType.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('type', nodeType.dataset.type);
+            });
+        });
+        
+        canvas.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+        
+        canvas.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const type = e.dataTransfer.getData('type');
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            addNode(type, x, y);
+        });
+        
+        function addNode(type, x, y) {
+            const nodeId = 'node_' + Date.now();
+            const nodeTypes = {
+                message: { icon: '💬', label: 'Mensagem', color: '#45a7b1' },
+                question: { icon: '❓', label: 'Pergunta', color: '#10b981' },
+                action: { icon: '⚡', label: 'Ação', color: '#f59e0b' },
+                condition: { icon: '🔀', label: 'Condição', color: '#ef4444' }
+            };
+            
+            const nodeType = nodeTypes[type] || nodeTypes.message;
+            
+            const node = document.createElement('div');
+            node.className = `flow-node ${type}`;
+            node.id = nodeId;
+            node.style.left = x + 'px';
+            node.style.top = y + 'px';
+            node.innerHTML = `
+                <div class="flow-node-header">
+                    <span>${nodeType.icon}</span>
+                    <span>${nodeType.label}</span>
+                </div>
+                <div class="flow-node-content">
+                    <input type="text" class="flow-node-input" placeholder="Conteúdo..." data-node-id="${nodeId}">
+                    <div class="flow-node-actions">
+                        <button class="btn btn-secondary" onclick="deleteNode('${nodeId}')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Excluir</button>
+                    </div>
+                </div>
+            `;
+            
+            canvas.appendChild(node);
+            
+            nodes.push({
+                id: nodeId,
+                type: type,
+                x: x,
+                y: y,
+                element: node
+            });
+            
+            makeNodeDraggable(node, nodeId);
+            makeNodeSelectable(node, nodeId);
+        }
+        
+        function makeNodeDraggable(node, nodeId) {
+            const header = node.querySelector('.flow-node-header');
+            let isDragging = false;
+            let startX, startY, initialX, initialY;
+            
+            header.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                const nodeData = nodes.find(n => n.id === nodeId);
+                initialX = nodeData.x;
+                initialY = nodeData.y;
+                node.style.cursor = 'grabbing';
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                
+                const nodeData = nodes.find(n => n.id === nodeId);
+                nodeData.x = initialX + dx;
+                nodeData.y = initialY + dy;
+                
+                node.style.left = nodeData.x + 'px';
+                node.style.top = nodeData.y + 'px';
+                
+                updateConnections();
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                node.style.cursor = 'move';
+            });
+        }
+        
+        function makeNodeSelectable(node, nodeId) {
+            node.addEventListener('click', (e) => {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+                
+                // Deselecionar todos
+                nodes.forEach(n => n.element.classList.remove('selected'));
+                
+                // Selecionar este
+                node.classList.add('selected');
+                selectedNode = nodeId;
+            });
+        }
+        
+        function deleteNode(nodeId) {
+            const node = document.getElementById(nodeId);
+            if (node) node.remove();
+            
+            nodes = nodes.filter(n => n.id !== nodeId);
+            connections = connections.filter(c => c.from !== nodeId && c.to !== nodeId);
+            
+            updateConnections();
+        }
+        
+        function clearCanvas() {
+            if (confirm('Limpar todo o canvas?')) {
+                nodes.forEach(n => n.element.remove());
+                nodes = [];
+                connections = [];
+                updateConnections();
+            }
+        }
+        
+        function updateConnections() {
+            // Limpar SVG
+            svg.innerHTML = '';
+            
+            // Desenhar conexões
+            connections.forEach(conn => {
+                const fromNode = nodes.find(n => n.id === conn.from);
+                const toNode = nodes.find(n => n.id === conn.to);
+                
+                if (!fromNode || !toNode) return;
+                
+                const x1 = fromNode.x + 100; // Centro do nó
+                const y1 = fromNode.y + 50;
+                const x2 = toNode.x + 100;
+                const y2 = toNode.y + 50;
+                
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', x1);
+                line.setAttribute('y1', y1);
+                line.setAttribute('x2', x2);
+                line.setAttribute('y2', y2);
+                line.setAttribute('class', 'connection-line');
+                svg.appendChild(line);
+                
+                // Seta
+                const angle = Math.atan2(y2 - y1, x2 - x1);
+                const arrowX = x2 - 10 * Math.cos(angle);
+                const arrowY = y2 - 10 * Math.sin(angle);
+                
+                const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                arrow.setAttribute('points', `${arrowX},${arrowY} ${arrowX - 5},${arrowY - 5} ${arrowX - 5},${arrowY + 5}`);
+                arrow.setAttribute('class', 'connection-arrow');
+                svg.appendChild(arrow);
+            });
+        }
+        
+        function saveFlow() {
+            const flow = {
+                name: 'Fluxo Personalizado',
+                trigger: 'always',
+                steps: nodes.map(node => {
+                    const input = node.element.querySelector('input');
+                    return {
+                        type: node.type,
+                        content: input ? input.value : '',
+                        position: { x: node.x, y: node.y }
+                    };
+                }),
+                connections: connections
+            };
+            
+            // Salvar via API (implementar)
+            console.log('Fluxo salvo:', flow);
+            alert('Fluxo salvo com sucesso!');
+        }
+        
+        // Conectar nós (exemplo: shift + click)
+        canvas.addEventListener('click', (e) => {
+            if (e.shiftKey && selectedNode) {
+                const clickedNode = e.target.closest('.flow-node');
+                if (clickedNode && clickedNode.id !== selectedNode) {
+                    connections.push({
+                        from: selectedNode,
+                        to: clickedNode.id
+                    });
+                    updateConnections();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+

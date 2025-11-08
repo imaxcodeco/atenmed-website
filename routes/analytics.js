@@ -1,403 +1,303 @@
+/**
+ * AtenMed - Analytics Routes
+ * Rotas para métricas e analytics dos agentes
+ */
+
 const express = require('express');
-const { authenticateToken, authorize } = require('../middleware/auth');
-const Lead = require('../models/Lead');
-const Client = require('../models/Client');
-const Contact = require('../models/Contact');
+const router = express.Router();
+const analyticsService = require('../services/analyticsService');
+const { authenticateToken } = require('../middleware/auth');
 const logger = require('../utils/logger');
 
-const router = express.Router();
+// ===== MIDDLEWARE =====
+router.use(authenticateToken);
 
-// @route   GET /api/analytics/leads-monthly
-// @desc    Obter leads por mês (últimos 6 meses)
-// @access  Admin
-router.get('/leads-monthly', authenticateToken, authorize('admin'), async (req, res) => {
+// ===== MÉTRICAS GERAIS =====
+/**
+ * @route   GET /api/analytics/metrics
+ * @desc    Obter métricas gerais
+ * @access  Private
+ */
+router.get('/metrics', async (req, res) => {
     try {
-        const sixMonthsAgo = new Date();
-        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-
-        const leads = await Lead.aggregate([
-            {
-                $match: {
-                    createdAt: { $gte: sixMonthsAgo }
-                }
-            },
-            {
-                $group: {
-                    _id: {
-                        year: { $year: '$createdAt' },
-                        month: { $month: '$createdAt' }
-                    },
-                    count: { $sum: 1 }
-                }
-            },
-            {
-                $sort: { '_id.year': 1, '_id.month': 1 }
-            }
-        ]);
-
-        // Formatar dados para Chart.js
-        const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-        const labels = leads.map(item => months[item._id.month - 1]);
-        const values = leads.map(item => item.count);
-
-        res.json({
-            success: true,
-            data: {
-                labels,
-                values
-            }
-        });
-    } catch (error) {
-        logger.error('Erro ao buscar leads mensais:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Erro ao buscar dados de leads'
-        });
-    }
-});
-
-// @route   GET /api/analytics/conversion-rate
-// @desc    Obter taxa de conversão
-// @access  Admin
-router.get('/conversion-rate', authenticateToken, authorize('admin'), async (req, res) => {
-    try {
-        const totalLeads = await Lead.countDocuments();
-        const convertedLeads = await Lead.countDocuments({ status: 'convertido' });
-        const inProgressLeads = await Lead.countDocuments({ status: 'em_contato' });
-        const lostLeads = await Lead.countDocuments({ status: 'perdido' });
-
-        const convertedPercentage = totalLeads > 0 ? Math.round((convertedLeads / totalLeads) * 100) : 0;
-        const inProgressPercentage = totalLeads > 0 ? Math.round((inProgressLeads / totalLeads) * 100) : 0;
-        const lostPercentage = totalLeads > 0 ? Math.round((lostLeads / totalLeads) * 100) : 0;
-
-        res.json({
-            success: true,
-            data: {
-                labels: ['Convertidos', 'Em processo', 'Perdidos'],
-                values: [convertedPercentage, inProgressPercentage, lostPercentage]
-            }
-        });
-    } catch (error) {
-        logger.error('Erro ao calcular taxa de conversão:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Erro ao calcular taxa de conversão'
-        });
-    }
-});
-
-// @route   GET /api/analytics/lead-sources
-// @desc    Obter origem dos leads
-// @access  Admin
-router.get('/lead-sources', authenticateToken, authorize('admin'), async (req, res) => {
-    try {
-        const sources = await Lead.aggregate([
-            {
-                $group: {
-                    _id: '$origem',
-                    count: { $sum: 1 }
-                }
-            },
-            {
-                $sort: { count: -1 }
-            }
-        ]);
-
-        const labels = sources.map(item => {
-            const origemMap = {
-                'site': 'Site',
-                'whatsapp': 'WhatsApp',
-                'indicacao': 'Indicação',
-                'redes_sociais': 'Redes Sociais',
-                'outros': 'Outros'
-            };
-            return origemMap[item._id] || item._id;
-        });
-        const values = sources.map(item => item.count);
-
-        res.json({
-            success: true,
-            data: {
-                labels,
-                values
-            }
-        });
-    } catch (error) {
-        logger.error('Erro ao buscar origem dos leads:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Erro ao buscar origem dos leads'
-        });
-    }
-});
-
-// @route   GET /api/analytics/revenue-monthly
-// @desc    Obter receita mensal (últimos 6 meses)
-// @access  Admin
-router.get('/revenue-monthly', authenticateToken, authorize('admin'), async (req, res) => {
-    try {
-        const sixMonthsAgo = new Date();
-        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-
-        // Como não temos modelo de receita, vamos calcular baseado em clientes convertidos
-        // Você pode ajustar isso conforme seu modelo de negócio
-        const clients = await Client.aggregate([
-            {
-                $match: {
-                    createdAt: { $gte: sixMonthsAgo }
-                }
-            },
-            {
-                $group: {
-                    _id: {
-                        year: { $year: '$createdAt' },
-                        month: { $month: '$createdAt' }
-                    },
-                    count: { $sum: 1 }
-                }
-            },
-            {
-                $sort: { '_id.year': 1, '_id.month': 1 }
-            }
-        ]);
-
-        // Simular receita (ajuste o valor conforme seu ticket médio)
-        const averageTicket = 1500; // R$ 1.500 por cliente
-
-        const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-        const labels = clients.map(item => months[item._id.month - 1]);
-        const values = clients.map(item => item.count * averageTicket);
-
-        res.json({
-            success: true,
-            data: {
-                labels,
-                values
-            }
-        });
-    } catch (error) {
-        logger.error('Erro ao buscar receita mensal:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Erro ao buscar receita mensal'
-        });
-    }
-});
-
-// @route   GET /api/analytics/summary
-// @desc    Obter resumo de analytics
-// @access  Admin
-router.get('/summary', authenticateToken, authorize('admin'), async (req, res) => {
-    try {
-        const [
-            totalLeads,
-            totalClients,
-            totalContacts,
-            leadsThisMonth,
-            clientsThisMonth,
-            conversionRate
-        ] = await Promise.all([
-            Lead.countDocuments(),
-            Client.countDocuments(),
-            Contact.countDocuments(),
-            Lead.countDocuments({
-                createdAt: {
-                    $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-                }
-            }),
-            Client.countDocuments({
-                createdAt: {
-                    $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-                }
-            }),
-            Lead.countDocuments({ status: 'convertido' })
-        ]);
-
-        const rate = totalLeads > 0 ? ((conversionRate / totalLeads) * 100).toFixed(1) : 0;
-
-        res.json({
-            success: true,
-            data: {
-                totalLeads,
-                totalClients,
-                totalContacts,
-                leadsThisMonth,
-                clientsThisMonth,
-                conversionRate: rate
-            }
-        });
-    } catch (error) {
-        logger.error('Erro ao buscar resumo de analytics:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Erro ao buscar resumo'
-        });
-    }
-});
-
-// @route   GET /api/analytics/sales-funnel
-// @desc    Obter funil de vendas
-// @access  Admin
-router.get('/sales-funnel', authenticateToken, authorize('admin'), async (req, res) => {
-    try {
-        const [
-            totalLeads,
-            qualifiedLeads,
-            proposalLeads,
-            negotiationLeads,
-            closedLeads
-        ] = await Promise.all([
-            Lead.countDocuments(),
-            Lead.countDocuments({ status: 'qualificado' }),
-            Lead.countDocuments({ status: 'em_contato' }),
-            Lead.countDocuments({ status: { $in: ['qualificado', 'em_contato'] } }),
-            Lead.countDocuments({ status: 'convertido' }),
-        ]);
-
-        res.json({
-            success: true,
-            data: {
-                labels: ['Leads', 'Qualificados', 'Em Contato', 'Negociação', 'Fechados'],
-                values: [totalLeads, qualifiedLeads, proposalLeads, negotiationLeads, closedLeads]
-            }
-        });
-    } catch (error) {
-        logger.error('Erro ao buscar funil de vendas:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Erro ao buscar funil de vendas'
-        });
-    }
-});
-
-// @route   GET /api/analytics/specialties
-// @desc    Obter especialidades mais procuradas
-// @access  Admin
-router.get('/specialties', authenticateToken, authorize('admin'), async (req, res) => {
-    try {
-        const specialties = await Lead.aggregate([
-            {
-                $match: {
-                    especialidade: { $exists: true, $ne: null }
-                }
-            },
-            {
-                $group: {
-                    _id: '$especialidade',
-                    count: { $sum: 1 }
-                }
-            },
-            {
-                $sort: { count: -1 }
-            },
-            {
-                $limit: 5
-            }
-        ]);
-
-        const total = specialties.reduce((sum, item) => sum + item.count, 0);
+        const { startDate, endDate } = req.query;
         
-        const labels = specialties.map(item => {
-            const specialtyMap = {
-                'cardiologia': 'Cardiologia',
-                'dermatologia': 'Dermatologia',
-                'pediatria': 'Pediatria',
-                'ortopedia': 'Ortopedia',
-                'ginecologia': 'Ginecologia',
-                'oftalmologia': 'Oftalmologia',
-                'psiquiatria': 'Psiquiatria',
-                'outros': 'Outros'
-            };
-            return specialtyMap[item._id] || item._id;
+        const now = new Date();
+        const defaultStartDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // 30 dias atrás
+        
+        const metrics = await analyticsService.getGeneralMetrics(
+            req.clinicId,
+            startDate || defaultStartDate,
+            endDate || now
+        );
+        
+        res.json({
+            success: true,
+            metrics
         });
         
-        const values = specialties.map(item => Math.round((item.count / total) * 100));
-
-        res.json({
-            success: true,
-            data: {
-                labels,
-                values
-            }
-        });
     } catch (error) {
-        logger.error('Erro ao buscar especialidades:', error);
+        logger.error('Erro ao obter métricas:', error);
         res.status(500).json({
             success: false,
-            error: 'Erro ao buscar especialidades'
+            error: 'Erro ao obter métricas'
         });
     }
 });
 
-// @route   GET /api/analytics/weekly-performance
-// @desc    Obter performance semanal
-// @access  Admin
-router.get('/weekly-performance', authenticateToken, authorize('admin'), async (req, res) => {
+// ===== MÉTRICAS POR DIA =====
+/**
+ * @route   GET /api/analytics/daily
+ * @desc    Obter métricas por dia
+ * @access  Private
+ */
+router.get('/daily', async (req, res) => {
     try {
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
-        const leads = await Lead.aggregate([
-            {
-                $match: {
-                    createdAt: { $gte: oneWeekAgo }
-                }
-            },
-            {
-                $group: {
-                    _id: { $dayOfWeek: '$createdAt' },
-                    count: { $sum: 1 }
-                }
-            },
-            {
-                $sort: { '_id': 1 }
-            }
-        ]);
-
-        const contacts = await Contact.aggregate([
-            {
-                $match: {
-                    createdAt: { $gte: oneWeekAgo }
-                }
-            },
-            {
-                $group: {
-                    _id: { $dayOfWeek: '$createdAt' },
-                    count: { $sum: 1 }
-                }
-            },
-            {
-                $sort: { '_id': 1 }
-            }
-        ]);
-
-        const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-        const leadsData = new Array(7).fill(0);
-        const contactsData = new Array(7).fill(0);
-
-        leads.forEach(item => {
-            const dayIndex = item._id - 1; // MongoDB dayOfWeek é 1-7 (Sunday=1)
-            leadsData[dayIndex] = item.count;
-        });
-
-        contacts.forEach(item => {
-            const dayIndex = item._id - 1;
-            contactsData[dayIndex] = item.count;
-        });
-
+        const { startDate, endDate } = req.query;
+        
+        const now = new Date();
+        const defaultStartDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        
+        const dailyMetrics = await analyticsService.getDailyMetrics(
+            req.clinicId,
+            startDate || defaultStartDate,
+            endDate || now
+        );
+        
         res.json({
             success: true,
-            data: {
-                labels: daysOfWeek,
-                leads: leadsData,
-                contacts: contactsData
-            }
+            data: dailyMetrics
         });
+        
     } catch (error) {
-        logger.error('Erro ao buscar performance semanal:', error);
+        logger.error('Erro ao obter métricas diárias:', error);
         res.status(500).json({
             success: false,
-            error: 'Erro ao buscar performance semanal'
+            error: 'Erro ao obter métricas diárias'
+        });
+    }
+});
+
+// ===== MÉTRICAS POR AGENTE =====
+/**
+ * @route   GET /api/analytics/agents
+ * @desc    Obter métricas por agente
+ * @access  Private
+ */
+router.get('/agents', async (req, res) => {
+    try {
+        const { startDate, endDate } = req.query;
+        
+        const now = new Date();
+        const defaultStartDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        
+        const agentMetrics = await analyticsService.getAgentMetrics(
+            req.clinicId,
+            startDate || defaultStartDate,
+            endDate || now
+        );
+        
+        res.json({
+            success: true,
+            agents: agentMetrics
+        });
+        
+    } catch (error) {
+        logger.error('Erro ao obter métricas por agente:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Erro ao obter métricas por agente'
+        });
+    }
+});
+
+// ===== MÉTRICAS POR CANAL =====
+/**
+ * @route   GET /api/analytics/channels
+ * @desc    Obter métricas por canal
+ * @access  Private
+ */
+router.get('/channels', async (req, res) => {
+    try {
+        const { startDate, endDate } = req.query;
+        
+        const now = new Date();
+        const defaultStartDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        
+        const channelMetrics = await analyticsService.getChannelMetrics(
+            req.clinicId,
+            startDate || defaultStartDate,
+            endDate || now
+        );
+        
+        res.json({
+            success: true,
+            channels: channelMetrics
+        });
+        
+    } catch (error) {
+        logger.error('Erro ao obter métricas por canal:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Erro ao obter métricas por canal'
+        });
+    }
+});
+
+// ===== TENDÊNCIAS =====
+/**
+ * @route   GET /api/analytics/trends
+ * @desc    Obter tendências
+ * @access  Private
+ */
+router.get('/trends', async (req, res) => {
+    try {
+        const { days = 30 } = req.query;
+        
+        const trends = await analyticsService.getTrends(req.clinicId, parseInt(days));
+        
+        res.json({
+            success: true,
+            trends
+        });
+        
+    } catch (error) {
+        logger.error('Erro ao obter tendências:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Erro ao obter tendências'
+        });
+    }
+});
+
+// ===== MÉTRICAS HORÁRIAS =====
+/**
+ * @route   GET /api/analytics/hourly
+ * @desc    Obter métricas por hora do dia
+ * @access  Private
+ */
+router.get('/hourly', async (req, res) => {
+    try {
+        const { startDate, endDate } = req.query;
+        
+        const now = new Date();
+        const defaultStartDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        
+        const hourlyMetrics = await analyticsService.getHourlyMetrics(
+            req.clinicId,
+            startDate || defaultStartDate,
+            endDate || now
+        );
+        
+        res.json({
+            success: true,
+            data: hourlyMetrics
+        });
+        
+    } catch (error) {
+        logger.error('Erro ao obter métricas horárias:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Erro ao obter métricas horárias'
+        });
+    }
+});
+
+// ===== MÉTRICAS DE SATISFAÇÃO =====
+/**
+ * @route   GET /api/analytics/satisfaction
+ * @desc    Obter métricas detalhadas de satisfação
+ * @access  Private
+ */
+router.get('/satisfaction', async (req, res) => {
+    try {
+        const { startDate, endDate } = req.query;
+        
+        const now = new Date();
+        const defaultStartDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        
+        const satisfactionMetrics = await analyticsService.getSatisfactionMetrics(
+            req.clinicId,
+            startDate || defaultStartDate,
+            endDate || now
+        );
+        
+        res.json({
+            success: true,
+            metrics: satisfactionMetrics
+        });
+        
+    } catch (error) {
+        logger.error('Erro ao obter métricas de satisfação:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Erro ao obter métricas de satisfação'
+        });
+    }
+});
+
+// ===== MÉTRICAS DE INTENÇÕES =====
+/**
+ * @route   GET /api/analytics/intents
+ * @desc    Obter métricas de intenções detectadas
+ * @access  Private
+ */
+router.get('/intents', async (req, res) => {
+    try {
+        const { startDate, endDate } = req.query;
+        
+        const now = new Date();
+        const defaultStartDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        
+        const intentMetrics = await analyticsService.getIntentMetrics(
+            req.clinicId,
+            startDate || defaultStartDate,
+            endDate || now
+        );
+        
+        res.json({
+            success: true,
+            intents: intentMetrics
+        });
+        
+    } catch (error) {
+        logger.error('Erro ao obter métricas de intenções:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Erro ao obter métricas de intenções'
+        });
+    }
+});
+
+// ===== MÉTRICAS DE TEMPO DE RESPOSTA =====
+/**
+ * @route   GET /api/analytics/response-time
+ * @desc    Obter métricas detalhadas de tempo de resposta
+ * @access  Private
+ */
+router.get('/response-time', async (req, res) => {
+    try {
+        const { startDate, endDate } = req.query;
+        
+        const now = new Date();
+        const defaultStartDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        
+        const responseTimeMetrics = await analyticsService.getResponseTimeMetrics(
+            req.clinicId,
+            startDate || defaultStartDate,
+            endDate || now
+        );
+        
+        res.json({
+            success: true,
+            metrics: responseTimeMetrics
+        });
+        
+    } catch (error) {
+        logger.error('Erro ao obter métricas de tempo de resposta:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Erro ao obter métricas de tempo de resposta'
         });
     }
 });

@@ -38,6 +38,13 @@ const googleCalendarRoutes = require('./routes/googleCalendar');
 const testRoutes = require('./routes/test');
 const queuesDashboardRoutes = require('./routes/queues-dashboard');
 const healthRoutes = require('./routes/health');
+const agentRoutes = require('./routes/agents');
+const whatsappWebRoutes = require('./routes/whatsappWeb');
+const conversationRoutes = require('./routes/conversations');
+const analyticsAgentRoutes = require('./routes/analytics');
+const agentTestRoutes = require('./routes/agentTest');
+const instagramRoutes = require('./routes/instagram');
+const whiteLabelRoutes = require('./routes/whiteLabel');
 
 // Importar middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -79,6 +86,10 @@ googleCalendarService.initialize();
 // Inicializar WhatsApp Service
 whatsappService.initialize();
 logger.info('📱 WhatsApp Business Service inicializado');
+
+// Inicializar Instagram Service
+const instagramService = require('./services/instagramService');
+instagramService.initialize();
 
 // Inicializar Reminder Service
 if (process.env.NODE_ENV === 'production' || process.env.ENABLE_REMINDERS === 'true') {
@@ -340,6 +351,8 @@ app.use(
 app.use('/apps/clinic-page', express.static(path.join(__dirname, 'applications/clinic-page')));
 app.use('/apps/crm', express.static(path.join(__dirname, 'applications/crm-pipeline')));
 app.use('/apps/portal', express.static(path.join(__dirname, 'applications/clinic-portal')));
+app.use('/apps/ai-agents', express.static(path.join(__dirname, 'applications/ai-agents')));
+app.use('/uploads/whitelabel', express.static(path.join(__dirname, 'uploads/whitelabel')));
 
 // IMPORTANTE: Servir arquivos estáticos do admin-dashboard para /crm e /dashboard
 // Isso permite que dashboard.css, dashboard.js, clinics-manager.js, etc sejam acessíveis
@@ -435,6 +448,27 @@ app.use('/admin', queuesDashboardRoutes);
 // Rotas do Google Calendar
 app.use('/api', googleCalendarRoutes);
 
+// Rotas de Agentes de IA
+app.use('/api/agents', agentRoutes);
+
+// Rotas de WhatsApp Web (não oficial - QR Code)
+app.use('/api/whatsapp-web', whatsappWebRoutes);
+
+// Rotas de Conversas
+app.use('/api/conversations', conversationRoutes);
+
+// Rotas de Analytics dos Agentes
+app.use('/api/analytics', analyticsAgentRoutes);
+
+// Rotas de Teste de Agentes
+app.use('/api/agents', agentTestRoutes);
+
+// Rotas de Instagram
+app.use('/api/instagram', instagramRoutes);
+
+// Rotas de White Label
+app.use('/api/whitelabel', whiteLabelRoutes);
+
 // Rotas específicas para aplicações
 app.get('/whatsapp', (req, res) => {
   res.sendFile(path.join(__dirname, 'applications/whatsapp-automation/whatsapp-admin.html'));
@@ -469,6 +503,10 @@ app.get(['/crm', '/pipeline', '/vendas'], (req, res) => {
 
 app.get(['/portal', '/portal/', '/minha-clinica'], (req, res) => {
   res.sendFile(path.join(__dirname, 'applications/clinic-portal/index.html'));
+});
+
+app.get(['/ai-agents', '/agentes', '/agentes-ia'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'applications/ai-agents/index.html'));
 });
 
 // Landing de aplicações internas
