@@ -155,23 +155,38 @@ jobs:
             fi
 
             echo "✅ Commit após pull: $(git rev-parse --short HEAD)"
+            echo "📋 Último commit: $(git log -1 --oneline)"
 
             # Backup
             mkdir -p backups
             cp .env backups/.env.$(date +%Y%m%d_%H%M%S) 2>/dev/null || true
 
             # Install dependencies
+            echo "📦 Instalando dependências..."
             npm install --production --legacy-peer-deps --ignore-scripts
 
             # Build
+            echo "🔨 Fazendo build..."
             npm run build:css || echo "Build optional"
 
+            # Verificar se arquivo existe
+            echo "🔍 Verificando arquivos..."
+            if [ -f "applications/ai-agents/index.html" ]; then
+              echo "✅ applications/ai-agents/index.html existe"
+            else
+              echo "❌ applications/ai-agents/index.html NÃO existe!"
+              ls -la applications/ai-agents/ || echo "Diretório não existe"
+            fi
+
             # Restart with PM2
+            echo "🔄 Reiniciando PM2..."
             pm2 restart atenmed --update-env || pm2 start ecosystem.config.js --env production
             pm2 save
 
             # Show status
             pm2 status
+            echo "📋 Logs recentes:"
+            pm2 logs atenmed --lines 20 --nostream || true
 
             echo "✅ Deploy completed successfully!"
 
