@@ -449,6 +449,7 @@ app.use('/admin', queuesDashboardRoutes);
 app.use('/api', googleCalendarRoutes);
 
 // Rotas de Agentes de IA (deve vir antes do catch-all)
+logger.info('📌 Registrando rotas de agentes: /api/agents');
 app.use('/api/agents', agentRoutes);
 // Rotas de Teste de Agentes (mesmo prefixo, mas rota específica /:id/test)
 app.use('/api/agents', agentTestRoutes);
@@ -505,13 +506,16 @@ app.get(['/portal', '/portal/', '/minha-clinica'], (req, res) => {
 });
 
 // Rotas de Agentes de IA - Interface (ANTES do catch-all)
+logger.info('📌 Registrando rotas de interface: /ai-agents, /agentes, /agentes-ia');
 app.get(['/ai-agents', '/agentes', '/agentes-ia'], (req, res) => {
   const filePath = path.join(__dirname, 'applications/ai-agents/index.html');
   const fs = require('fs');
+  logger.info(`🔍 Tentando servir: ${filePath}`);
   if (fs.existsSync(filePath)) {
+    logger.info(`✅ Arquivo encontrado, enviando...`);
     res.sendFile(filePath);
   } else {
-    logger.error(`Arquivo não encontrado: ${filePath}`);
+    logger.error(`❌ Arquivo não encontrado: ${filePath}`);
     res.status(404).send('Interface de Agentes não encontrada');
   }
 });
