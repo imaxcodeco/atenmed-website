@@ -505,9 +505,10 @@ app.get(['/portal', '/portal/', '/minha-clinica'], (req, res) => {
   res.sendFile(path.join(__dirname, 'applications/clinic-portal/index.html'));
 });
 
-// Rotas de Agentes de IA - Interface (ANTES do catch-all)
+// Rotas de Agentes de IA - Interface (DEVE VIR ANTES DO CATCH-ALL)
 logger.info('📌 Registrando rotas de interface: /ai-agents, /agentes, /agentes-ia');
-app.get(['/ai-agents', '/agentes', '/agentes-ia'], (req, res) => {
+app.get('/ai-agents', (req, res) => {
+  logger.info(`🔍 Rota /ai-agents acessada`);
   const filePath = path.join(__dirname, 'applications/ai-agents/index.html');
   const fs = require('fs');
   logger.info(`🔍 Tentando servir: ${filePath}`);
@@ -518,6 +519,16 @@ app.get(['/ai-agents', '/agentes', '/agentes-ia'], (req, res) => {
     logger.error(`❌ Arquivo não encontrado: ${filePath}`);
     res.status(404).send('Interface de Agentes não encontrada');
   }
+});
+
+app.get('/agentes', (req, res) => {
+  logger.info(`🔍 Rota /agentes acessada`);
+  res.sendFile(path.join(__dirname, 'applications/ai-agents/index.html'));
+});
+
+app.get('/agentes-ia', (req, res) => {
+  logger.info(`🔍 Rota /agentes-ia acessada`);
+  res.sendFile(path.join(__dirname, 'applications/ai-agents/index.html'));
 });
 
 // Landing de aplicações internas
@@ -619,6 +630,13 @@ app.get('*', (req, res) => {
   // Se for rota de aplicação, redirecionar
   if (req.path.startsWith('/apps/')) {
     return res.status(404).json({ error: 'Aplicação não encontrada' });
+  }
+
+  // Rotas de aplicações específicas já foram tratadas acima, não capturar aqui
+  const appRoutes = ['/ai-agents', '/agentes', '/agentes-ia', '/dashboard', '/crm', '/portal', '/analytics', '/agendamento', '/whatsapp'];
+  if (appRoutes.includes(req.path)) {
+    logger.warn(`⚠️ Rota de aplicação ${req.path} não foi capturada pelas rotas específicas`);
+    return res.status(404).send('Aplicação não encontrada');
   }
 
   // Servir o index.html do site principal
