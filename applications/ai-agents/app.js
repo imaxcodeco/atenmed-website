@@ -9,9 +9,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // Verificar autenticação
     authToken = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
     
+    // Tentar obter token do localStorage do AtenMed
     if (!authToken) {
-        // Redirecionar para login se não autenticado
-        window.location.href = '/login';
+        try {
+            const atenmedAuth = localStorage.getItem('atenmed_auth');
+            if (atenmedAuth) {
+                const authData = JSON.parse(atenmedAuth);
+                authToken = authData.token;
+                // Salvar também no formato esperado
+                localStorage.setItem('authToken', authToken);
+            }
+        } catch (e) {
+            console.error('Erro ao ler autenticação:', e);
+        }
+    }
+    
+    if (!authToken) {
+        // Salvar URL atual para retornar após login
+        const currentUrl = window.location.pathname + window.location.search;
+        sessionStorage.setItem('returnUrl', currentUrl);
+        // Redirecionar para login com parâmetro de retorno
+        window.location.href = `/login?returnUrl=${encodeURIComponent(currentUrl)}`;
         return;
     }
     

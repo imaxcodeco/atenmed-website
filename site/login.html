@@ -369,9 +369,13 @@
                     const now = new Date();
                     const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
                     
-                    // Se login foi há menos de 24 horas, redirecionar baseado no tipo de usuário
+                    // Se login foi há menos de 24 horas, redirecionar
                     if (hoursDiff < 24) {
-                        const redirectPath = authData.redirectRoute || 
+                        // Verificar se há URL de retorno
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const returnUrl = urlParams.get('returnUrl');
+                        
+                        const redirectPath = returnUrl || authData.redirectRoute || 
                                            (authData.isGlobalAdmin ? '/dashboard' : '/portal');
                         window.location.href = redirectPath;
                     }
