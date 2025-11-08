@@ -430,6 +430,140 @@ function renderAgentEditor(agent = null) {
     window.currentKnowledgeItems = agent?.knowledgeBase?.documents || [];
 }
 
+// Gerar prompt com IA
+async function generatePromptWithAI() {
+    const descriptionInput = document.getElementById('agent-description-input');
+    const promptTextarea = document.getElementById('system-prompt-textarea');
+    const promptGroup = document.getElementById('generated-prompt-group');
+    const generateBtn = document.getElementById('generate-prompt-btn');
+    
+    const description = descriptionInput?.value?.trim();
+    
+    if (!description) {
+        alert('Por favor, descreva o que você quer que o agente faça antes de gerar o prompt.');
+        descriptionInput?.focus();
+        return;
+    }
+    
+    // Desabilitar botão e mostrar loading
+    if (generateBtn) {
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
+    }
+    
+    try {
+        // Obter dados do formulário
+        const form = document.getElementById('agent-form');
+        const formData = new FormData(form);
+        
+        const response = await fetch(`${API_BASE}/generate-prompt`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({
+                description: description,
+                agentName: formData.get('name') || '',
+                personality: {
+                    name: formData.get('personality.name') || 'Assistente',
+                    tone: formData.get('personality.tone') || 'profissional'
+                },
+                template: formData.get('template') || 'personalizado'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.prompt) {
+            // Preencher o textarea com o prompt gerado
+            if (promptTextarea) {
+                promptTextarea.value = data.prompt;
+            }
+            
+            // Mostrar o grupo do prompt gerado
+            if (promptGroup) {
+                promptGroup.style.display = 'block';
+                promptGroup.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+            
+            // Mostrar mensagem de sucesso
+            showNotification('✅ Prompt gerado com sucesso! Você pode editá-lo se necessário.', 'success');
+        } else {
+            throw new Error(data.error || 'Erro ao gerar prompt');
+        }
+        
+    } catch (error) {
+        console.error('Erro ao gerar prompt:', error);
+        showNotification('❌ Erro ao gerar prompt: ' + (error.message || 'Erro desconhecido'), 'error');
+    } finally {
+        // Reabilitar botão
+        if (generateBtn) {
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = '<i class="fas fa-magic"></i> Gerar Prompt com IA';
+        }
+    }
+}
+
+// Função auxiliar para mostrar notificações
+function showNotification(message, type = 'info') {
+    // Criar elemento de notificação
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+        color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        z-index: 10000;
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remover após 5 segundos
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 5000);
+}
+
+// Adicionar animações CSS via JavaScript se não existirem
+if (!document.getElementById('notification-styles')) {
+    const style = document.createElement('style');
+    style.id = 'notification-styles';
+    style.textContent = `
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
 function addKnowledgeItem() {
     const title = prompt('Título do documento:');
     if (!title) return;
@@ -506,16 +640,24 @@ async function saveAgent() {
     const form = document.getElementById('agent-form');
     const formData = new FormData(form);
     
+    // Obter prompt do textarea (pode ter sido gerado pela IA)
+    const promptTextarea = document.getElementById('system-prompt-textarea');
+    const systemPrompt = promptTextarea?.value || formData.get('aiConfig.systemPrompt') || '';
+    
+    // Obter descrição do campo de descrição
+    const descriptionInput = document.getElementById('agent-description-input');
+    const description = descriptionInput?.value || formData.get('description') || '';
+    
     const agentData = {
         name: formData.get('name'),
-        description: formData.get('description'),
+        description: description,
         template: formData.get('template'),
         personality: {
             name: formData.get('personality.name'),
             tone: formData.get('personality.tone')
         },
         aiConfig: {
-            systemPrompt: formData.get('aiConfig.systemPrompt')
+            systemPrompt: systemPrompt
         },
         channels: {
             whatsapp: {
