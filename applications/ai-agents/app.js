@@ -364,9 +364,18 @@ function renderAgentEditor(agent = null) {
             </div>
             
             <div class="form-group">
-                <label class="form-label">Prompt do Sistema</label>
-                <textarea class="form-textarea" name="aiConfig.systemPrompt" rows="6">${agent?.aiConfig?.systemPrompt || ''}</textarea>
-                <small class="form-help">Descreva como o agente deve se comportar e responder</small>
+                <label class="form-label">O que você quer que o agente faça?</label>
+                <textarea class="form-textarea" id="agent-description-input" rows="3" placeholder="Ex: Quero um agente que atenda clientes de uma clínica médica, seja simpático e ajude com agendamentos...">${agent?.description || ''}</textarea>
+                <small class="form-help">Descreva de forma simples o que o agente deve fazer</small>
+                <button type="button" class="btn-secondary" onclick="generatePromptWithAI()" id="generate-prompt-btn" style="margin-top: 0.5rem;">
+                    <i class="fas fa-magic"></i> Gerar Prompt com IA
+                </button>
+            </div>
+            
+            <div class="form-group" id="generated-prompt-group" style="${agent?.aiConfig?.systemPrompt ? '' : 'display: none;'}">
+                <label class="form-label">Prompt do Sistema (Gerado pela IA)</label>
+                <textarea class="form-textarea" name="aiConfig.systemPrompt" id="system-prompt-textarea" rows="8">${agent?.aiConfig?.systemPrompt || ''}</textarea>
+                <small class="form-help">Você pode editar o prompt gerado se necessário</small>
             </div>
             
             <div class="form-group">
