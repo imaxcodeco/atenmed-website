@@ -448,8 +448,10 @@ app.use('/admin', queuesDashboardRoutes);
 // Rotas do Google Calendar
 app.use('/api', googleCalendarRoutes);
 
-// Rotas de Agentes de IA
+// Rotas de Agentes de IA (deve vir antes do catch-all)
 app.use('/api/agents', agentRoutes);
+// Rotas de Teste de Agentes (mesmo prefixo, mas rota específica /:id/test)
+app.use('/api/agents', agentTestRoutes);
 
 // Rotas de WhatsApp Web (não oficial - QR Code)
 app.use('/api/whatsapp-web', whatsappWebRoutes);
@@ -459,9 +461,6 @@ app.use('/api/conversations', conversationRoutes);
 
 // Rotas de Analytics dos Agentes
 app.use('/api/analytics', analyticsAgentRoutes);
-
-// Rotas de Teste de Agentes
-app.use('/api/agents', agentTestRoutes);
 
 // Rotas de Instagram
 app.use('/api/instagram', instagramRoutes);
@@ -505,8 +504,16 @@ app.get(['/portal', '/portal/', '/minha-clinica'], (req, res) => {
   res.sendFile(path.join(__dirname, 'applications/clinic-portal/index.html'));
 });
 
+// Rotas de Agentes de IA - Interface (ANTES do catch-all)
 app.get(['/ai-agents', '/agentes', '/agentes-ia'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'applications/ai-agents/index.html'));
+  const filePath = path.join(__dirname, 'applications/ai-agents/index.html');
+  const fs = require('fs');
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    logger.error(`Arquivo não encontrado: ${filePath}`);
+    res.status(404).send('Interface de Agentes não encontrada');
+  }
 });
 
 // Landing de aplicações internas

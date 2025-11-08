@@ -11,8 +11,60 @@ const { authenticateToken, authorize } = require('../middleware/auth');
 const agentService = require('../services/agentService');
 const logger = require('../utils/logger');
 
+// ===== ROTAS PÚBLICAS (ANTES DO MIDDLEWARE DE AUTENTICAÇÃO) =====
+
+// Processar mensagem (público para widget/webhook)
+router.post('/:id/process', async (req, res) => {
+    try {
+        const { message, conversationId, userId, channel } = req.body;
+        
+        if (!message) {
+            return res.status(400).json({
+                success: false,
+                error: 'Mensagem é obrigatória'
+            });
+        }
+        
+        const agent = await Agent.findById(req.params.id);
+        
+        if (!agent || !agent.active) {
+            return res.status(404).json({
+                success: false,
+                error: 'Agente não encontrado ou inativo'
+            });
+        }
+        
+        // Processar mensagem através do serviço
+        const response = await agentService.processMessage(agent, message, {
+            conversationId,
+            userId,
+            channel: channel || 'website',
+            clinicId: agent.clinic
+        });
+        
+        // Atualizar estatísticas
+        agent.stats.totalMessages = (agent.stats.totalMessages || 0) + 1;
+        await agent.save();
+        
+        res.json({
+            success: true,
+            response: response.text,
+            intent: response.intent,
+            actions: response.actions || [],
+            conversationId: response.conversationId
+        });
+        
+    } catch (error) {
+        logger.error('Erro ao processar mensagem:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Erro ao processar mensagem'
+        });
+    }
+});
+
 // ===== MIDDLEWARE =====
-// Todas as rotas requerem autenticação
+// Rotas privadas (com autenticação)
 router.use(authenticateToken);
 
 // ===== LISTAR AGENTES =====
@@ -287,13 +339,17 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
-// ===== PROCESSAR MENSAGEM =====
+// ===== PROCESSAR MENSAGEM (PRIVADO - ALIAS) =====
 /**
  * @route   POST /api/agents/:id/chat
- * @desc    Processar mensagem do usuário
- * @access  Public (para webhooks)
+ * @desc    Processar mensagem do usuário (alias para /process)
+ * @access  Private
  */
 router.post('/:id/chat', async (req, res) => {
+    // Redirecionar para a rota pública /process
+    req.url = req.url.replace('/chat', '/process');
+    req.originalUrl = req.originalUrl.replace('/chat', '/process');
+    // Mas como já passou pelo middleware, vamos processar aqui mesmo
     try {
         const { message, conversationId, userId, channel } = req.body;
         
@@ -304,7 +360,10 @@ router.post('/:id/chat', async (req, res) => {
             });
         }
         
-        const agent = await Agent.findById(req.params.id);
+        const agent = await Agent.findOne({
+            _id: req.params.id,
+            clinic: req.clinicId
+        });
         
         if (!agent || !agent.active) {
             return res.status(404).json({
@@ -313,16 +372,15 @@ router.post('/:id/chat', async (req, res) => {
             });
         }
         
-        // Processar mensagem através do serviço
         const response = await agentService.processMessage(agent, message, {
             conversationId,
             userId,
             channel: channel || 'website',
-            clinicId: agent.clinic
+            clinicId: req.clinicId
         });
         
-        // Atualizar estatísticas
-        agent.incrementStats('totalMessages');
+        agent.stats.totalMessages = (agent.stats.totalMessages || 0) + 1;
+        await agent.save();
         
         res.json({
             success: true,
