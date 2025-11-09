@@ -14,8 +14,8 @@ const logger = require('../utils/logger');
 
 // ===== ROTAS PÚBLICAS (ANTES DO MIDDLEWARE DE AUTENTICAÇÃO) =====
 
-// Gerar prompt com IA (deve vir ANTES das rotas com parâmetros dinâmicos)
-router.post('/generate-prompt', authenticateToken, async (req, res) => {
+// Processar mensagem (público para widget/webhook)
+router.post('/:id/process', async (req, res) => {
     try {
         const { description, agentName, personality, template } = req.body;
         
@@ -170,6 +170,115 @@ router.post('/:id/process', async (req, res) => {
 // ===== MIDDLEWARE =====
 // Rotas privadas (com autenticação)
 router.use(authenticateToken);
+
+// ===== GERAR PROMPT COM IA =====
+// IMPORTANTE: Esta rota deve vir ANTES das rotas com parâmetros dinâmicos (/:id)
+/**
+ * @route   POST /api/agents/generate-prompt
+ * @desc    Gerar prompt do sistema usando IA baseado em descrição
+ * @access  Private
+ */
+router.post('/generate-prompt', async (req, res) => {
+    try {
+        const { description, agentName, personality, template } = req.body;
+        
+        if (!description || !description.trim()) {
+            return res.status(400).json({
+                success: false,
+                error: 'Descrição é obrigatória'
+            });
+        }
+        
+        const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+        const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-pro';
+        
+        if (!GEMINI_API_KEY) {
+            return res.status(500).json({
+                success: false,
+                error: 'API do Gemini não configurada'
+            });
+        }
+        
+        // Construir prompt para gerar o system prompt
+        const prompt = `Você é um especialista em criar prompts de sistema para assistentes de IA conversacional.
+
+Com base na seguinte descrição, crie um prompt de sistema completo e profissional:
+
+DESCRIÇÃO DO AGENTE:
+${description}
+
+${agentName ? `NOME DO AGENTE: ${agentName}` : ''}
+${personality ? `PERSONALIDADE: ${personality.name || 'Assistente'} - Tom: ${personality.tone || 'profissional'}` : ''}
+${template ? `TEMPLATE: ${template}` : ''}
+
+INSTRUÇÕES:
+1. Crie um prompt de sistema detalhado e profissional
+2. Defina claramente o papel, personalidade e comportamento do agente
+3. Inclua exemplos de como o agente deve responder
+4. Especifique restrições e limites importantes
+5. Use tom ${personality?.tone || 'profissional'} e seja ${personality?.tone === 'empatico' ? 'empático e acolhedor' : personality?.tone === 'casual' ? 'descontraído e amigável' : 'profissional e claro'}
+6. O prompt deve ter entre 200-400 palavras
+7. Seja específico sobre o contexto e função do agente
+
+Gere APENAS o prompt de sistema, sem explicações adicionais:`;
+
+        const response = await axios.post(
+            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+            {
+                contents: [{
+                    parts: [{
+                        text: prompt
+                    }]
+                }],
+                generationConfig: {
+                    temperature: 0.8,
+                    maxOutputTokens: 1000,
+                    topP: 0.95,
+                    topK: 40
+                },
+                safetySettings: [
+                    {
+                        category: 'HARM_CATEGORY_HARASSMENT',
+                        threshold: 'BLOCK_NONE'
+                    },
+                    {
+                        category: 'HARM_CATEGORY_HATE_SPEECH',
+                        threshold: 'BLOCK_NONE'
+                    }
+                ]
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                timeout: 30000
+            }
+        );
+        
+        if (!response.data.candidates || response.data.candidates.length === 0) {
+            return res.status(500).json({
+                success: false,
+                error: 'Erro ao gerar prompt: resposta vazia da IA'
+            });
+        }
+        
+        const generatedPrompt = response.data.candidates[0].content.parts[0].text.trim();
+        
+        logger.info('✅ Prompt gerado com sucesso pela IA');
+        
+        res.json({
+            success: true,
+            prompt: generatedPrompt
+        });
+        
+    } catch (error) {
+        logger.error('Erro ao gerar prompt:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Erro ao gerar prompt com IA'
+        });
+    }
+});
 
 // ===== LISTAR AGENTES =====
 /**
