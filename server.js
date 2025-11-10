@@ -40,6 +40,7 @@ const queuesDashboardRoutes = require('./routes/queues-dashboard');
 const healthRoutes = require('./routes/health');
 const agentRoutes = require('./routes/agents');
 const whatsappWebRoutes = require('./routes/whatsappWeb');
+const whatsappEvolutionRoutes = require('./routes/whatsappEvolution');
 const conversationRoutes = require('./routes/conversations');
 const analyticsAgentRoutes = require('./routes/analytics');
 const agentTestRoutes = require('./routes/agentTest');
@@ -457,6 +458,9 @@ app.use('/api/agents', agentTestRoutes);
 
 // Rotas de WhatsApp Web (não oficial - QR Code)
 app.use('/api/whatsapp-web', whatsappWebRoutes);
+
+// Rotas de Evolution API (alternativa ao WhatsApp Business API oficial)
+app.use('/api/whatsapp-evolution', whatsappEvolutionRoutes);
 
 // Rotas de Conversas
 app.use('/api/conversations', conversationRoutes);
